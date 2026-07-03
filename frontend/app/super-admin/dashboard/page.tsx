@@ -499,18 +499,6 @@ export default function SuperAdminDashboardPage() {
             <span>All Properties</span>
           </button>
 
-          <button
-            onClick={() => {
-              setIsAddPropModalOpen(true);
-              cancelEditAdmin();
-              setIsSidebarOpen(false);
-            }}
-            className={styles.menuItem}
-          >
-            <PlusCircle size={18} strokeWidth={1.5} />
-            <span>Add Property</span>
-          </button>
-
           <div style={{ marginTop: "auto", borderTop: "1px solid rgba(197, 168, 128, 0.1)", paddingTop: "1rem" }}>
             <Link href="/" className={styles.menuItem}>
               <ExternalLink size={18} strokeWidth={1.5} />

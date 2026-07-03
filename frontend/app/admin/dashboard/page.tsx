@@ -245,17 +245,6 @@ export default function AdminDashboardPage() {
 
           <button
             onClick={() => {
-              setIsAddPropModalOpen(true);
-              setIsSidebarOpen(false);
-            }}
-            className={styles.menuItem}
-          >
-            <PlusCircle size={18} strokeWidth={1.5} />
-            <span>Add Property</span>
-          </button>
-
-          <button
-            onClick={() => {
               setActiveTab("settings");
               setIsSidebarOpen(false);
             }}
