@@ -1,0 +1,164 @@
+.section {
+  padding: 8rem 2rem;
+  background-color: var(--color-bg-white);
+  border-bottom: 1px solid var(--color-border);
+  overflow: hidden;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.subtitle {
+  color: var(--color-primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+}
+
+.title {
+  font-size: 2.8rem;
+  color: var(--color-dark);
+  font-family: var(--font-serif);
+}
+
+/* Marquee Outer Container */
+.sliderContainer {
+  overflow: hidden;
+  width: 100%;
+  position: relative;
+  /* Add fading gradients on sides for luxury magazine look */
+  mask-image: linear-gradient(to right, transparent, white 10%, white 90%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, white 10%, white 90%, transparent);
+}
+
+/* Marquee Track (Loops continuously) */
+.marqueeTrack {
+  display: flex;
+  gap: 2rem;
+  width: max-content;
+  animation: scrollMarquee 30s linear infinite;
+}
+
+/* Pause animation on hover */
+.sliderContainer:hover .marqueeTrack {
+  animation-play-state: paused;
+}
+
+@keyframes scrollMarquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(calc(-50% - 1rem)); /* Translate exactly half the track width + half the gap */
+  }
+}
+
+.slideItem {
+  flex: 0 0 340px; /* Small card width */
+  max-width: 100%;
+}
+
+.card {
+  background-color: var(--color-bg-light);
+  border: 1px solid var(--color-border);
+  padding: 2.2rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  height: 100%;
+  position: relative;
+  transition: border-color 0.3s ease;
+}
+
+.card:hover {
+  border-color: var(--color-primary);
+}
+
+.quoteIcon {
+  font-family: var(--font-serif);
+  font-size: 3rem;
+  color: var(--color-primary);
+  line-height: 1;
+  height: 1.5rem;
+  margin-bottom: -0.5rem;
+}
+
+.quoteText {
+  color: var(--color-dark-muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  font-weight: 300;
+  font-style: italic;
+  flex-grow: 1;
+}
+
+.client {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  border-top: 1px solid var(--color-border);
+  padding-top: 1.2rem;
+  margin-top: auto;
+}
+
+.clientName {
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--color-dark);
+}
+
+.clientRole {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  color: var(--color-primary-dark);
+  letter-spacing: 0.1em;
+}
+
+@media (max-width: 768px) {
+  .slideItem {
+    flex: 0 0 290px;
+  }
+  
+  .title {
+    font-size: 2.2rem;
+  }
+  
+  .section {
+    padding: 5rem 1.5rem;
+  }
+  
+  .marqueeTrack {
+    animation: scrollMarquee 25s linear infinite; /* Slightly faster scroll on small screens */
+  }
+}
+
+@media (max-width: 480px) {
+  .slideItem {
+    flex: 0 0 250px;
+  }
+  
+  .card {
+    padding: 1.5rem 1.25rem;
+  }
+  
+  .quoteText {
+    font-size: 0.85rem;
+  }
+  
+  .title {
+    font-size: 1.8rem;
+  }
+}

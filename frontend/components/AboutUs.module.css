@@ -1,0 +1,134 @@
+.section {
+  padding: 8rem 2rem;
+  background-color: var(--color-bg-white);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5rem;
+  align-items: center;
+}
+
+.leftColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.tagline {
+  color: var(--color-primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+}
+
+.heading {
+  font-size: 2.8rem;
+  line-height: 1.2;
+  color: var(--color-dark);
+  font-family: var(--font-serif);
+}
+
+.description {
+  color: var(--color-dark-muted);
+  font-size: 1rem;
+  line-height: 1.7;
+  font-weight: 300;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.metricCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.metricValue {
+  font-family: var(--font-serif);
+  font-size: 2.2rem;
+  color: var(--color-primary);
+  font-weight: 400;
+}
+
+.metricLabel {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-dark-muted);
+}
+
+.rightColumn {
+  position: relative;
+  border: 1px solid var(--color-border);
+  padding: 1.5rem;
+}
+
+.imageWrapper {
+  position: relative;
+  width: 100%;
+  height: 500px;
+}
+
+.aboutImage {
+  object-fit: cover;
+}
+
+.accentBox {
+  position: absolute;
+  bottom: -2rem;
+  left: -2rem;
+  background-color: var(--color-dark);
+  color: #FCFBFA;
+  padding: 2rem;
+  border: 1px solid var(--color-primary);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  z-index: 5;
+}
+
+.accentTitle {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  color: var(--color-primary);
+}
+
+.accentSub {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(252, 251, 250, 0.7);
+}
+
+@media (max-width: 968px) {
+  .container {
+    grid-template-columns: 1fr;
+    gap: 4rem;
+  }
+  
+  .rightColumn {
+    margin-left: 2rem;
+    margin-top: 2rem;
+  }
+  
+  .heading {
+    font-size: 2.2rem;
+  }
+  
+  .imageWrapper {
+    height: 400px;
+  }
+}

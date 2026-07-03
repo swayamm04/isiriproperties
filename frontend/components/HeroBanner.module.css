@@ -1,0 +1,249 @@
+.hero {
+  position: relative;
+  width: 100%;
+  height: 95vh;
+  min-height: 600px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  background-color: #111;
+}
+
+.slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  transition: opacity 1.5s ease-in-out;
+  z-index: 1;
+}
+
+.slideActive {
+  opacity: 1;
+  z-index: 2;
+}
+
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    rgba(21, 21, 21, 0.7) 0%,
+    rgba(21, 21, 21, 0.4) 50%,
+    rgba(21, 21, 21, 0.85) 100%
+  );
+  z-index: 3;
+}
+
+.contentContainer {
+  position: relative;
+  z-index: 4;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  margin-top: 4rem;
+}
+
+.textBlock {
+  max-width: 700px;
+}
+
+.subtitle {
+  color: var(--color-primary);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  margin-bottom: 1rem;
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: revealText 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+}
+
+.title {
+  color: #FCFBFA;
+  font-family: var(--font-serif);
+  font-size: 3.5rem;
+  line-height: 1.15;
+  font-weight: 400;
+  margin-bottom: 1.5rem;
+  opacity: 0;
+  transform: translateY(30px);
+  animation: revealText 1s cubic-bezier(0.16, 1, 0.3, 1) 0.4s forwards;
+}
+
+.description {
+  color: rgba(252, 251, 250, 0.75);
+  font-size: 1.05rem;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+  max-width: 550px;
+  font-weight: 300;
+  opacity: 0;
+  transform: translateY(30px);
+  animation: revealText 1s cubic-bezier(0.16, 1, 0.3, 1) 0.6s forwards;
+}
+
+@keyframes revealText {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Search Bar (Sharp Corners, Clean Borders, No glow, Premium Feel) */
+.searchBar {
+  background-color: #FCFBFA;
+  display: flex;
+  border-bottom: 1px solid var(--color-primary);
+  width: 100%;
+  max-width: 900px;
+  opacity: 0;
+  transform: translateY(35px);
+  animation: revealText 1s cubic-bezier(0.16, 1, 0.3, 1) 0.8s forwards;
+}
+
+.searchField {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.25rem 1.5rem;
+  border-right: 1px solid var(--color-border);
+  color: var(--color-dark);
+}
+
+.searchField:last-of-type {
+  border-right: none;
+}
+
+.searchFieldIcon {
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.searchFieldInput {
+  background: transparent;
+  border: none;
+  width: 100%;
+  color: var(--color-dark);
+  font-size: 0.9rem;
+}
+
+.searchFieldInput::placeholder {
+  color: #888;
+}
+
+.searchLabel {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #777;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.selectInput {
+  background: transparent;
+  border: none;
+  width: 100%;
+  color: var(--color-dark);
+  font-size: 0.9rem;
+  cursor: pointer;
+  appearance: none;
+  outline: none;
+}
+
+.searchBtn {
+  background-color: var(--color-dark);
+  color: #FCFBFA;
+  border: none;
+  padding: 0 2.5rem;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.searchBtn:hover {
+  background-color: var(--color-primary);
+  color: var(--color-dark);
+}
+
+/* Indicators */
+.indicators {
+  position: absolute;
+  bottom: 2.5rem;
+  right: 2rem;
+  display: flex;
+  gap: 1rem;
+  z-index: 4;
+}
+
+.indicator {
+  width: 40px;
+  height: 2px;
+  background-color: rgba(252, 251, 250, 0.3);
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.4s ease;
+}
+
+.indicatorActive {
+  background-color: var(--color-primary);
+}
+
+@media (max-width: 900px) {
+  .searchBar {
+    flex-direction: column;
+    border-bottom: none;
+  }
+  
+  .searchField {
+    border-right: none;
+    border-bottom: 1px solid var(--color-border);
+    padding: 1rem;
+  }
+  
+  .searchBtn {
+    padding: 1.25rem;
+    width: 100%;
+  }
+
+  .title {
+    font-size: 2.5rem;
+  }
+  
+  .hero {
+    height: auto;
+    padding: 8rem 0 4rem;
+  }
+}
+
+.welcomeBanner {
+  font-family: var(--font-serif);
+  font-size: 1.6rem;
+  color: var(--color-primary);
+  letter-spacing: 0.05em;
+  font-weight: 300;
+  border-bottom: 1px solid rgba(197, 168, 128, 0.3);
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.5rem;
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(15px);
+  animation: revealText 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

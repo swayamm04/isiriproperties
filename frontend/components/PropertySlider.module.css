@@ -1,0 +1,195 @@
+.section {
+  padding: 8rem 2rem;
+  background-color: var(--color-bg-light);
+  border-bottom: 1px solid var(--color-border);
+  overflow: hidden;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 3.5rem;
+}
+
+.titleBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.subtitle {
+  color: var(--color-primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+}
+
+.title {
+  font-size: 2.8rem;
+  color: var(--color-dark);
+  font-family: var(--font-serif);
+}
+
+.controls {
+  display: flex;
+  gap: 1rem;
+}
+
+.controlBtn {
+  background-color: transparent;
+  color: var(--color-dark);
+  border: 1px solid var(--color-dark);
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.controlBtn:hover {
+  background-color: var(--color-dark);
+  color: #FCFBFA;
+  border-color: var(--color-dark);
+}
+
+.controlBtnDisabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.sliderContainer {
+  display: flex;
+  gap: 2rem;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  padding-bottom: 1rem;
+  /* Hide scrollbar for Chrome, Safari and Opera */
+}
+
+.sliderContainer::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.sliderContainer {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.slideItem {
+  flex: 0 0 380px; /* Width of each property card */
+  max-width: 100%;
+}
+
+.moreCard {
+  flex: 0 0 380px;
+  border: 1px dashed var(--color-primary);
+  background-color: rgba(197, 168, 128, 0.03);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  text-align: center;
+  gap: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.moreCard:hover {
+  background-color: rgba(197, 168, 128, 0.08);
+  border-style: solid;
+}
+
+.moreIcon {
+  color: var(--color-primary);
+  margin-bottom: 0.5rem;
+}
+
+.moreTitle {
+  font-family: var(--font-serif);
+  font-size: 1.6rem;
+  color: var(--color-dark);
+  font-weight: 500;
+}
+
+.moreText {
+  font-size: 0.9rem;
+  color: var(--color-dark-muted);
+  line-height: 1.5;
+}
+
+.moreBtn {
+  display: inline-block;
+  background-color: var(--color-dark);
+  color: #FCFBFA;
+  border: none;
+  padding: 0.8rem 2rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.moreBtn:hover {
+  background-color: var(--color-primary);
+  color: var(--color-dark);
+}
+
+@media (max-width: 768px) {
+  .slideItem {
+    flex: 0 0 300px;
+  }
+  
+  .moreCard {
+    flex: 0 0 300px;
+  }
+  
+  .title {
+    font-size: 2.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .slideItem {
+    flex: 0 0 260px;
+  }
+  
+  .moreCard {
+    flex: 0 0 260px;
+    padding: 2rem 1.5rem;
+  }
+  
+  .moreTitle {
+    font-size: 1.3rem;
+  }
+  
+  .moreText {
+    font-size: 0.8rem;
+  }
+  
+  .moreBtn {
+    padding: 0.6rem 1.5rem;
+    font-size: 0.75rem;
+  }
+  
+  .section {
+    padding: 5rem 1.5rem;
+  }
+  
+  .title {
+    font-size: 1.8rem;
+  }
+}

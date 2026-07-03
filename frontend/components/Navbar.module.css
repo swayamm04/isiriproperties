@@ -1,0 +1,343 @@
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  background-color: rgba(21, 21, 21, 0.95);
+  border-bottom: 1px solid rgba(197, 168, 128, 0.2);
+  backdrop-filter: blur(5px);
+  transition: all 0.4s ease;
+}
+
+.scrolled {
+  background-color: #151515;
+  border-bottom: 1px solid rgba(197, 168, 128, 0.4);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.25rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-family: var(--font-serif);
+  font-size: 1.4rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  color: #FCFBFA;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.logoGold {
+  color: var(--color-primary);
+}
+
+.navLinks {
+  display: flex;
+  gap: 2.5rem;
+  align-items: center;
+}
+
+.navLink {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(252, 251, 250, 0.8);
+  font-weight: 500;
+  position: relative;
+  padding: 0.25rem 0;
+}
+
+.navLink:hover, .navLinkActive {
+  color: var(--color-primary);
+}
+
+.navLink::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background-color: var(--color-primary);
+  transition: width 0.3s ease;
+}
+
+.navLink:hover::after, .navLinkActive::after {
+  width: 100%;
+}
+
+.ctaButton {
+  display: inline-block;
+  background-color: transparent;
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  padding: 0.6rem 1.5rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.ctaButton:hover {
+  background-color: var(--color-primary);
+  color: #151515;
+}
+
+.mobileMenuBtn {
+  display: none;
+  background: none;
+  border: none;
+  color: #FCFBFA;
+  cursor: pointer;
+  padding: 0.25rem;
+}
+
+/* Mobile Sidebar Drawer */
+.mobileDrawer {
+  position: fixed;
+  top: 0;
+  right: -100%;
+  width: 300px;
+  height: 100vh;
+  background-color: #151515;
+  border-left: 1px solid rgba(197, 168, 128, 0.3);
+  z-index: 1001;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+  transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.drawerOpen {
+  right: 0;
+}
+
+.drawerCloseBtn {
+  background: none;
+  border: none;
+  color: #FCFBFA;
+  cursor: pointer;
+  align-self: flex-end;
+}
+
+.drawerLinks {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.drawerLink {
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(252, 251, 250, 0.9);
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(252, 251, 250, 0.05);
+}
+
+.drawerLink:hover {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.6);
+  z-index: 999;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.overlayVisible {
+  opacity: 1;
+  visibility: visible;
+}
+
+@media (max-width: 768px) {
+  .navLinks {
+    display: none;
+  }
+  
+  .mobileMenuBtn {
+    display: block;
+  }
+  
+  .container {
+    padding: 1rem 1.5rem;
+  }
+}
+
+/* Auth Modal Styles */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  z-index: 2000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+}
+
+.modalContent {
+  background-color: #151515;
+  border: 1px solid var(--color-primary);
+  width: 100%;
+  max-width: 480px;
+  padding: 3rem 2.5rem;
+  position: relative;
+  animation: modalFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modalCloseBtn {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  background: none;
+  border: none;
+  color: rgba(252, 251, 250, 0.6);
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.modalCloseBtn:hover {
+  color: var(--color-primary);
+}
+
+.modalTitle {
+  font-family: var(--font-serif);
+  font-size: 2rem;
+  color: #FCFBFA;
+  margin-bottom: 0.5rem;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  text-align: center;
+}
+
+.modalSubtitle {
+  font-size: 0.85rem;
+  color: var(--color-primary);
+  margin-bottom: 2.5rem;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+}
+
+.formGroup {
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.formLabel {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(252, 251, 250, 0.6);
+  margin-bottom: 0.5rem;
+}
+
+.inputField {
+  background-color: #1a1a1a;
+  border: 1px solid rgba(197, 168, 128, 0.3);
+  color: #FCFBFA;
+  padding: 0.8rem 1rem;
+  font-size: 0.9rem;
+  letter-spacing: 0.05em;
+  transition: all 0.3s ease;
+}
+
+.inputField:focus {
+  border-color: var(--color-primary);
+  background-color: #202020;
+}
+
+.errorMsg {
+  font-size: 0.8rem;
+  color: #e05e5e;
+  margin-bottom: 1.5rem;
+  padding: 0.5rem 1rem;
+  border-left: 2px solid #e05e5e;
+  background-color: rgba(224, 94, 94, 0.05);
+}
+
+.submitBtn {
+  width: 100%;
+  background-color: var(--color-primary);
+  color: #151515;
+  border: none;
+  padding: 1rem;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 1rem;
+}
+
+.submitBtn:hover {
+  background-color: var(--color-primary-dark);
+}
+
+.switchText {
+  text-align: center;
+  margin-top: 2rem;
+  font-size: 0.85rem;
+  color: rgba(252, 251, 250, 0.5);
+}
+
+.switchBtn {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  cursor: pointer;
+  font-weight: 500;
+  text-decoration: underline;
+  padding: 0;
+  margin-left: 0.25rem;
+}
+
+.switchBtn:hover {
+  color: var(--color-primary-dark);
+}
+
+.userInfo {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-primary);
+  font-weight: 600;
+}

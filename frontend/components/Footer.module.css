@@ -1,0 +1,130 @@
+.footer {
+  background-color: #151515;
+  color: #FCFBFA;
+  padding: 6rem 2rem 3rem;
+  border-top: 1px solid rgba(197, 168, 128, 0.2);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1.5fr;
+  gap: 4rem;
+  margin-bottom: 4rem;
+}
+
+.brandCol {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.logo {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  color: #FCFBFA;
+  text-transform: uppercase;
+}
+
+.logoGold {
+  color: var(--color-primary);
+}
+
+.brandText {
+  color: rgba(252, 251, 250, 0.65);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  font-weight: 300;
+  max-width: 320px;
+}
+
+.colTitle {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  color: var(--color-primary);
+  margin-bottom: 1.5rem;
+  letter-spacing: 0.05em;
+}
+
+.linksList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.link {
+  font-size: 0.85rem;
+  color: rgba(252, 251, 250, 0.7);
+  transition: color 0.3s ease;
+  cursor: pointer;
+}
+
+.link:hover {
+  color: var(--color-primary);
+}
+
+.contactText {
+  font-size: 0.85rem;
+  color: rgba(252, 251, 250, 0.7);
+  line-height: 1.6;
+  font-weight: 300;
+}
+
+.bottomRow {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(252, 251, 250, 0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.copyright {
+  font-size: 0.8rem;
+  color: rgba(252, 251, 250, 0.4);
+}
+
+.legalLinks {
+  display: flex;
+  gap: 2rem;
+}
+
+.legalLink {
+  font-size: 0.8rem;
+  color: rgba(252, 251, 250, 0.4);
+}
+
+.legalLink:hover {
+  color: var(--color-primary);
+}
+
+@media (max-width: 968px) {
+  .container {
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .container {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+  
+  .bottomRow {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .legalLinks {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+}
