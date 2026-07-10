@@ -89,7 +89,8 @@ export default function SuperAdminDashboardPage() {
   const { user, loading, logout } = useAuth();
   const router = useRouter();
 
-  const [activeTab, setActiveTab] = useState<"inquiries" | "admins" | "users" | "properties">("inquiries");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "inquiries" | "admins" | "users" | "properties">("dashboard");
+  const [selectedInquiry, setSelectedInquiry] = useState<InterestInquiry | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isAddPropModalOpen, setIsAddPropModalOpen] = useState(false);
 
@@ -147,7 +148,9 @@ export default function SuperAdminDashboardPage() {
     setTabLoading(true);
 
     try {
-      if (activeTab === "inquiries") {
+      if (activeTab === "dashboard") {
+        await loadStats();
+      } else if (activeTab === "inquiries") {
         const data = await apiRequest("/interest");
         setInquiries(data);
       } else if (activeTab === "admins") {
@@ -432,7 +435,8 @@ export default function SuperAdminDashboardPage() {
 
   const getBreadcrumbTitle = () => {
     switch (activeTab) {
-      case "inquiries": return "Dashboard / Inquiries";
+      case "dashboard": return "Dashboard / General";
+      case "inquiries": return "Dashboard / Enquiries";
       case "admins": return "Supervision / Vendor Admins";
       case "users": return "Supervision / Registered Users";
       case "properties": return "Supervision / Global Properties";
@@ -454,14 +458,26 @@ export default function SuperAdminDashboardPage() {
         <nav className={styles.sidebarMenu}>
           <button
             onClick={() => {
+              setActiveTab("dashboard");
+              cancelEditAdmin();
+              setIsSidebarOpen(false);
+            }}
+            className={`${styles.menuItem} ${activeTab === "dashboard" ? styles.activeMenuItem : ""}`}
+          >
+            <LayoutDashboard size={18} strokeWidth={1.5} />
+            <span>Dashboard</span>
+          </button>
+
+          <button
+            onClick={() => {
               setActiveTab("inquiries");
               cancelEditAdmin();
               setIsSidebarOpen(false);
             }}
             className={`${styles.menuItem} ${activeTab === "inquiries" ? styles.activeMenuItem : ""}`}
           >
-            <LayoutDashboard size={18} strokeWidth={1.5} />
-            <span>Dashboard</span>
+            <MessageSquare size={18} strokeWidth={1.5} />
+            <span>Enquiries</span>
           </button>
 
           <button
@@ -556,7 +572,7 @@ export default function SuperAdminDashboardPage() {
           {/* Welcome greeting */}
           <div className={styles.welcomeSection}>
             <h1 className={styles.title}>
-              {activeTab === "inquiries" ? "Dashboard" : activeTab === "admins" ? "Manage Vendor Admins" : activeTab === "users" ? "Manage Customer Users" : "Global Property Listings"}
+              {activeTab === "dashboard" ? "System Dashboard" : activeTab === "inquiries" ? "Client Enquiries" : activeTab === "admins" ? "Manage Vendor Admins" : activeTab === "users" ? "Manage Customer Users" : "Global Property Listings"}
             </h1>
             <p className={styles.subtitle}>
               Welcome back, {user.name.split(" ")[0]}. Here is the current status of your real estate platform.
@@ -572,9 +588,8 @@ export default function SuperAdminDashboardPage() {
             <p style={{ textAlign: "center", padding: "3rem", color: "var(--color-dark-muted)" }}>Loading records...</p>
           ) : (
             <>
-              {activeTab === "inquiries" && (
+              {activeTab === "dashboard" && (
                 <div>
-                  {/* Stats Overview Grid inside Dashboard (Inquiries) view only */}
                   {stats && (
                     <div className={styles.statsGrid}>
                       <div className={styles.statCard}>
@@ -618,65 +633,75 @@ export default function SuperAdminDashboardPage() {
                       </div>
                     </div>
                   )}
+                </div>
+              )}
 
+              {activeTab === "inquiries" && (
+                <div>
                   <h3 style={{ fontFamily: "var(--font-serif)", fontSize: "1.4rem", marginBottom: "1.5rem", fontWeight: 400 }}>
-                    Recent Client Interest Inquiries
+                    Client Enquiries
                   </h3>
                   {inquiries.length > 0 ? (
-                    <div className={styles.inquiriesList}>
-                      {inquiries.map((inq) => {
-                        const formattedPrice = new Intl.NumberFormat("en-IN", {
-                          style: "currency",
-                          currency: "INR",
-                          maximumFractionDigits: 0,
-                        }).format(inq.property.price);
-
-                        return (
-                          <div
-                            key={inq._id}
-                            className={`${styles.inquiryCard} ${inq.status === "new" ? styles.inquiryNew : styles.inquiryReviewed}`}
-                          >
-                            <span className={`${styles.inquiryBadge} ${inq.status === "new" ? styles.badgeNew : styles.badgeReviewed}`}>
-                              {inq.status === "new" ? "New Query" : "Reviewed"}
-                            </span>
-
-                            <div className={styles.inquiryMeta}>
-                              <div className={styles.metaBlock}>
-                                <div className={styles.metaBlockTitle}>Prospect Information</div>
-                                <div className={styles.metaItem}>Name: <strong>{inq.user.name}</strong></div>
-                                <div className={styles.metaItem}>Phone: <strong>{inq.user.phone}</strong></div>
-                                <div className={styles.metaItem}>City: <strong>{inq.user.city}</strong></div>
-                                <div className={styles.metaItem}>Email ID: <strong>{inq.user.email}</strong></div>
-                              </div>
-
-                              <div className={styles.metaBlock}>
-                                <div className={styles.metaBlockTitle}>Property Details</div>
-                                <div className={styles.metaItem}>Ref ID: <strong>#{inq.property.propertyId}</strong></div>
-                                <div className={styles.metaItem}>Title: <strong>{inq.property.title}</strong></div>
-                                <div className={styles.metaItem}>Location: <strong>{inq.property.location}</strong></div>
-                                <div className={styles.metaItem}>Value: <strong>{formattedPrice}</strong></div>
-                                <div className={styles.metaItem}>Vendor Admin: <strong>{inq.property.addedByAdminName}</strong></div>
-                              </div>
-                            </div>
-
-                            <div className={styles.inquiryText}>
-                              <div style={{ fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--color-dark-muted)", marginBottom: "0.5rem" }}>
-                                Query Message:
-                              </div>
-                              "{inq.queryText}"
-                            </div>
-
-                            {inq.status === "new" && (
-                              <button
-                                onClick={() => handleMarkReviewed(inq._id)}
-                                className={styles.reviewActionBtn}
-                              >
-                                Mark as Reviewed
-                              </button>
-                            )}
-                          </div>
-                        );
-                      })}
+                    <div className={styles.tableContainer}>
+                      <table className={styles.table}>
+                        <thead>
+                          <tr>
+                            <th>Ref ID</th>
+                            <th>Customer</th>
+                            <th>Property</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {inquiries.map((inq) => {
+                            return (
+                              <tr key={inq._id}>
+                                <td style={{ fontWeight: 600 }}>#{inq.property.propertyId}</td>
+                                <td style={{ fontWeight: 500 }}>{inq.user.name}</td>
+                                <td>{inq.property.title}</td>
+                                <td>{new Date(inq.createdAt).toLocaleDateString()}</td>
+                                <td>
+                                  <span style={{ 
+                                    fontWeight: 600, 
+                                    color: inq.status === "new" ? "var(--color-primary-dark)" : "var(--color-dark-muted)",
+                                    backgroundColor: inq.status === "new" ? "rgba(197, 168, 128, 0.15)" : "rgba(0, 0, 0, 0.05)",
+                                    padding: "0.25rem 0.6rem",
+                                    fontSize: "0.75rem",
+                                    textTransform: "uppercase",
+                                    letterSpacing: "0.05em"
+                                  }}>
+                                    {inq.status === "new" ? "New" : "Reviewed"}
+                                  </span>
+                                </td>
+                                <td>
+                                  <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+                                    <button
+                                      onClick={() => setSelectedInquiry(inq)}
+                                      className={styles.actionBtn}
+                                      style={{ color: "var(--color-primary-dark)", textDecoration: "none", border: "1px solid var(--color-border)", padding: "0.25rem 0.5rem", fontSize: "0.8rem", display: "inline-flex", alignItems: "center", gap: "0.3rem" }}
+                                    >
+                                      <Eye size={14} />
+                                      <span>View More</span>
+                                    </button>
+                                    {inq.status === "new" && (
+                                      <button
+                                        onClick={() => handleMarkReviewed(inq._id)}
+                                        className={styles.actionBtn}
+                                        style={{ color: "#4eb570", textDecoration: "none", border: "1px solid var(--color-border)", padding: "0.25rem 0.5rem", fontSize: "0.8rem", display: "inline-flex", alignItems: "center", gap: "0.3rem" }}
+                                      >
+                                        <Check size={14} />
+                                        <span>Mark Reviewed</span>
+                                      </button>
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
                     </div>
                   ) : (
                     <div className={styles.emptyMsg}>No interest inquiries registered in the database.</div>
@@ -1121,6 +1146,96 @@ export default function SuperAdminDashboardPage() {
                 {propAddLoading ? "Saving Property..." : "Submit Property Listing"}
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Inquiry Detail Modal */}
+      {selectedInquiry && (
+        <div className={styles.modalOverlay} onClick={() => setSelectedInquiry(null)}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <button 
+              className={styles.modalCloseBtn} 
+              onClick={() => setSelectedInquiry(null)}
+              aria-label="Close Inquiry Details"
+            >
+              <X size={20} />
+            </button>
+
+            <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "1.6rem", fontWeight: 400, marginBottom: "1rem" }}>
+              Enquiry Details
+            </h2>
+            <span style={{ 
+              fontWeight: 600, 
+              color: selectedInquiry.status === "new" ? "var(--color-primary-dark)" : "var(--color-dark-muted)",
+              backgroundColor: selectedInquiry.status === "new" ? "rgba(197, 168, 128, 0.15)" : "rgba(0, 0, 0, 0.05)",
+              padding: "0.3rem 0.8rem",
+              fontSize: "0.75rem",
+              textTransform: "uppercase",
+              letterSpacing: "0.05em",
+              display: "inline-block",
+              marginBottom: "2.5rem"
+            }}>
+              {selectedInquiry.status === "new" ? "New Query" : "Reviewed"}
+            </span>
+
+            <div className={styles.inquiryMeta} style={{ marginBottom: "2rem" }}>
+              <div className={styles.metaBlock}>
+                <div className={styles.metaBlockTitle}>Prospect Information</div>
+                <div className={styles.metaItem}>Name: <strong>{selectedInquiry.user.name}</strong></div>
+                <div className={styles.metaItem}>Phone: <strong>{selectedInquiry.user.phone}</strong></div>
+                <div className={styles.metaItem}>City: <strong>{selectedInquiry.user.city}</strong></div>
+                <div className={styles.metaItem}>Email ID: <strong>{selectedInquiry.user.email}</strong></div>
+              </div>
+
+              <div className={styles.metaBlock}>
+                <div className={styles.metaBlockTitle}>Property Details</div>
+                <div className={styles.metaItem}>Ref ID: <strong>#{selectedInquiry.property.propertyId}</strong></div>
+                <div className={styles.metaItem}>Title: <strong>{selectedInquiry.property.title}</strong></div>
+                <div className={styles.metaItem}>Location: <strong>{selectedInquiry.property.location}</strong></div>
+                <div className={styles.metaItem}>Value: <strong>{new Intl.NumberFormat("en-IN", {
+                  style: "currency",
+                  currency: "INR",
+                  maximumFractionDigits: 0,
+                }).format(selectedInquiry.property.price)}</strong></div>
+                <div className={styles.metaItem}>Vendor Admin: <strong>{selectedInquiry.property.addedByAdminName}</strong></div>
+              </div>
+            </div>
+
+            <div className={styles.inquiryText} style={{ marginBottom: "2.5rem" }}>
+              <div style={{ fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--color-dark-muted)", marginBottom: "0.5rem" }}>
+                Query Message:
+              </div>
+              "{selectedInquiry.queryText}"
+            </div>
+
+            <div style={{ display: "flex", gap: "1rem" }}>
+              {selectedInquiry.status === "new" && (
+                <button
+                  onClick={() => {
+                    handleMarkReviewed(selectedInquiry._id);
+                    setSelectedInquiry(null);
+                  }}
+                  className={styles.submitBtn}
+                  style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.8rem 1.5rem" }}
+                >
+                  <Check size={16} />
+                  <span>Mark as Reviewed</span>
+                </button>
+              )}
+              <button
+                onClick={() => setSelectedInquiry(null)}
+                className={styles.submitBtn}
+                style={{ 
+                  backgroundColor: "transparent", 
+                  color: "var(--color-dark)", 
+                  border: "1px solid var(--color-border)",
+                  padding: "0.8rem 1.5rem"
+                }}
+              >
+                Close Window
+              </button>
+            </div>
           </div>
         </div>
       )}
