@@ -122,4 +122,37 @@ router.get("/me", auth, async (req, res) => {
   }
 });
 
+// @route   PUT api/auth/update-password
+// @desc    Update current user's password
+// @access  Private
+router.put("/update-password", auth, async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+
+  try {
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: "Please provide both current and new passwords" });
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Verify current password
+    const isMatch = await user.comparePassword(currentPassword);
+    if (!isMatch) {
+      return res.status(400).json({ error: "Incorrect current password" });
+    }
+
+    // Update password
+    user.password = newPassword;
+    await user.save(); // The pre('save') hook will handle hashing automatically
+
+    res.json({ message: "Password updated successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Server error while updating password" });
+  }
+});
+
 module.exports = router;

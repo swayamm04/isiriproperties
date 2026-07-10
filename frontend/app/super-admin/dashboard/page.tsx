@@ -19,7 +19,9 @@ import {
   MessageSquare, 
   Check,
   Shield,
-  Eye
+  Eye,
+  EyeOff,
+  Settings
 } from "lucide-react";
 import Link from "next/link";
 import styles from "./page.module.css";
@@ -89,7 +91,7 @@ export default function SuperAdminDashboardPage() {
   const { user, loading, logout } = useAuth();
   const router = useRouter();
 
-  const [activeTab, setActiveTab] = useState<"dashboard" | "inquiries" | "admins" | "users" | "properties">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "inquiries" | "admins" | "users" | "properties" | "settings">("dashboard");
   const [selectedInquiry, setSelectedInquiry] = useState<InterestInquiry | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isAddPropModalOpen, setIsAddPropModalOpen] = useState(false);
@@ -129,6 +131,15 @@ export default function SuperAdminDashboardPage() {
 
   // Property filtering state
   const [selectedAdminId, setSelectedAdminId] = useState("");
+
+  // Settings form state
+  const [settingsCurrentPassword, setSettingsCurrentPassword] = useState("");
+  const [settingsNewPassword, setSettingsNewPassword] = useState("");
+  const [settingsConfirmPassword, setSettingsConfirmPassword] = useState("");
+  const [settingsUpdateLoading, setSettingsUpdateLoading] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const loadStats = async () => {
     try {
@@ -415,6 +426,38 @@ export default function SuperAdminDashboardPage() {
     }
   };
 
+  // Actions: Update Password
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSettingsUpdateLoading(true);
+    setErrorMsg("");
+    setSuccessMsg("");
+
+    if (settingsNewPassword !== settingsConfirmPassword) {
+      setErrorMsg("New password and confirm password do not match.");
+      setSettingsUpdateLoading(false);
+      return;
+    }
+
+    try {
+      await apiRequest("/auth/update-password", {
+        method: "PUT",
+        body: JSON.stringify({
+          currentPassword: settingsCurrentPassword,
+          newPassword: settingsNewPassword,
+        }),
+      });
+      setSuccessMsg("Password updated successfully.");
+      setSettingsCurrentPassword("");
+      setSettingsNewPassword("");
+      setSettingsConfirmPassword("");
+    } catch (err: any) {
+      setErrorMsg(err.message || "Failed to update password.");
+    } finally {
+      setSettingsUpdateLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", backgroundColor: "var(--color-bg-light)" }}>
@@ -440,6 +483,7 @@ export default function SuperAdminDashboardPage() {
       case "admins": return "Supervision / Vendor Admins";
       case "users": return "Supervision / Registered Users";
       case "properties": return "Supervision / Global Properties";
+      case "settings": return "System / Account Settings";
       default: return "Dashboard";
     }
   };
@@ -515,6 +559,18 @@ export default function SuperAdminDashboardPage() {
             <span>All Properties</span>
           </button>
 
+          <button
+            onClick={() => {
+              setActiveTab("settings");
+              cancelEditAdmin();
+              setIsSidebarOpen(false);
+            }}
+            className={`${styles.menuItem} ${activeTab === "settings" ? styles.activeMenuItem : ""}`}
+          >
+            <Settings size={18} strokeWidth={1.5} />
+            <span>Settings</span>
+          </button>
+
           <div style={{ marginTop: "auto", borderTop: "1px solid rgba(197, 168, 128, 0.1)", paddingTop: "1rem" }}>
             <Link href="/" className={styles.menuItem}>
               <ExternalLink size={18} strokeWidth={1.5} />
@@ -572,7 +628,7 @@ export default function SuperAdminDashboardPage() {
           {/* Welcome greeting */}
           <div className={styles.welcomeSection}>
             <h1 className={styles.title}>
-              {activeTab === "dashboard" ? "System Dashboard" : activeTab === "inquiries" ? "Client Enquiries" : activeTab === "admins" ? "Manage Vendor Admins" : activeTab === "users" ? "Manage Customer Users" : "Global Property Listings"}
+              {activeTab === "dashboard" ? "System Dashboard" : activeTab === "inquiries" ? "Client Enquiries" : activeTab === "admins" ? "Manage Vendor Admins" : activeTab === "users" ? "Manage Customer Users" : activeTab === "settings" ? "Account Settings" : "Global Property Listings"}
             </h1>
             <p className={styles.subtitle}>
               Welcome back, {user.name.split(" ")[0]}. Here is the current status of your real estate platform.
@@ -990,6 +1046,91 @@ export default function SuperAdminDashboardPage() {
                   ) : (
                     <div className={styles.emptyMsg}>No property listings found.</div>
                   )}
+                </div>
+              )}
+              {activeTab === "settings" && (
+                <div style={{ maxWidth: "600px" }}>
+                  <div className={styles.formBox}>
+                    <h3 style={{ fontFamily: "var(--font-serif)", fontSize: "1.4rem", marginBottom: "1.5rem", fontWeight: 400 }}>
+                      Update Super Admin Password
+                    </h3>
+                    <form onSubmit={handleUpdatePassword}>
+                      <div className={styles.formGroup}>
+                        <label className={styles.label}>Current Password</label>
+                        <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                          <input
+                            type={showCurrentPassword ? "text" : "password"}
+                            placeholder="Enter current password"
+                            value={settingsCurrentPassword}
+                            onChange={(e) => setSettingsCurrentPassword(e.target.value)}
+                            className={styles.input}
+                            required
+                            style={{ width: "100%", paddingRight: "3rem" }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                            style={{ position: "absolute", right: "1rem", background: "none", border: "none", color: "var(--color-dark-muted)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}
+                            aria-label={showCurrentPassword ? "Hide password" : "Show password"}
+                          >
+                            {showCurrentPassword ? <EyeOff size={18} strokeWidth={1.5} /> : <Eye size={18} strokeWidth={1.5} />}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className={styles.formGroup}>
+                        <label className={styles.label}>New Password</label>
+                        <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                          <input
+                            type={showNewPassword ? "text" : "password"}
+                            placeholder="Enter new password"
+                            value={settingsNewPassword}
+                            onChange={(e) => setSettingsNewPassword(e.target.value)}
+                            className={styles.input}
+                            required
+                            minLength={6}
+                            style={{ width: "100%", paddingRight: "3rem" }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowNewPassword(!showNewPassword)}
+                            style={{ position: "absolute", right: "1rem", background: "none", border: "none", color: "var(--color-dark-muted)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}
+                            aria-label={showNewPassword ? "Hide password" : "Show password"}
+                          >
+                            {showNewPassword ? <EyeOff size={18} strokeWidth={1.5} /> : <Eye size={18} strokeWidth={1.5} />}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className={styles.formGroup}>
+                        <label className={styles.label}>Confirm New Password</label>
+                        <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                          <input
+                            type={showConfirmPassword ? "text" : "password"}
+                            placeholder="Confirm new password"
+                            value={settingsConfirmPassword}
+                            onChange={(e) => setSettingsConfirmPassword(e.target.value)}
+                            className={styles.input}
+                            required
+                            minLength={6}
+                            style={{ width: "100%", paddingRight: "3rem" }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            style={{ position: "absolute", right: "1rem", background: "none", border: "none", color: "var(--color-dark-muted)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}
+                            aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                          >
+                            {showConfirmPassword ? <EyeOff size={18} strokeWidth={1.5} /> : <Eye size={18} strokeWidth={1.5} />}
+                          </button>
+                        </div>
+                      </div>
+
+                      <button type="submit" className={styles.submitBtn} disabled={settingsUpdateLoading} style={{ width: "100%" }}>
+                        {settingsUpdateLoading ? "Updating..." : "Update Password"}
+                      </button>
+                    </form>
+                  </div>
                 </div>
               )}
             </>
