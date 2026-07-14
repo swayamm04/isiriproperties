@@ -61,7 +61,6 @@ export default function AboutUs() {
           <p className={styles.description}>
             At I Siri Properties, we believe in more than just buildings – we believe in creating spaces that inspire, connect, and elevate lives. With years of experience in real estate, we are committed to providing exceptional service and trusted solutions.
           </p>
-          {renderCards(`${styles.featuresGrid} ${styles.desktopOnly}`)}
         </div>
       </div>
       {renderCards(`${styles.featuresGrid} ${styles.mobileOnly}`)}
