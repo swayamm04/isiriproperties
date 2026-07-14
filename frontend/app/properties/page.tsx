@@ -105,40 +105,16 @@ function PropertiesList() {
       {/* Grid and Filters */}
       <section className={styles.section}>
         {/* Toggle between Available and Sold Out */}
-        <div style={{ display: "flex", gap: "1rem", borderBottom: "1px solid var(--color-border)", marginBottom: "2.5rem" }}>
+        <div className={styles.tabsContainer}>
           <button
             onClick={() => setViewStatus("available")}
-            className={`${styles.resetBtn}`}
-            style={{
-              background: "none",
-              border: "none",
-              borderBottom: viewStatus === "available" ? "2px solid var(--color-primary)" : "none",
-              padding: "1rem",
-              fontWeight: 600,
-              fontSize: "0.85rem",
-              textTransform: "uppercase",
-              letterSpacing: "0.1em",
-              color: viewStatus === "available" ? "var(--color-primary-dark)" : "var(--color-dark-muted)",
-              cursor: "pointer",
-            }}
+            className={`${styles.tabBtn} ${viewStatus === "available" ? styles.activeTab : ""}`}
           >
             Available Portfolio
           </button>
           <button
             onClick={() => setViewStatus("sold")}
-            className={`${styles.resetBtn}`}
-            style={{
-              background: "none",
-              border: "none",
-              borderBottom: viewStatus === "sold" ? "2px solid var(--color-primary)" : "none",
-              padding: "1rem",
-              fontWeight: 600,
-              fontSize: "0.85rem",
-              textTransform: "uppercase",
-              letterSpacing: "0.1em",
-              color: viewStatus === "sold" ? "var(--color-primary-dark)" : "var(--color-dark-muted)",
-              cursor: "pointer",
-            }}
+            className={`${styles.tabBtn} ${viewStatus === "sold" ? styles.activeTab : ""}`}
           >
             Sold Out Section
           </button>

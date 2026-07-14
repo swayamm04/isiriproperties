@@ -44,8 +44,8 @@ const propertySchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ["Villa", "Chalet", "Penthouse"],
-      default: "Villa",
+      enum: ["Villa", "Chalet", "Penthouse", "Site"],
+      required: true,
     },
     addedBy: {
       type: mongoose.Schema.Types.ObjectId,

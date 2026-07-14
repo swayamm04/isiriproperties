@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { useAuth } from "@/context/authContext";
 import { apiRequest, getImageUrl } from "@/utils/api";
 import { 
@@ -95,6 +96,7 @@ export default function SuperAdminDashboardPage() {
   const [selectedInquiry, setSelectedInquiry] = useState<InterestInquiry | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isAddPropModalOpen, setIsAddPropModalOpen] = useState(false);
+  const [isAddAdminModalOpen, setIsAddAdminModalOpen] = useState(false);
 
   // State values
   const [stats, setStats] = useState<Stats | null>(null);
@@ -252,6 +254,10 @@ export default function SuperAdminDashboardPage() {
       setAdminName("");
       setAdminEmail("");
       setAdminPassword("");
+      setTimeout(() => {
+        setIsAddAdminModalOpen(false);
+        setSuccessMsg("");
+      }, 2000);
       loadStats();
       loadTabData();
     } catch (err: any) {
@@ -334,11 +340,7 @@ export default function SuperAdminDashboardPage() {
     setAdminName(adm.name);
     setAdminEmail(adm.email);
     setAdminPassword("");
-    
-    const formBox = document.getElementById("adminFormBox");
-    if (formBox) {
-      formBox.scrollIntoView({ behavior: "smooth" });
-    }
+    setIsAddAdminModalOpen(true);
   };
 
   const cancelEditAdmin = () => {
@@ -346,6 +348,7 @@ export default function SuperAdminDashboardPage() {
     setAdminName("");
     setAdminEmail("");
     setAdminPassword("");
+    setIsAddAdminModalOpen(false);
   };
 
   // Actions: Delete Admin
@@ -493,10 +496,7 @@ export default function SuperAdminDashboardPage() {
       {/* Left Sidebar */}
       <aside className={`${styles.sidebar} ${isSidebarOpen ? styles.sidebarOpen : ""}`}>
         <div className={styles.sidebarBrand}>
-          <Building2 className={styles.brandLogo} size={22} strokeWidth={1.5} />
-          <span className={styles.brandName}>
-            I Siri <span className={styles.brandGold}>Prop</span>
-          </span>
+          <Image src="/logo.png" alt="I Siri Properties" width={160} height={50} style={{ objectFit: "contain", height: "auto" }} />
         </div>
 
         <nav className={styles.sidebarMenu}>
@@ -571,7 +571,7 @@ export default function SuperAdminDashboardPage() {
             <span>Settings</span>
           </button>
 
-          <div style={{ marginTop: "auto", borderTop: "1px solid rgba(197, 168, 128, 0.1)", paddingTop: "1rem" }}>
+          <div style={{ marginTop: "auto", borderTop: "1px solid rgba(76, 131, 161, 0.1)", paddingTop: "1rem" }}>
             <Link href="/" className={styles.menuItem}>
               <ExternalLink size={18} strokeWidth={1.5} />
               <span>Return to site</span>
@@ -722,7 +722,7 @@ export default function SuperAdminDashboardPage() {
                                   <span style={{ 
                                     fontWeight: 600, 
                                     color: inq.status === "new" ? "var(--color-primary-dark)" : "var(--color-dark-muted)",
-                                    backgroundColor: inq.status === "new" ? "rgba(197, 168, 128, 0.15)" : "rgba(0, 0, 0, 0.05)",
+                                    backgroundColor: inq.status === "new" ? "rgba(76, 131, 161, 0.15)" : "rgba(0, 0, 0, 0.05)",
                                     padding: "0.25rem 0.6rem",
                                     fontSize: "0.75rem",
                                     textTransform: "uppercase",
@@ -766,12 +766,32 @@ export default function SuperAdminDashboardPage() {
               )}
 
               {activeTab === "admins" && (
-                <div style={{ gridTemplateColumns: "1.2fr 0.8fr", gap: "3rem", alignItems: "start", display: "grid" }}>
-                  {/* Active Admins List */}
-                  <div>
-                    <h3 style={{ fontFamily: "var(--font-serif)", fontSize: "1.4rem", marginBottom: "1.5rem", fontWeight: 400 }}>
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", flexWrap: "wrap", gap: "1rem" }}>
+                    <h3 style={{ fontFamily: "var(--font-serif)", fontSize: "1.4rem", fontWeight: 400, margin: 0 }}>
                       Active Vendor Accounts
                     </h3>
+                    <button
+                      onClick={() => {
+                        cancelEditAdmin();
+                        setIsAddAdminModalOpen(true);
+                      }}
+                      className={styles.submitBtn}
+                      style={{ 
+                        padding: "0.6rem 1.5rem", 
+                        fontSize: "0.8rem", 
+                        display: "flex", 
+                        alignItems: "center", 
+                        gap: "0.5rem" 
+                      }}
+                    >
+                      <PlusCircle size={16} />
+                      <span>Add Admin</span>
+                    </button>
+                  </div>
+
+                  {/* Active Admins List */}
+                  <div>
                     {admins.length > 0 ? (
                       <div className={styles.tableContainer}>
                         <table className={styles.table}>
@@ -813,69 +833,8 @@ export default function SuperAdminDashboardPage() {
                         </table>
                       </div>
                     ) : (
-                      <div className={styles.emptyMsg}>No admins registered yet. Fill out the registration form.</div>
+                      <div className={styles.emptyMsg}>No admins registered yet. Click "Add Admin" to register one.</div>
                     )}
-                  </div>
-
-                  {/* Register Form */}
-                  <div className={styles.formBox} id="adminFormBox">
-                    <h3 style={{ fontFamily: "var(--font-serif)", fontSize: "1.4rem", marginBottom: "1.5rem", fontWeight: 400 }}>
-                      {editingAdminId ? "Edit Admin Details" : "Register Vendor Admin"}
-                    </h3>
-                    <form onSubmit={handleAddAdminSubmit}>
-                      <div className={styles.formGroup}>
-                        <label className={styles.label}>Admin Name</label>
-                        <input
-                          type="text"
-                          placeholder="e.g. Rachel Green"
-                          value={adminName}
-                          onChange={(e) => setAdminName(e.target.value)}
-                          className={styles.input}
-                          required
-                        />
-                      </div>
-
-                      <div className={styles.formGroup}>
-                        <label className={styles.label}>Email ID</label>
-                        <input
-                          type="email"
-                          placeholder="e.g. rachel@isiri.com"
-                          value={adminEmail}
-                          onChange={(e) => setAdminEmail(e.target.value)}
-                          className={styles.input}
-                          required
-                        />
-                      </div>
-
-                      <div className={styles.formGroup}>
-                        <label className={styles.label}>
-                          {editingAdminId ? "New Password (optional)" : "Default Password"}
-                        </label>
-                        <input
-                          type="password"
-                          placeholder={editingAdminId ? "Leave blank to keep current" : "••••••••"}
-                          value={adminPassword}
-                          onChange={(e) => setAdminPassword(e.target.value)}
-                          className={styles.input}
-                          required={!editingAdminId}
-                        />
-                      </div>
-
-                      <button type="submit" className={styles.submitBtn} disabled={addAdminLoading} style={{ width: "100%", marginBottom: editingAdminId ? "1rem" : 0 }}>
-                        {addAdminLoading ? "Saving..." : editingAdminId ? "Update Admin Account" : "Add Admin Account"}
-                      </button>
-                      
-                      {editingAdminId && (
-                        <button 
-                          type="button" 
-                          onClick={cancelEditAdmin}
-                          className={styles.submitBtn}
-                          style={{ width: "100%", backgroundColor: "transparent", color: "var(--color-dark)", border: "1px solid var(--color-border)" }}
-                        >
-                          Cancel Edit
-                        </button>
-                      )}
-                    </form>
                   </div>
                 </div>
               )}
@@ -912,13 +871,7 @@ export default function SuperAdminDashboardPage() {
                               </td>
                               <td>
                                 <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-                                  <button
-                                    onClick={() => handleToggleBlockUser(u._id, u.name, u.isBlocked)}
-                                    className={`${styles.actionBtn} ${u.isBlocked ? styles.unblockBtn : styles.blockBtn}`}
-                                    style={{ textDecoration: "none", border: "1px solid var(--color-border)", padding: "0.25rem 0.75rem", fontSize: "0.8rem" }}
-                                  >
-                                    {u.isBlocked ? "Unblock" : "Block"}
-                                  </button>
+
                                   <button
                                     onClick={() => handleDeleteUser(u._id, u.name)}
                                     title="Delete User"
@@ -1011,7 +964,7 @@ export default function SuperAdminDashboardPage() {
                                   <img
                                     src={getImageUrl(prop.images[0])}
                                     alt="thumb"
-                                    style={{ width: "60px", height: "40px", objectFit: "contain", backgroundColor: "#FCFBFA", border: "1px solid var(--color-border)" }}
+                                    style={{ width: "60px", height: "40px", objectFit: "contain", backgroundColor: "#FFFFFF", border: "1px solid var(--color-border)" }}
                                   />
                                 </td>
                                 <td style={{ fontWeight: 500 }}>{prop.title}</td>
@@ -1028,11 +981,33 @@ export default function SuperAdminDashboardPage() {
                                     <button
                                       onClick={() => handleToggleSoldProperty(prop._id, prop.title, prop.status)}
                                       className={styles.actionBtn}
-                                      style={{ color: "var(--color-primary-dark)", textDecoration: "none", border: "1px solid var(--color-border)", padding: "0.25rem 0.5rem", fontSize: "0.8rem" }}
+                                      style={{ 
+                                        color: "var(--color-dark)", 
+                                        textDecoration: "none", 
+                                        border: "1px solid var(--color-border)", 
+                                        padding: "0.4rem 0.8rem", 
+                                        fontSize: "0.75rem",
+                                        whiteSpace: "nowrap",
+                                        backgroundColor: "var(--color-bg-light)",
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                        justifyContent: "center"
+                                      }}
                                     >
                                       {prop.status === "available" ? "Mark Sold" : "Mark Available"}
                                     </button>
-                                    <Link href={`/properties/${prop._id}`} className={`${styles.actionBtn} ${styles.viewBtn}`} style={{ textDecoration: "none", border: "1px solid var(--color-border)", padding: "0.25rem 0.5rem", fontSize: "0.8rem" }}>
+                                    <Link href={`/properties/${prop._id}`} className={`${styles.actionBtn} ${styles.viewBtn}`} style={{ 
+                                      textDecoration: "none", 
+                                      border: "1px solid var(--color-border)", 
+                                      padding: "0.4rem 0.8rem", 
+                                      fontSize: "0.75rem",
+                                      whiteSpace: "nowrap",
+                                      backgroundColor: "var(--color-bg-light)",
+                                      display: "inline-flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      color: "var(--color-primary-dark)"
+                                    }}>
                                       View
                                     </Link>
                                   </div>
@@ -1137,6 +1112,82 @@ export default function SuperAdminDashboardPage() {
           )}
         </main>
       </div>
+
+      {/* Add Admin Modal */}
+      {isAddAdminModalOpen && (
+        <div className={styles.modalOverlay} onClick={() => setIsAddAdminModalOpen(false)}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()} style={{ maxWidth: "500px" }}>
+            <button 
+              className={styles.modalCloseBtn} 
+              onClick={() => setIsAddAdminModalOpen(false)}
+              aria-label="Close Admin Modal"
+            >
+              <X size={20} />
+            </button>
+
+            <h2 className={styles.modalTitle} style={{ fontFamily: "var(--font-serif)", fontSize: "1.6rem", fontWeight: 400, marginBottom: "2rem" }}>
+              {editingAdminId ? "Edit Admin Details" : "Register Vendor Admin"}
+            </h2>
+            <form onSubmit={handleAddAdminSubmit}>
+              {errorMsg && <div className={styles.errorBox}>{errorMsg}</div>}
+              {successMsg && <div className={styles.successBox}>{successMsg}</div>}
+
+              <div className={styles.formGroup}>
+                <label className={styles.label}>Admin Name</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Rachel Green"
+                  value={adminName}
+                  onChange={(e) => setAdminName(e.target.value)}
+                  className={styles.input}
+                  required
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.label}>Email ID</label>
+                <input
+                  type="email"
+                  placeholder="e.g. rachel@isiri.com"
+                  value={adminEmail}
+                  onChange={(e) => setAdminEmail(e.target.value)}
+                  className={styles.input}
+                  required
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.label}>
+                  {editingAdminId ? "New Password (optional)" : "Default Password"}
+                </label>
+                <input
+                  type="password"
+                  placeholder={editingAdminId ? "Leave blank to keep current" : "••••••••"}
+                  value={adminPassword}
+                  onChange={(e) => setAdminPassword(e.target.value)}
+                  className={styles.input}
+                  required={!editingAdminId}
+                />
+              </div>
+
+              <div className={styles.modalActionContainer} style={{ marginTop: "2rem" }}>
+                <button type="submit" className={styles.submitBtn} disabled={addAdminLoading}>
+                  {addAdminLoading ? "Saving..." : editingAdminId ? "Update Admin Account" : "Add Admin Account"}
+                </button>
+                
+                <button 
+                  type="button" 
+                  onClick={() => setIsAddAdminModalOpen(false)}
+                  className={styles.submitBtn}
+                  style={{ backgroundColor: "transparent", color: "var(--color-dark)", border: "1px solid var(--color-border)" }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Add Property Modal (Super Admin) */}
       {isAddPropModalOpen && (
@@ -1303,13 +1354,13 @@ export default function SuperAdminDashboardPage() {
               <X size={20} />
             </button>
 
-            <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "1.6rem", fontWeight: 400, marginBottom: "1rem" }}>
+            <h2 className={styles.modalTitle} style={{ fontFamily: "var(--font-serif)", fontSize: "1.6rem", fontWeight: 400, marginBottom: "1rem" }}>
               Enquiry Details
             </h2>
-            <span style={{ 
+            <span className={styles.modalBadge} style={{ 
               fontWeight: 600, 
               color: selectedInquiry.status === "new" ? "var(--color-primary-dark)" : "var(--color-dark-muted)",
-              backgroundColor: selectedInquiry.status === "new" ? "rgba(197, 168, 128, 0.15)" : "rgba(0, 0, 0, 0.05)",
+              backgroundColor: selectedInquiry.status === "new" ? "rgba(76, 131, 161, 0.15)" : "rgba(0, 0, 0, 0.05)",
               padding: "0.3rem 0.8rem",
               fontSize: "0.75rem",
               textTransform: "uppercase",
@@ -1322,7 +1373,7 @@ export default function SuperAdminDashboardPage() {
 
             <div className={styles.inquiryMeta} style={{ marginBottom: "2rem" }}>
               <div className={styles.metaBlock}>
-                <div className={styles.metaBlockTitle}>Prospect Information</div>
+                <div className={styles.metaBlockTitle}>Buyer Details</div>
                 <div className={styles.metaItem}>Name: <strong>{selectedInquiry.user.name}</strong></div>
                 <div className={styles.metaItem}>Phone: <strong>{selectedInquiry.user.phone}</strong></div>
                 <div className={styles.metaItem}>City: <strong>{selectedInquiry.user.city}</strong></div>
@@ -1350,7 +1401,7 @@ export default function SuperAdminDashboardPage() {
               "{selectedInquiry.queryText}"
             </div>
 
-            <div style={{ display: "flex", gap: "1rem" }}>
+            <div className={styles.modalActionContainer}>
               {selectedInquiry.status === "new" && (
                 <button
                   onClick={() => {

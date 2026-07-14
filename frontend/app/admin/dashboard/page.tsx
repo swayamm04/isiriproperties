@@ -254,7 +254,7 @@ export default function AdminDashboardPage() {
             <span>Settings</span>
           </button>
 
-          <div style={{ marginTop: "auto", borderTop: "1px solid rgba(197, 168, 128, 0.1)", paddingTop: "1rem" }}>
+          <div style={{ marginTop: "auto", borderTop: "1px solid rgba(76, 131, 161, 0.1)", paddingTop: "1rem" }}>
             <Link href="/" className={styles.menuItem}>
               <ExternalLink size={18} strokeWidth={1.5} />
               <span>Return to site</span>

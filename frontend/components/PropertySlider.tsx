@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, ArrowUpRight, Compass } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import PropertyCard from "./PropertyCard";
 import { apiRequest } from "@/utils/api";
 import styles from "./PropertySlider.module.css";
@@ -17,14 +17,12 @@ interface Property {
   beds: number;
   baths: number;
   area: string;
-  type: "Villa" | "Chalet" | "Penthouse";
+  type: "Villa" | "Chalet" | "Penthouse" | "Site";
   description: string;
 }
 
 export default function PropertySlider() {
   const sliderRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
 
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,35 +42,7 @@ export default function PropertySlider() {
     loadFeaturedProperties();
   }, []);
 
-  const checkScrollLimits = () => {
-    if (sliderRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = sliderRef.current;
-      setCanScrollLeft(scrollLeft > 5);
-      setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 5);
-    }
-  };
-
-  useEffect(() => {
-    const slider = sliderRef.current;
-    if (slider) {
-      slider.addEventListener("scroll", checkScrollLimits);
-      // Run once initially
-      checkScrollLimits();
-    }
-    return () => {
-      if (slider) {
-        slider.removeEventListener("scroll", checkScrollLimits);
-      }
-    };
-  }, [properties]); // Trigger when properties are loaded
-
-  const handleScroll = (direction: "left" | "right") => {
-    if (sliderRef.current) {
-      const { clientWidth } = sliderRef.current;
-      const scrollAmount = direction === "left" ? -(clientWidth * 0.75) : (clientWidth * 0.75);
-      sliderRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
-    }
-  };
+  // Slider items mapped below
 
   if (loading) {
     return (
@@ -90,29 +60,13 @@ export default function PropertySlider() {
         {/* Header Block */}
         <div className={styles.header}>
           <div className={styles.titleBlock}>
-            <span className={styles.subtitle}>Curated Portfolio</span>
-            <h2 className={styles.title}>Most Viewed Properties</h2>
+            <span className={styles.subtitle}>FEATURED PROPERTIES</span>
+            <h2 className={styles.title}>Explore Our Best Properties</h2>
           </div>
-          {properties.length > 0 && (
-            <div className={styles.controls}>
-              <button
-                onClick={() => handleScroll("left")}
-                className={`${styles.controlBtn} ${!canScrollLeft ? styles.controlBtnDisabled : ""}`}
-                disabled={!canScrollLeft}
-                aria-label="Scroll Left"
-              >
-                <ArrowLeft size={20} strokeWidth={1.5} />
-              </button>
-              <button
-                onClick={() => handleScroll("right")}
-                className={`${styles.controlBtn} ${!canScrollRight ? styles.controlBtnDisabled : ""}`}
-                disabled={!canScrollRight}
-                aria-label="Scroll Right"
-              >
-                <ArrowRight size={20} strokeWidth={1.5} />
-              </button>
-            </div>
-          )}
+          <Link href="/properties" className={styles.viewAllBtn}>
+            View All Properties <ArrowRight size={16} />
+          </Link>
+          {/* Removed old navigation controls to match layout */}
         </div>
 
         {/* Horizontal Slider container */}
@@ -138,19 +92,7 @@ export default function PropertySlider() {
             );
           })}
 
-          {/* End "View More" Card */}
-          <Link href="/properties" className={styles.moreCard}>
-            <div className={styles.moreIcon}>
-              <Compass size={40} strokeWidth={1.2} />
-            </div>
-            <h3 className={styles.moreTitle}>Explore All Listings</h3>
-            <p className={styles.moreText}>
-              Discover our complete collection of villas, chalets, and premium penthouses.
-            </p>
-            <div className={styles.moreBtn}>
-              View More <ArrowUpRight size={14} style={{ display: "inline-block", marginLeft: "4px", verticalAlign: "middle" }} />
-            </div>
-          </Link>
+
         </div>
       </div>
     </section>

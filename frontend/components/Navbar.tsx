@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Menu, X, Building2, Eye, EyeOff } from "lucide-react";
+import { Menu, X, Building2, Eye, EyeOff, Phone } from "lucide-react";
 import { useAuth } from "@/context/authContext";
 import styles from "./Navbar.module.css";
 
@@ -89,7 +90,7 @@ export default function Navbar() {
         await signup({ name, email, phone, city, password });
       }
       closeAuthModal();
-    } catch (err: any) {
+    } catch {
       // Errors handled by context
     } finally {
       setAuthLoading(false);
@@ -121,8 +122,7 @@ export default function Navbar() {
       <nav className={`${styles.navbar} ${scrolled ? styles.scrolled : ""}`}>
         <div className={styles.container}>
           <Link href="/" className={styles.logo} onClick={closeMenu}>
-            <Building2 className={styles.logoGold} size={24} strokeWidth={1.5} />
-            <span>I Siri <span className={styles.logoGold}>Properties</span></span>
+            <Image src="/logo.png" alt="I Siri Properties" width={180} height={60} style={{ objectFit: "contain", height: "auto" }} />
           </Link>
 
           {/* Desktop Nav Links */}
@@ -191,12 +191,22 @@ export default function Navbar() {
                 </button>
               </div>
             ) : (
-              <button 
-                onClick={() => openAuthModal("login")} 
-                className={styles.ctaButton}
-              >
-                Login Free
-              </button>
+              <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+                <button 
+                  onClick={() => openAuthModal("login")} 
+                  className={styles.ctaButton}
+                  style={{ backgroundColor: "transparent", color: "var(--color-dark)", border: "1px solid var(--color-border)" }}
+                >
+                  Login
+                </button>
+                <a 
+                  href="tel:+12345678900" 
+                  className={styles.ctaButton}
+                >
+                  <Phone size={16} />
+                  +1 234 567 8900
+                </a>
+              </div>
             )}
           </div>
 
@@ -397,7 +407,7 @@ export default function Navbar() {
                       right: "1rem",
                       background: "none",
                       border: "none",
-                      color: "rgba(252, 251, 250, 0.6)",
+                      color: "rgba(255, 255, 255, 0.6)",
                       cursor: "pointer",
                       display: "flex",
                       alignItems: "center",

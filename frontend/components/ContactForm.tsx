@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Mail, Phone, MapPin, Clock } from "lucide-react";
-import { PROPERTIES } from "@/data/properties";
 import styles from "./ContactForm.module.css";
 
 export default function ContactForm() {
@@ -10,7 +9,6 @@ export default function ContactForm() {
     name: "",
     email: "",
     phone: "",
-    property: "",
     message: "",
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -25,7 +23,7 @@ export default function ContactForm() {
     // Simulate API request
     setTimeout(() => {
       setIsSubmitted(true);
-      setFormData({ name: "", email: "", phone: "", property: "", message: "" });
+      setFormData({ name: "", email: "", phone: "", message: "" });
     }, 800);
   };
 
@@ -141,23 +139,7 @@ export default function ContactForm() {
                   />
                 </div>
 
-                <div className={styles.inputGroup}>
-                  <label htmlFor="property" className={styles.label}>Property of Interest</label>
-                  <select
-                    id="property"
-                    name="property"
-                    value={formData.property}
-                    onChange={handleChange}
-                    className={styles.select}
-                  >
-                    <option value="">General Inquiry</option>
-                    {PROPERTIES.map((property) => (
-                      <option key={property.id} value={property.title}>
-                        {property.title}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+
 
                 <div className={`${styles.inputGroup} ${styles.fullWidth}`}>
                   <label htmlFor="message" className={styles.label}>Message / Architectural Focus</label>

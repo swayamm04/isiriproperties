@@ -1,21 +1,30 @@
 :root {
-  --color-primary: #C5A880;
-  --color-primary-dark: #A38A5F;
-  --color-bg-light: #F9F6F0;
-  --color-bg-white: #FCFBFA;
-  --color-dark: #151515;
-  --color-dark-muted: #555555;
-  --color-border: #E5DFD5;
+  --color-primary: #4C83A1;
+  --color-primary-dark: #FF535B;
+  --color-bg-light: #F2F6F8;
+  --color-bg-white: #FFFFFF;
+  --color-dark: #1A262E;
+  --color-dark-muted: #5E6E78;
+  --color-border: #DCE5EB;
   --color-border-dark: #333333;
+
+  /* Design System Variables */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+  
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 * {
   box-sizing: border-box;
   padding: 0;
   margin: 0;
-  border-radius: 0px !important; /* Avoid curved corners */
-  text-shadow: none !important;   /* Avoid glow effects */
-  box-shadow: none !important;    /* Avoid glowing/blurry drop shadows */
 }
 
 html {

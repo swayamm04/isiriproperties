@@ -19,7 +19,7 @@ interface Property {
   beds: number;
   baths: number;
   area: string;
-  type: "Villa" | "Chalet" | "Penthouse";
+  type: "Villa" | "Chalet" | "Penthouse" | "Site";
   description: string;
   status: "available" | "sold";
 }
