@@ -31,15 +31,15 @@
 }
 
 .slidesWrapper {
-  position: relative;
-  min-height: 380px; /* Increased reserved space for the absolute text blocks */
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
   width: 100%;
 }
 
 .textBlock {
-  position: absolute;
-  top: 0;
-  left: 0;
+  grid-column: 1 / -1;
+  grid-row: 1 / -1;
   width: 100%;
   opacity: 0;
   transition: opacity 1.5s ease-in-out;
@@ -159,10 +159,6 @@
 
   .textContainer {
     max-width: 100%;
-  }
-
-  .slidesWrapper {
-    min-height: 280px;
   }
 
   .subtitle {
