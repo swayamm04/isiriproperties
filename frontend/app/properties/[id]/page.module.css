@@ -32,6 +32,18 @@
     grid-template-columns: 1fr;
     gap: 2.5rem;
   }
+
+  .title {
+    /* Responsive sizing handled by clamp() globally */
+  }
+
+  .price {
+    /* Responsive sizing handled by clamp() globally */
+  }
+
+  .location {
+    /* Responsive sizing handled by clamp() globally */
+  }
 }
 
 /* Image Carousel */
@@ -135,14 +147,30 @@
   border-color: var(--color-primary);
 }
 
-/* Detail Info */
 .infoPanel {
   display: flex;
   flex-direction: column;
 }
 
+.headerSection {
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.titleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
 .refNumber {
-  font-size: 0.75rem;
+  font-size: clamp(0.7rem, 2vw, 0.75rem);
   text-transform: uppercase;
   letter-spacing: 0.15em;
   color: var(--color-primary);
@@ -151,43 +179,31 @@
 }
 
 .title {
-  font-size: 2.5rem;
+  font-size: clamp(1.6rem, 4vw, 2.5rem);
   line-height: 1.15;
   color: var(--color-dark);
-  margin-bottom: 0.75rem;
   font-weight: 400;
+  margin: 0;
+  flex: 1;
+  word-break: break-word;
+  min-width: 0;
 }
 
 .location {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.95rem;
+  font-size: clamp(0.85rem, 2.5vw, 0.95rem);
   color: var(--color-dark-muted);
-  margin-bottom: 2rem;
-}
-
-.priceBlock {
-  border-top: 1px solid var(--color-border);
-  border-bottom: 1px solid var(--color-border);
-  padding: 1.5rem 0;
-  margin-bottom: 2rem;
-}
-
-.priceLabel {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--color-dark-muted);
-  display: block;
-  margin-bottom: 0.25rem;
 }
 
 .price {
-  font-family: var(--font-serif);
-  font-size: 2.2rem;
+  font-family: var(--font-sans);
+  font-size: clamp(1.4rem, 3.5vw, 2.2rem);
   color: var(--color-primary-dark);
-  font-weight: 500;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .specsTable {
@@ -362,11 +378,11 @@
 }
 
 .modalTitle {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-size: 1.8rem;
   color: #FFFFFF;
   margin-bottom: 0.5rem;
-  font-weight: 400;
+  font-weight: 600;
 }
 
 .modalSubtitle {

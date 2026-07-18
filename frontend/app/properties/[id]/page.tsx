@@ -210,16 +210,16 @@ export default function PropertyDetailPage() {
 
           {/* Right Column: Detail Information */}
           <div className={styles.infoPanel}>
-            <span className={styles.refNumber}>Ref ID: #{property.propertyId}</span>
-            <h1 className={styles.title}>{property.title}</h1>
-            <span className={styles.location}>
-              <MapPin size={16} style={{ color: "var(--color-primary)" }} strokeWidth={1.5} />
-              {property.location}
-            </span>
-
-            <div className={styles.priceBlock}>
-              <span className={styles.priceLabel}>Advisory Value</span>
-              <span className={styles.price}>{formattedPrice}</span>
+            <div className={styles.headerSection}>
+              <span className={styles.refNumber}>Ref ID: #{property.propertyId}</span>
+              <div className={styles.titleRow}>
+                <h1 className={styles.title}>{property.title}</h1>
+                <span className={styles.price}>{formattedPrice}</span>
+              </div>
+              <span className={styles.location}>
+                <MapPin size={16} style={{ color: "var(--color-primary)" }} strokeWidth={1.5} />
+                {property.location}
+              </span>
             </div>
 
             {/* Specifications Table */}
