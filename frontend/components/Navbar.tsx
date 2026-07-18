@@ -195,17 +195,9 @@ export default function Navbar() {
                 <button 
                   onClick={() => openAuthModal("login")} 
                   className={styles.ctaButton}
-                  style={{ backgroundColor: "transparent", color: "var(--color-dark)", border: "1px solid var(--color-border)" }}
                 >
-                  Login
+                  Login Free
                 </button>
-                <a 
-                  href="tel:+12345678900" 
-                  className={styles.ctaButton}
-                >
-                  <Phone size={16} />
-                  +1 234 567 8900
-                </a>
               </div>
             )}
           </div>
@@ -294,8 +286,7 @@ export default function Navbar() {
                   closeMenu();
                   window.location.href = "/";
                 }} 
-                className={styles.ctaButton} 
-                style={{ width: "100%", textAlign: "center" }}
+                className={styles.mobileAuthBtn} 
               >
                 Logout
               </button>
@@ -303,8 +294,7 @@ export default function Navbar() {
           ) : (
             <button 
               onClick={() => openAuthModal("login")} 
-              className={styles.ctaButton} 
-              style={{ width: "100%", marginTop: "1rem", textAlign: "center" }}
+              className={styles.mobileAuthBtn} 
             >
               Login Free
             </button>

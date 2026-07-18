@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowLeft, Heart, MapPin, Bed, Bath, Compass, Calendar, User, Eye, CheckCircle, ChevronLeft, ChevronRight, X } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import Loader from "@/components/Loader";
 import { useAuth } from "@/context/authContext";
 import { apiRequest, getImageUrl } from "@/utils/api";
 import styles from "./page.module.css";
@@ -45,6 +46,9 @@ export default function PropertyDetailPage() {
   const [interestLoading, setInterestLoading] = useState(false);
   const [interestSuccess, setInterestSuccess] = useState("");
   const [interestError, setInterestError] = useState("");
+  
+  // Custom Alert Modal state
+  const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -69,10 +73,8 @@ export default function PropertyDetailPage() {
     return (
       <>
         <Navbar />
-        <div style={{ padding: "12rem 2rem", textAlign: "center", minHeight: "80vh" }}>
-          <p style={{ fontFamily: "var(--font-serif)", fontSize: "1.5rem", color: "var(--color-primary)" }}>
-            Retrieving Architectural Portfolio...
-          </p>
+        <div style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Loader />
         </div>
         <Footer />
       </>
@@ -98,7 +100,7 @@ export default function PropertyDetailPage() {
 
   const handleWishlistToggle = async () => {
     if (!user) {
-      alert("Please click 'Login Free' in the header to register or log in first.");
+      setIsAlertModalOpen(true);
       return;
     }
     await toggleWishlist(property._id);
@@ -322,8 +324,7 @@ export default function PropertyDetailPage() {
 
                 <button
                   type="submit"
-                  className={styles.interestBtn}
-                  style={{ width: "100%" }}
+                  className={styles.modalBtn}
                   disabled={interestLoading || !!interestSuccess}
                 >
                   {interestLoading ? "Submitting Inquiry..." : "Submit Inquiry"}
@@ -336,13 +337,36 @@ export default function PropertyDetailPage() {
                 </p>
                 <button
                   onClick={() => setIsInterestModalOpen(false)}
-                  className={styles.interestBtn}
-                  style={{ width: "100%" }}
+                  className={styles.modalBtn}
                 >
                   Close Window
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Alert Modal for Unauthenticated Users */}
+      {isAlertModalOpen && (
+        <div className={styles.modalOverlay} onClick={() => setIsAlertModalOpen(false)}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()} style={{ maxWidth: "400px", textAlign: "center" }}>
+            <button className={styles.closeBtn} onClick={() => setIsAlertModalOpen(false)}>
+              <X size={20} />
+            </button>
+
+            <h2 className={styles.modalTitle} style={{ marginBottom: "1.5rem" }}>Authentication Required</h2>
+            <p className={styles.loginPromptText}>
+              Please click the <strong>"Login Free"</strong> button in the navigation header to register or log in before adding properties to your wishlist.
+            </p>
+
+            <button
+              onClick={() => setIsAlertModalOpen(false)}
+              className={styles.modalBtn}
+              style={{ marginTop: "1rem" }}
+            >
+              Okay, Got It
+            </button>
           </div>
         </div>
       )}

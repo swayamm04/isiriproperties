@@ -39,8 +39,9 @@ export default function AboutUs() {
   return (
     <section className={styles.section} id="about">
       <div className={styles.container}>
-        {/* Left Column: Image */}
+        {/* Left Column: Image & Tagline */}
         <div className={styles.leftColumn}>
+          <span className={`${styles.tagline} ${styles.mobileTagline}`}>About Us</span>
           <div className={styles.imageWrapper}>
             <Image
               src="/about-us.png"
@@ -54,13 +55,14 @@ export default function AboutUs() {
 
         {/* Right Column: Text & Metrics */}
         <div className={styles.rightColumn}>
-          <span className={styles.tagline}>About Us</span>
+          <span className={`${styles.tagline} ${styles.desktopTagline}`}>About Us</span>
           <h2 className={styles.heading}>
             Building Better Futures
           </h2>
           <p className={styles.description}>
             At I Siri Properties, we believe in more than just buildings – we believe in creating spaces that inspire, connect, and elevate lives. With years of experience in real estate, we are committed to providing exceptional service and trusted solutions.
           </p>
+          {renderCards(`${styles.featuresGrid} ${styles.desktopOnly}`)}
         </div>
       </div>
       {renderCards(`${styles.featuresGrid} ${styles.mobileOnly}`)}

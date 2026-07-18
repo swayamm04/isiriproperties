@@ -151,6 +151,27 @@
   border-bottom-color: var(--color-primary);
 }
 
+.mobileAuthBtn {
+  background-color: transparent;
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 50px;
+  padding: 0.85rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+  text-align: center;
+  margin-top: 1rem;
+  letter-spacing: 0.05em;
+}
+
+.mobileAuthBtn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: #FFFFFF;
+}
+
 .overlay {
   position: fixed;
   top: 0;
@@ -236,12 +257,12 @@
 }
 
 .modalTitle {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-size: 2rem;
   color: #FFFFFF;
   margin-bottom: 0.5rem;
-  font-weight: 400;
-  letter-spacing: 0.05em;
+  font-weight: 500;
+  letter-spacing: 0.02em;
   text-align: center;
 }
 

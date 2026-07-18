@@ -7,7 +7,7 @@
   max-width: 1200px;
   margin: 0 auto;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 4rem;
 }
 
@@ -22,6 +22,7 @@
   border-radius: var(--radius-xl);
   overflow: hidden;
   box-shadow: var(--shadow-lg);
+  margin-top: 4.5rem;
 }
 
 .aboutImage {
@@ -30,6 +31,7 @@
 
 .rightColumn {
   flex: 1;
+  margin-top: 1.5rem;
 }
 
 .tagline {
@@ -59,7 +61,19 @@
 }
 
 .mobileOnly {
+  display: none !important;
+}
+
+.desktopOnly {
+  display: grid !important;
+}
+
+.mobileTagline {
   display: none;
+}
+
+.desktopTagline {
+  display: inline-block;
 }
 
 .featuresGrid {
@@ -110,6 +124,14 @@
     padding: 3rem 1.5rem;
   }
 
+  .mobileTagline {
+    display: inline-block;
+  }
+  
+  .desktopTagline {
+    display: none;
+  }
+
   .container {
     flex-direction: row;
     gap: 1.5rem;
@@ -117,6 +139,7 @@
   
   .imageWrapper {
     height: 250px;
+    margin-top: 1.5rem;
   }
   
   .featuresGrid {

@@ -16,6 +16,7 @@ import {
   LayoutDashboard 
 } from "lucide-react";
 import Link from "next/link";
+import Loader from "@/components/Loader";
 import styles from "./page.module.css";
 
 interface Property {
@@ -197,9 +198,7 @@ export default function AdminDashboardPage() {
   if (loading) {
     return (
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", backgroundColor: "var(--color-bg-light)" }}>
-        <p style={{ fontFamily: "var(--font-serif)", fontSize: "1.5rem", color: "var(--color-primary)" }}>
-          Loading Admin Workspace...
-        </p>
+        <Loader />
       </div>
     );
   }
@@ -345,7 +344,7 @@ export default function AdminDashboardPage() {
               {propertiesError && <div className={styles.errorBox}>{propertiesError}</div>}
               
               {propertiesLoading ? (
-                <p style={{ textAlign: "center", padding: "3rem", color: "var(--color-dark-muted)" }}>Loading properties list...</p>
+                <Loader />
               ) : properties.length > 0 ? (
                 <div className={styles.tableContainer}>
                   <table className={styles.table}>

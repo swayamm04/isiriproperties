@@ -52,8 +52,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           role: data.role,
           wishlist: data.wishlist ? data.wishlist.map((item: any) => typeof item === "string" ? item : item._id || item.id) : [],
         });
-      } catch (err) {
-        console.error("Token verification failed:", err);
+      } catch (err: any) {
+        // Token might be expired or invalid, just clean up without throwing a console error
+        // to avoid Next.js dev overlay for expected authentication flows.
+        console.warn("Token verification failed, clearing session.");
         // Clear expired/invalid token
         localStorage.removeItem("isiri_token");
         setUser(null);

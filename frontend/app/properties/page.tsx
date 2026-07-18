@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 import PropertyCard from "@/components/PropertyCard";
 import { apiRequest } from "@/utils/api";
 import { Search, Compass } from "lucide-react";
+import Loader from "@/components/Loader";
 import styles from "./page.module.css";
 
 interface Property {
@@ -185,9 +186,7 @@ function PropertiesList() {
 
         {/* Listings Grid */}
         {loading ? (
-          <div style={{ textAlign: "center", padding: "6rem 2rem", color: "var(--color-dark-muted)" }}>
-            Retrieving portfolio files...
-          </div>
+          <Loader />
         ) : error ? (
           <div style={{ textAlign: "center", padding: "6rem 2rem", color: "#e05e5e" }}>
             {error}
@@ -232,7 +231,7 @@ export default function PropertiesPage() {
   return (
     <>
       <Navbar />
-      <Suspense fallback={<div style={{ padding: "12rem 2rem", textAlign: "center", color: "var(--color-dark)" }}>Loading Portfolio...</div>}>
+      <Suspense fallback={<div style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center" }}><Loader /></div>}>
         <PropertiesList />
       </Suspense>
       <Footer />

@@ -7,22 +7,22 @@ import styles from "./HeroBanner.module.css";
 
 const SLIDES = [
   {
-    image: "/hero-1.png",
+    image: "/banner1.png",
     subtitle: "Find Your Dream Home",
     title: "Find The Perfect <span>Property</span> For You",
     description: "Explore our handpicked properties and find a place you'll love to call home.",
   },
   {
-    image: "/hero-2.png",
-    subtitle: "Luxury Urban Living",
-    title: "Penthouse Residences With Skyline <span>Panoramas</span>",
-    description: "Experience the pinnacle of high-rise living with luxury floor plans and panoramic vistas.",
+    image: "/banner2.png",
+    subtitle: "Premium Plots & Land",
+    title: "Build Your Vision From The <span>Ground Up</span>",
+    description: "Discover prime locations and exclusive plots perfectly suited for your custom architectural masterpiece.",
   },
   {
-    image: "/hero-3.png",
-    subtitle: "Exclusive Estates",
-    title: "Serene Retreats Harmonized With <span>Nature</span>",
-    description: "Escape to private estates that offer absolute tranquility and state-of-the-art architecture.",
+    image: "/banner3.png",
+    subtitle: "Start Your Journey",
+    title: "Unlock The Door To <span>Extraordinary</span> Living",
+    description: "Explore our full portfolio of exclusive properties, luxury villas, and premium plots to find your perfect match.",
   },
 ];
 
@@ -39,33 +39,39 @@ export default function HeroBanner() {
 
   return (
     <section className={styles.hero}>
+      {/* Background Slider */}
+      {SLIDES.map((slide, idx) => (
+        <div
+          key={idx}
+          className={`${styles.slide} ${idx === currentSlide ? styles.slideActive : ""}`}
+          style={{ backgroundImage: `url(${slide.image})` }}
+        />
+      ))}
+      <div className={styles.overlay} />
+
       <div className={styles.contentContainer}>
         {/* Text Section (Left) */}
-        <div className={styles.textBlock} key={currentSlide}>
-          <span className={styles.subtitle}>{SLIDES[currentSlide].subtitle}</span>
-          <h1 className={styles.title} dangerouslySetInnerHTML={{ __html: SLIDES[currentSlide].title }}></h1>
-          <p className={styles.description}>{SLIDES[currentSlide].description}</p>
+        <div className={styles.textContainer}>
+          <div className={styles.slidesWrapper}>
+            {SLIDES.map((slide, idx) => (
+              <div 
+                key={idx} 
+                className={`${styles.textBlock} ${idx === currentSlide ? styles.textActive : ""}`}
+              >
+                <span className={styles.subtitle}>{slide.subtitle}</span>
+                <h1 className={styles.title} dangerouslySetInnerHTML={{ __html: slide.title }}></h1>
+                <p className={styles.description}>{slide.description}</p>
+              </div>
+            ))}
+          </div>
           
-          <div className={styles.ctaContainer}>
+          <div className={styles.staticCta}>
             <button onClick={() => router.push("/properties")} className={styles.ctaBtn}>
               Explore Properties
               <ArrowRight size={16} strokeWidth={2} />
             </button>
-
           </div>
         </div>
-
-        {/* Image Section (Right) */}
-        <div className={styles.imageBlock}>
-          {SLIDES.map((slide, idx) => (
-            <div
-              key={idx}
-              className={`${styles.slide} ${idx === currentSlide ? styles.slideActive : ""}`}
-              style={{ backgroundImage: `url(${slide.image})` }}
-            />
-          ))}
-        </div>
-
       </div>
 
     </section>

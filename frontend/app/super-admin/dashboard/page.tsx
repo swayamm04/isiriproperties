@@ -25,6 +25,7 @@ import {
   Settings
 } from "lucide-react";
 import Link from "next/link";
+import Loader from "@/components/Loader";
 import styles from "./page.module.css";
 
 interface Stats {
@@ -464,9 +465,7 @@ export default function SuperAdminDashboardPage() {
   if (loading) {
     return (
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", backgroundColor: "var(--color-bg-light)" }}>
-        <p style={{ fontFamily: "var(--font-serif)", fontSize: "1.5rem", color: "var(--color-primary)" }}>
-          Accessing Super Admin Command Center...
-        </p>
+        <Loader />
       </div>
     );
   }
@@ -641,7 +640,7 @@ export default function SuperAdminDashboardPage() {
 
           {/* Tab Render Content */}
           {tabLoading ? (
-            <p style={{ textAlign: "center", padding: "3rem", color: "var(--color-dark-muted)" }}>Loading records...</p>
+            <Loader />
           ) : (
             <>
               {activeTab === "dashboard" && (

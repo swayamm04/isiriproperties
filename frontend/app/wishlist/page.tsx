@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PropertyCard from "@/components/PropertyCard";
+import Loader from "@/components/Loader";
 import { useAuth } from "@/context/authContext";
 import { apiRequest } from "@/utils/api";
 import Link from "next/link";
@@ -59,10 +60,8 @@ export default function WishlistPage() {
     return (
       <>
         <Navbar />
-        <div style={{ padding: "12rem 2rem", textAlign: "center", minHeight: "80vh" }}>
-          <p style={{ fontFamily: "var(--font-serif)", fontSize: "1.5rem", color: "var(--color-primary)" }}>
-            Loading Your Curated Collection...
-          </p>
+        <div style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Loader />
         </div>
         <Footer />
       </>
