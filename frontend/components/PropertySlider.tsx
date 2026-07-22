@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ArrowLeft } from "lucide-react";
 import PropertyCard from "./PropertyCard";
 import { apiRequest } from "@/utils/api";
 import styles from "./PropertySlider.module.css";
@@ -42,6 +42,18 @@ export default function PropertySlider() {
     loadFeaturedProperties();
   }, []);
 
+  const scrollLeft = () => {
+    if (sliderRef.current) {
+      sliderRef.current.scrollBy({ left: -320, behavior: "smooth" });
+    }
+  };
+
+  const scrollRight = () => {
+    if (sliderRef.current) {
+      sliderRef.current.scrollBy({ left: 320, behavior: "smooth" });
+    }
+  };
+
   // Slider items mapped below
 
   if (loading) {
@@ -63,10 +75,19 @@ export default function PropertySlider() {
             <span className={styles.subtitle}>FEATURED PROPERTIES</span>
             <h2 className={styles.title}>Explore Our Best Properties</h2>
           </div>
-          <Link href="/properties" className={styles.viewAllBtn}>
-            View All Properties <ArrowRight size={16} />
-          </Link>
-          {/* Removed old navigation controls to match layout */}
+          <div className={styles.headerControls}>
+            <div className={styles.navArrows}>
+              <button onClick={scrollLeft} className={styles.arrowBtn} aria-label="Previous">
+                <ArrowLeft size={20} />
+              </button>
+              <button onClick={scrollRight} className={styles.arrowBtn} aria-label="Next">
+                <ArrowRight size={20} />
+              </button>
+            </div>
+            <Link href="/properties" className={styles.viewAllBtn}>
+              View All Properties <ArrowRight size={16} />
+            </Link>
+          </div>
         </div>
 
         {/* Horizontal Slider container */}
@@ -83,6 +104,7 @@ export default function PropertySlider() {
               area: property.area,
               type: property.type,
               description: property.description,
+              customFields: (property as any).customFields,
             };
 
             return (

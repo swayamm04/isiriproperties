@@ -26,6 +26,7 @@ interface PropertyDetail {
   addedBy: string;
   addedByName: string;
   status: "available" | "sold";
+  customFields?: Record<string, any>;
 }
 
 export default function PropertyDetailPage() {
@@ -216,41 +217,33 @@ export default function PropertyDetailPage() {
                 <h1 className={styles.title}>{property.title}</h1>
                 <span className={styles.price}>{formattedPrice}</span>
               </div>
-              <span className={styles.location}>
-                <MapPin size={16} style={{ color: "var(--color-primary)" }} strokeWidth={1.5} />
-                {property.location}
-              </span>
+              {user && (
+                <span className={styles.location}>
+                  <MapPin size={16} style={{ color: "var(--color-primary)" }} strokeWidth={1.5} />
+                  {property.location}
+                </span>
+              )}
             </div>
 
             {/* Specifications Table */}
             <div className={styles.specsTable}>
-              <div className={styles.specRow}>
-                <span className={styles.specLabel}>
-                  <Bed size={14} style={{ display: "inline", marginRight: "4px", verticalAlign: "middle" }} /> Beds
-                </span>
-                <span className={styles.specVal}>{property.beds} Bedrooms</span>
-              </div>
-
-              <div className={styles.specRow}>
-                <span className={styles.specLabel}>
-                  <Bath size={14} style={{ display: "inline", marginRight: "4px", verticalAlign: "middle" }} /> Baths
-                </span>
-                <span className={styles.specVal}>{property.baths} Bathrooms</span>
-              </div>
-
-              <div className={styles.specRow}>
-                <span className={styles.specLabel}>
-                  <Compass size={14} style={{ display: "inline", marginRight: "4px", verticalAlign: "middle" }} /> Area Size
-                </span>
-                <span className={styles.specVal}>{property.area}</span>
-              </div>
-
-              <div className={styles.specRow}>
-                <span className={styles.specLabel}>
-                  <User size={14} style={{ display: "inline", marginRight: "4px", verticalAlign: "middle" }} /> Architect / Vendor
-                </span>
-                <span className={styles.specVal}>{property.addedByName}</span>
-              </div>
+              {property.customFields && Object.keys(property.customFields).length > 0 ? (
+                Object.entries(property.customFields).map(([key, value]) => (
+                  <div key={key} className={styles.specRow}>
+                    <span className={styles.specLabel}>
+                      <CheckCircle size={14} style={{ display: "inline", marginRight: "4px", verticalAlign: "middle" }} /> {key}
+                    </span>
+                    <span className={styles.specVal}>{String(value)}</span>
+                  </div>
+                ))
+              ) : (
+                <div className={styles.specRow}>
+                  <span className={styles.specLabel}>
+                    <CheckCircle size={14} style={{ display: "inline", marginRight: "4px", verticalAlign: "middle" }} /> Details
+                  </span>
+                  <span className={styles.specVal}>Available upon inquiry</span>
+                </div>
+              )}
             </div>
 
             <div className={styles.descriptionSection}>
@@ -333,13 +326,16 @@ export default function PropertyDetailPage() {
             ) : (
               <div style={{ textAlign: "center" }}>
                 <p className={styles.loginPromptText}>
-                  Please click the <strong>"Login Free"</strong> button in the navigation header to register or log in before submitting purchase inquiries.
+                  Please sign in or register an account before submitting purchase inquiries.
                 </p>
                 <button
-                  onClick={() => setIsInterestModalOpen(false)}
+                  onClick={() => {
+                    setIsInterestModalOpen(false);
+                    window.dispatchEvent(new CustomEvent("openAuthModal", { detail: { mode: "login" } }));
+                  }}
                   className={styles.modalBtn}
                 >
-                  Close Window
+                  Login to Inquire
                 </button>
               </div>
             )}
@@ -357,15 +353,18 @@ export default function PropertyDetailPage() {
 
             <h2 className={styles.modalTitle} style={{ marginBottom: "1.5rem" }}>Authentication Required</h2>
             <p className={styles.loginPromptText}>
-              Please click the <strong>"Login Free"</strong> button in the navigation header to register or log in before adding properties to your wishlist.
+              Please sign in or register an account before adding properties to your wishlist.
             </p>
 
             <button
-              onClick={() => setIsAlertModalOpen(false)}
+              onClick={() => {
+                setIsAlertModalOpen(false);
+                window.dispatchEvent(new CustomEvent("openAuthModal", { detail: { mode: "login" } }));
+              }}
               className={styles.modalBtn}
               style={{ marginTop: "1rem" }}
             >
-              Okay, Got It
+              Login / Register
             </button>
           </div>
         </div>

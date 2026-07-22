@@ -93,6 +93,19 @@ router.get("/", async (req, res) => {
   }
 });
 
+// @route   GET api/properties/cities/all
+// @desc    Get all unique cities
+// @access  Public
+router.get("/cities/all", async (req, res) => {
+  try {
+    const cities = await Property.distinct("city");
+    res.json(cities);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error fetching cities" });
+  }
+});
+
 // @route   GET api/properties/admin/my-list
 // @desc    Get properties added by the logged-in admin
 // @access  Private (Admin only)
@@ -103,6 +116,25 @@ router.get("/admin/my-list", auth, authorize("admin"), async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error fetching admin's properties" });
+  }
+});
+
+// @route   PUT api/properties/admin/sold/:id
+// @desc    Toggle property status between available and sold
+// @access  Private (Admin only)
+router.put("/admin/sold/:id", auth, authorize("admin"), async (req, res) => {
+  try {
+    const property = await Property.findOne({ _id: req.params.id, addedBy: req.user.id });
+    if (!property) {
+      return res.status(404).json({ error: "Property not found or unauthorized" });
+    }
+    
+    property.status = property.status === "available" ? "sold" : "available";
+    await property.save();
+    res.json({ message: `Property status updated to ${property.status}`, property });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error updating property status" });
   }
 });
 
@@ -138,10 +170,19 @@ router.get("/:id", async (req, res) => {
 // @access  Private (Admin & Super Admin)
 router.post("/", auth, authorize(["admin", "super_admin"]), upload.array("imageFiles", 6), async (req, res) => {
   try {
-    const { title, description, location, price, beds, baths, area, type, imageUrls } = req.body;
+    const { title, description, city, location, price, beds, baths, area, type, imageUrls, customFields } = req.body;
 
-    if (!title || !description || !location || !price || !area) {
-      return res.status(400).json({ error: "Please provide all required fields" });
+    if (!title || !description || !city || !location || !price || !type) {
+      return res.status(400).json({ error: "Please provide all required fields (title, description, city, location, price, type)" });
+    }
+
+    let parsedCustomFields = {};
+    if (customFields) {
+      try {
+        parsedCustomFields = typeof customFields === 'string' ? JSON.parse(customFields) : customFields;
+      } catch (e) {
+        console.error("Error parsing customFields:", e);
+      }
     }
 
     let images = [];
@@ -190,6 +231,7 @@ router.post("/", auth, authorize(["admin", "super_admin"]), upload.array("imageF
     const newProperty = new Property({
       title,
       description,
+      city,
       location,
       price: Number(price),
       images,
@@ -197,6 +239,7 @@ router.post("/", auth, authorize(["admin", "super_admin"]), upload.array("imageF
       baths: Number(baths) || 0,
       area,
       type: type || "Villa",
+      customFields: parsedCustomFields,
       addedBy: req.user._id,
       addedByName: req.user.role === "super_admin" ? "Super Admin" : req.user.name,
       status: "available",

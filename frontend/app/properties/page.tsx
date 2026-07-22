@@ -6,6 +6,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PropertyCard from "@/components/PropertyCard";
 import { apiRequest } from "@/utils/api";
+import { useAuth } from "@/context/authContext";
 import { Search, Compass } from "lucide-react";
 import Loader from "@/components/Loader";
 import styles from "./page.module.css";
@@ -14,6 +15,7 @@ interface Property {
   _id: string;
   propertyId: string;
   title: string;
+  city?: string;
   location: string;
   price: number;
   images: string[];
@@ -27,29 +29,36 @@ interface Property {
 
 function PropertiesList() {
   const searchParams = useSearchParams();
+  const { user } = useAuth();
 
   // State values for properties
   const [properties, setProperties] = useState<Property[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
-  // Tabs for Available vs Sold Out
-  const [viewStatus, setViewStatus] = useState<"available" | "sold">("available");
 
   // State values for filters
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState("");
-  const [maxPrice, setMaxPrice] = useState("");
+  const [selectedCity, setSelectedCity] = useState("");
 
   // Sync state with URL search params on mount
   useEffect(() => {
     const loc = searchParams.get("location") || searchParams.get("search") || "";
     const type = searchParams.get("type") || "";
-    const price = searchParams.get("price") || "";
+    const city = searchParams.get("city") || "";
 
     if (loc) setSearchQuery(loc);
     if (type) setSelectedType(type);
-    if (price) setMaxPrice(price);
+    if (city) setSelectedCity(city);
+    
+    // Auto-focus search input if navigated via #search
+    if (window.location.hash === "#search") {
+      setTimeout(() => {
+        const searchInput = document.getElementById("search-input");
+        if (searchInput) searchInput.focus();
+      }, 100);
+    }
   }, [searchParams]);
 
   // Fetch properties from database on mount or when status view changes
@@ -57,11 +66,15 @@ function PropertiesList() {
     const fetchProperties = async () => {
       try {
         setLoading(true);
-        // Load properties matching the desired status (available or sold)
-        const data = await apiRequest(`/properties?status=${viewStatus}`);
-        setProperties(data);
+        // Load only available properties
+        const [propData, catData] = await Promise.all([
+          apiRequest(`/properties?status=available`),
+          apiRequest("/categories")
+        ]);
+        setProperties(propData);
+        setCategories(catData);
       } catch (err: any) {
-        console.error("Error loading properties:", err);
+        console.error("Error loading data:", err);
         setError("Failed to fetch listings. Please try again.");
       } finally {
         setLoading(false);
@@ -69,7 +82,7 @@ function PropertiesList() {
     };
 
     fetchProperties();
-  }, [viewStatus]);
+  }, []);
 
   // Filtered properties locally for instantaneous results
   const filteredProperties = properties.filter((property) => {
@@ -79,15 +92,17 @@ function PropertiesList() {
       property.propertyId.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesType = selectedType ? property.type === selectedType : true;
-    const matchesPrice = maxPrice ? property.price <= parseInt(maxPrice, 10) : true;
+    const matchesCity = selectedCity ? property.city === selectedCity : true;
 
-    return matchesSearch && matchesType && matchesPrice;
+    return matchesSearch && matchesType && matchesCity;
   });
+
+  const uniqueCities = Array.from(new Set(properties.map(p => p.city).filter(Boolean)));
 
   const handleReset = () => {
     setSearchQuery("");
     setSelectedType("");
-    setMaxPrice("");
+    setSelectedCity("");
   };
 
   return (
@@ -104,29 +119,14 @@ function PropertiesList() {
       </section>
 
       {/* Grid and Filters */}
-      <section className={styles.section}>
-        {/* Toggle between Available and Sold Out */}
-        <div className={styles.tabsContainer}>
-          <button
-            onClick={() => setViewStatus("available")}
-            className={`${styles.tabBtn} ${viewStatus === "available" ? styles.activeTab : ""}`}
-          >
-            Available Portfolio
-          </button>
-          <button
-            onClick={() => setViewStatus("sold")}
-            className={`${styles.tabBtn} ${viewStatus === "sold" ? styles.activeTab : ""}`}
-          >
-            Sold Out Section
-          </button>
-        </div>
-
-        <div className={styles.filterBar}>
+      <section className={styles.section} id="search">
+        <div className={styles.searchContainer}>
           {/* Keyword Search */}
           <div className={styles.filterGroup}>
             <label className={styles.label}>Search Keywords</label>
             <div style={{ position: "relative" }}>
               <input
+                id="search-input"
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -146,7 +146,9 @@ function PropertiesList() {
               />
             </div>
           </div>
+        </div>
 
+        <div className={styles.filterBar}>
           {/* Type Select */}
           <div className={styles.filterGroup}>
             <label className={styles.label}>Property Type</label>
@@ -156,25 +158,24 @@ function PropertiesList() {
               className={styles.select}
             >
               <option value="">All Types</option>
-              <option value="Villa">Villa</option>
-              <option value="Chalet">Chalet</option>
-              <option value="Penthouse">Penthouse</option>
+              {categories.map((cat) => (
+                <option key={cat._id} value={cat.name}>{cat.name}</option>
+              ))}
             </select>
           </div>
 
-          {/* Max Price */}
+          {/* City Filter */}
           <div className={styles.filterGroup}>
-            <label className={styles.label}>Maximum Price</label>
+            <label className={styles.label}>City</label>
             <select
-              value={maxPrice}
-              onChange={(e) => setMaxPrice(e.target.value)}
+              value={selectedCity}
+              onChange={(e) => setSelectedCity(e.target.value)}
               className={styles.select}
             >
-              <option value="">Any Price</option>
-              <option value="35000000">₹3.5 Crores</option>
-              <option value="50000000">₹5.0 Crores</option>
-              <option value="60000000">₹6.0 Crores</option>
-              <option value="70000000">₹7.0 Crores</option>
+              <option value="">Any City</option>
+              {uniqueCities.map(city => (
+                <option key={city} value={city}>{city}</option>
+              ))}
             </select>
           </div>
 
@@ -205,6 +206,7 @@ function PropertiesList() {
                 area: property.area,
                 type: property.type,
                 description: property.description,
+                customFields: (property as any).customFields,
               };
 
               return <PropertyCard key={mappedProp.id} property={mappedProp} />;

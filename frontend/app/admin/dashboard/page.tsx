@@ -13,11 +13,25 @@ import {
   LogOut, 
   Menu, 
   X, 
-  LayoutDashboard 
+  LayoutDashboard,
+  Eye 
 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import Loader from "@/components/Loader";
 import styles from "./page.module.css";
+
+interface CategoryField {
+  name: string;
+  type: "text" | "number";
+  unit?: string;
+}
+
+interface Category {
+  _id: string;
+  name: string;
+  fields: CategoryField[];
+}
 
 interface Property {
   _id: string;
@@ -26,11 +40,9 @@ interface Property {
   location: string;
   price: number;
   images: string[];
-  beds: number;
-  baths: number;
-  area: string;
   type: string;
   status: "available" | "sold";
+  customFields?: Record<string, any>;
 }
 
 export default function AdminDashboardPage() {
@@ -44,18 +56,19 @@ export default function AdminDashboardPage() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [propertiesLoading, setPropertiesLoading] = useState(false);
   const [propertiesError, setPropertiesError] = useState("");
+  const [viewStatus, setViewStatus] = useState<"available" | "sold">("available");
+  const [confirmStatusModal, setConfirmStatusModal] = useState<{ isOpen: boolean, property: Property | null }>({ isOpen: false, property: null });
+  const [statusUpdateLoading, setStatusUpdateLoading] = useState(false);
 
   // Add Property form state
   const [title, setTitle] = useState("");
+  const [city, setCity] = useState("");
   const [location, setLocation] = useState("");
   const [price, setPrice] = useState("");
-  const [type, setType] = useState("Villa");
-  const [beds, setBeds] = useState("3");
-  const [baths, setBaths] = useState("2.5");
-  const [area, setArea] = useState("");
+  const [type, setType] = useState("");
   const [description, setDescription] = useState("");
+  const [propCustomFields, setPropCustomFields] = useState<Record<string, any>>({});
   const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
-  const [imageUrls, setImageUrls] = useState("");
   const [addLoading, setAddLoading] = useState(false);
   const [addSuccess, setAddSuccess] = useState("");
   const [addError, setAddError] = useState("");
@@ -68,16 +81,25 @@ export default function AdminDashboardPage() {
   const [passSuccess, setPassSuccess] = useState("");
   const [passError, setPassError] = useState("");
 
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [citySuggestions, setCitySuggestions] = useState<string[]>([]);
+
   // Fetch admin's properties
   const fetchMyProperties = async () => {
     try {
       setPropertiesLoading(true);
       setPropertiesError("");
-      const data = await apiRequest("/properties/admin/my-list");
-      setProperties(data);
+      const [propData, catData, cityData] = await Promise.all([
+        apiRequest("/properties/admin/my-list"),
+        apiRequest("/categories"),
+        apiRequest("/properties/cities/all")
+      ]);
+      setProperties(propData);
+      setCategories(catData);
+      setCitySuggestions(cityData);
     } catch (err: any) {
       console.error(err);
-      setPropertiesError(err.message || "Failed to load properties.");
+      setPropertiesError(err.message || "Failed to load properties and categories.");
     } finally {
       setPropertiesLoading(false);
     }
@@ -101,7 +123,7 @@ export default function AdminDashboardPage() {
     setAddError("");
     setAddSuccess("");
 
-    if (!title || !location || !price || !area || !description) {
+    if (!title || !city || !location || !price || !type || !description) {
       setAddError("Please fill out all required fields.");
       setAddLoading(false);
       return;
@@ -110,14 +132,12 @@ export default function AdminDashboardPage() {
     try {
       const formData = new FormData();
       formData.append("title", title);
+      formData.append("city", city);
       formData.append("location", location);
       formData.append("price", price);
       formData.append("type", type);
-      formData.append("beds", beds);
-      formData.append("baths", baths);
-      formData.append("area", area);
       formData.append("description", description);
-      formData.append("imageUrls", imageUrls);
+      formData.append("customFields", JSON.stringify(propCustomFields));
 
       if (selectedFiles && selectedFiles.length > 0) {
         for (let i = 0; i < selectedFiles.length; i++) {
@@ -132,15 +152,13 @@ export default function AdminDashboardPage() {
 
       setAddSuccess("Property added successfully!");
       setTitle("");
+      setCity("");
       setLocation("");
       setPrice("");
-      setType("Villa");
-      setBeds("3");
-      setBaths("2.5");
-      setArea("");
+      setType("");
+      setPropCustomFields({});
       setDescription("");
       setSelectedFiles(null);
-      setImageUrls("");
       
       const fileInput = document.getElementById("imageFiles") as HTMLInputElement;
       if (fileInput) fileInput.value = "";
@@ -224,10 +242,7 @@ export default function AdminDashboardPage() {
       {/* Left Sidebar */}
       <aside className={`${styles.sidebar} ${isSidebarOpen ? styles.sidebarOpen : ""}`}>
         <div className={styles.sidebarBrand}>
-          <Building2 className={styles.brandLogo} size={22} strokeWidth={1.5} />
-          <span className={styles.brandName}>
-            I Siri <span className={styles.brandGold}>Prop</span>
-          </span>
+          <Image src="/logo.png" alt="I Siri Properties" width={160} height={50} style={{ objectFit: "contain", height: "auto" }} />
         </div>
 
         <nav className={styles.sidebarMenu}>
@@ -341,11 +356,27 @@ export default function AdminDashboardPage() {
           {/* Active Tab Content */}
           {activeTab === "my_properties" && (
             <div>
+              {/* Toggle between Available and Sold Out */}
+              <div className={styles.tabsContainer}>
+                <button
+                  onClick={() => setViewStatus("available")}
+                  className={`${styles.tabBtn} ${viewStatus === "available" ? styles.activeTab : ""}`}
+                >
+                  Available Portfolio
+                </button>
+                <button
+                  onClick={() => setViewStatus("sold")}
+                  className={`${styles.tabBtn} ${viewStatus === "sold" ? styles.activeTab : ""}`}
+                >
+                  Sold Out Section
+                </button>
+              </div>
+
               {propertiesError && <div className={styles.errorBox}>{propertiesError}</div>}
               
               {propertiesLoading ? (
                 <Loader />
-              ) : properties.length > 0 ? (
+              ) : properties.filter(p => p.status === viewStatus).length > 0 ? (
                 <div className={styles.tableContainer}>
                   <table className={styles.table}>
                     <thead>
@@ -362,7 +393,7 @@ export default function AdminDashboardPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {properties.map((prop) => {
+                      {properties.filter(p => p.status === viewStatus).map((prop) => {
                         const formattedVal = new Intl.NumberFormat("en-IN", {
                           style: "currency",
                           currency: "INR",
@@ -384,16 +415,31 @@ export default function AdminDashboardPage() {
                             <td style={{ color: "var(--color-primary-dark)", fontWeight: 600 }}>{formattedVal}</td>
                             <td>{prop.type}</td>
                             <td style={{ fontSize: "0.8rem", color: "var(--color-dark-muted)" }}>
-                              {prop.beds} Beds | {prop.baths} Baths | {prop.area}
+                              {prop.customFields && Object.keys(prop.customFields).length > 0
+                                ? Object.entries(prop.customFields).map(([k, v]) => `${k}: ${v}`).join(" | ")
+                                : "No custom specs"}
                             </td>
                             <td>
                               <span className={prop.status === "available" ? styles.statusAvailable : styles.statusSold}>
                                 {prop.status === "available" ? "Available" : "Sold"}
                               </span>
                             </td>
-                            <td>
-                              <Link href={`/properties/${prop._id}`} className={styles.viewBtn}>
-                                View Page
+                            <td style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+                              <label className={styles.toggleSwitch} title="Toggle Sold/Available Status">
+                                <input 
+                                  type="checkbox" 
+                                  checked={prop.status === "available"}
+                                  onChange={async (e) => {
+                                    const eTarget = e.target;
+                                    // Revert checkbox visual change temporarily until confirmed
+                                    eTarget.checked = prop.status === "available";
+                                    setConfirmStatusModal({ isOpen: true, property: prop });
+                                  }}
+                                />
+                                <span className={styles.toggleSlider}></span>
+                              </label>
+                              <Link href={`/properties/${prop._id}`} className={styles.viewBtn} title="View Page">
+                                <Eye size={20} />
                               </Link>
                             </td>
                           </tr>
@@ -404,7 +450,7 @@ export default function AdminDashboardPage() {
                 </div>
               ) : (
                 <div className={styles.emptyMsg}>
-                  <p>You have not added any properties yet. Click "Add Property" to begin listing.</p>
+                  <p>You do not have any properties listed under the {viewStatus === "available" ? "Available" : "Sold Out"} section.</p>
                 </div>
               )}
             </div>
@@ -494,6 +540,22 @@ export default function AdminDashboardPage() {
                 </div>
 
                 <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
+                  <label className={styles.label}>City *</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. New York"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    className={styles.input}
+                    list="adminCitySuggestions"
+                    required
+                  />
+                  <datalist id="adminCitySuggestions">
+                    {citySuggestions.map((c, i) => <option key={i} value={c} />)}
+                  </datalist>
+                </div>
+
+                <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
                   <label className={styles.label}>Location Address *</label>
                   <input
                     type="text"
@@ -512,6 +574,7 @@ export default function AdminDashboardPage() {
                     placeholder="e.g. 45000000"
                     value={price}
                     onChange={(e) => setPrice(e.target.value)}
+                    onWheel={(e) => (e.target as HTMLInputElement).blur()}
                     className={styles.input}
                     required
                   />
@@ -521,52 +584,35 @@ export default function AdminDashboardPage() {
                   <label className={styles.label}>Property Type *</label>
                   <select
                     value={type}
-                    onChange={(e) => setType(e.target.value)}
+                    onChange={(e) => {
+                      setType(e.target.value);
+                      setPropCustomFields({});
+                    }}
                     className={styles.select}
                     style={{ border: "1px solid var(--color-border)", padding: "0.8rem 1rem", fontSize: "0.9rem" }}
                   >
-                    <option value="Villa">Villa</option>
-                    <option value="Chalet">Chalet</option>
-                    <option value="Penthouse">Penthouse</option>
+                    <option value="" disabled>Select Property Type</option>
+                    {categories.length > 0 ? (
+                      categories.map(c => <option key={c._id} value={c.name}>{c.name}</option>)
+                    ) : (
+                      <option value="" disabled>No results found</option>
+                    )}
                   </select>
                 </div>
 
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>Bedrooms *</label>
-                  <input
-                    type="number"
-                    placeholder="e.g. 4"
-                    value={beds}
-                    onChange={(e) => setBeds(e.target.value)}
-                    className={styles.input}
-                    required
-                  />
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>Bathrooms *</label>
-                  <input
-                    type="number"
-                    placeholder="e.g. 3.5"
-                    step="0.5"
-                    value={baths}
-                    onChange={(e) => setBaths(e.target.value)}
-                    className={styles.input}
-                    required
-                  />
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>Area size *</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. 5,400 sqft"
-                    value={area}
-                    onChange={(e) => setArea(e.target.value)}
-                    className={styles.input}
-                    required
-                  />
-                </div>
+                {/* Custom Fields Rendering */}
+                {categories.find(c => c.name === type)?.fields.map(field => (
+                  <div key={field.name} className={styles.formGroup}>
+                    <label className={styles.label}>{field.name} {field.unit ? `(${field.unit})` : ""}</label>
+                    <input
+                      type={field.type === "number" ? "number" : "text"}
+                      placeholder={`Enter ${field.name}`}
+                      value={propCustomFields[field.name] || ""}
+                      onChange={(e) => setPropCustomFields({...propCustomFields, [field.name]: e.target.value})}
+                      className={styles.input}
+                    />
+                  </div>
+                ))}
 
                 <div className={styles.formGroup}>
                   <label className={styles.label}>Upload Local Images (max 6)</label>
@@ -582,17 +628,7 @@ export default function AdminDashboardPage() {
                   <span className={styles.helperText}>Select multiple image files to upload to the server.</span>
                 </div>
 
-                <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
-                  <label className={styles.label}>Or Provide Remote Image URLs (comma separated)</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. https://domain.com/img1.jpg, https://domain.com/img2.jpg"
-                    value={imageUrls}
-                    onChange={(e) => setImageUrls(e.target.value)}
-                    className={styles.input}
-                  />
-                  <span className={styles.helperText}>You can mix both file uploads and image URLs.</span>
-                </div>
+
 
                 <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
                   <label className={styles.label}>Architectural Description *</label>
@@ -610,6 +646,46 @@ export default function AdminDashboardPage() {
                 {addLoading ? "Saving Property..." : "Submit Property Listing"}
               </button>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Custom Confirm Status Modal */}
+      {confirmStatusModal.isOpen && confirmStatusModal.property && (
+        <div className={styles.modalOverlay} onClick={() => !statusUpdateLoading && setConfirmStatusModal({ isOpen: false, property: null })}>
+          <div className={styles.modalContent} style={{ maxWidth: '450px', padding: '2rem' }} onClick={(e) => e.stopPropagation()}>
+            <h3 style={{ fontFamily: "var(--font-serif)", fontSize: "1.4rem", marginBottom: "1rem", color: "var(--color-dark)" }}>Confirm Status Change</h3>
+            <p style={{ color: "var(--color-dark-muted)", marginBottom: "2rem", lineHeight: "1.5" }}>
+              Are you sure you want to change the status of <strong>{confirmStatusModal.property.title}</strong> to <strong>{confirmStatusModal.property.status === "available" ? "Sold Out" : "Available"}</strong>?
+            </p>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+              <button 
+                onClick={() => setConfirmStatusModal({ isOpen: false, property: null })}
+                disabled={statusUpdateLoading}
+                className={styles.submitBtn}
+                style={{ backgroundColor: 'transparent', color: 'var(--color-dark)', border: '1px solid var(--color-border)' }}
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={async () => {
+                  if (!confirmStatusModal.property) return;
+                  try {
+                    setStatusUpdateLoading(true);
+                    await apiRequest(`/properties/admin/sold/${confirmStatusModal.property._id}`, { method: 'PUT' });
+                    fetchMyProperties();
+                    setConfirmStatusModal({ isOpen: false, property: null });
+                  } catch (err: any) {
+                    alert(err.message || "Failed to update status");
+                  } finally {
+                    setStatusUpdateLoading(false);
+                  }
+                }}
+                disabled={statusUpdateLoading}
+                className={styles.submitBtn}
+              >
+                {statusUpdateLoading ? "Updating..." : "Confirm"}
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -46,7 +46,7 @@
   gap: 0.5rem;
   background-color: transparent;
   color: var(--color-dark);
-  border: 1px solid var(--color-border);
+  border: 2px solid var(--color-primary);
   padding: 0.75rem 1.5rem;
   border-radius: var(--radius-sm);
   font-weight: 600;
@@ -58,6 +58,37 @@
 .viewAllBtn:hover {
   border-color: var(--color-primary);
   color: var(--color-primary);
+}
+
+.headerControls {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.navArrows {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.arrowBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-dark);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.arrowBtn:hover {
+  background-color: var(--color-primary);
+  color: #FFFFFF;
+  border-color: var(--color-primary);
 }
 
 .sliderContainer {
@@ -115,8 +146,25 @@
     margin-bottom: 1.5rem;
   }
 
+  .headerControls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .arrowBtn {
+    background-color: var(--color-primary);
+    color: #FFFFFF;
+    border-color: var(--color-primary);
+    width: 32px;
+    height: 32px;
+  }
+
+  .arrowBtn svg {
+    width: 16px;
+    height: 16px;
+  }
+
   .viewAllBtn {
-    align-self: flex-end;
     padding: 0.5rem 1rem;
     font-size: 0.8rem;
   }

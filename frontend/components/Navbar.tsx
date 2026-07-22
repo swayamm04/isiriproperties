@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Menu, X, Building2, Eye, EyeOff, Phone } from "lucide-react";
+import { Menu, X, Building2, Eye, EyeOff, Phone, Search } from "lucide-react";
 import { useAuth } from "@/context/authContext";
 import styles from "./Navbar.module.css";
 
@@ -40,9 +40,24 @@ export default function Navbar() {
       }
     };
 
+    const handleOpenAuth = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      setAuthMode(customEvent.detail?.mode || "login");
+      setValidationError("");
+      clearError();
+      setIsModalOpen(true);
+      setShowPassword(false);
+      setIsMenuOpen(false);
+    };
+
     window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+    window.addEventListener("openAuthModal", handleOpenAuth);
+    
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("openAuthModal", handleOpenAuth);
+    };
+  }, [clearError]);
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   const closeMenu = () => setIsMenuOpen(false);
@@ -107,16 +122,6 @@ export default function Navbar() {
     return false;
   };
 
-  const handleContactClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    if (pathname === "/") {
-      e.preventDefault();
-      const contactSection = document.getElementById("contact");
-      if (contactSection) {
-        contactSection.scrollIntoView({ behavior: "smooth" });
-      }
-    }
-  };
-
   return (
     <>
       <nav className={`${styles.navbar} ${scrolled ? styles.scrolled : ""}`}>
@@ -140,11 +145,10 @@ export default function Navbar() {
               Properties
             </Link>
             <Link 
-              href={pathname === "/" ? "#contact" : "/#contact"} 
-              className={styles.navLink}
-              onClick={handleContactClick}
+              href="/#contact" 
+              className={`${styles.navLink} ${isActive("/#contact") ? styles.navLinkActive : ""}`}
             >
-              Contact Us
+              Contact
             </Link>
 
             {/* Role-based Links */}
@@ -202,10 +206,15 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Mobile Menu Icon */}
-          <button className={styles.mobileMenuBtn} onClick={toggleMenu} aria-label="Toggle Menu">
-            <Menu size={24} />
-          </button>
+          {/* Mobile Actions (Search + Menu) */}
+          <div className={styles.mobileActions}>
+            <Link href="/properties#search" aria-label="Search Properties" style={{ color: "var(--color-dark)", display: "flex", alignItems: "center" }}>
+              <Search size={22} strokeWidth={1.5} />
+            </Link>
+            <button className={styles.mobileMenuBtn} onClick={toggleMenu} aria-label="Toggle Menu">
+              <Menu size={24} />
+            </button>
+          </div>
         </div>
       </nav>
 
@@ -235,16 +244,6 @@ export default function Navbar() {
             onClick={closeMenu}
           >
             Properties
-          </Link>
-          <Link 
-            href={pathname === "/" ? "#contact" : "/#contact"} 
-            className={styles.drawerLink} 
-            onClick={(e) => {
-              closeMenu();
-              handleContactClick(e);
-            }}
-          >
-            Contact Us
           </Link>
 
           {user && user.role === "user" && (

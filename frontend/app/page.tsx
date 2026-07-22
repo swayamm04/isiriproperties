@@ -1,10 +1,11 @@
 import Navbar from "@/components/Navbar";
 import HeroBanner from "@/components/HeroBanner";
+import ContactForm from "@/components/ContactForm";
 
 import AboutUs from "@/components/AboutUs";
 import PropertySlider from "@/components/PropertySlider";
+import CorporateSolutions from "@/components/CorporateSolutions";
 import Testimonials from "@/components/Testimonials";
-import ContactForm from "@/components/ContactForm";
 import ScheduleVisitBanner from "@/components/ScheduleVisitBanner";
 import Footer from "@/components/Footer";
 
@@ -14,12 +15,13 @@ export default function Home() {
       <Navbar />
       <main className="fade-in">
         <HeroBanner />
-        <AboutUs />
-
         <PropertySlider />
+        <AboutUs />
+        <CorporateSolutions />
+
         <Testimonials />
-        <ContactForm />
         <ScheduleVisitBanner />
+        <ContactForm />
       </main>
       <Footer />
     </>

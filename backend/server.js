@@ -63,6 +63,7 @@ app.use("/api/properties", require("./routes/properties"));
 app.use("/api/admin", require("./routes/admin"));
 app.use("/api/superadmin", require("./routes/superadmin"));
 app.use("/api/interest", require("./routes/interest"));
+app.use("/api/categories", require("./routes/categories"));
 
 // Root route for API verification
 app.get("/", (req, res) => {

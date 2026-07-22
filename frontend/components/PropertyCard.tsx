@@ -1,8 +1,11 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { MapPin, BedDouble, Bath, Square, Heart } from "lucide-react";
 import { Property } from "@/data/properties";
 import { getImageUrl } from "@/utils/api";
+import { useAuth } from "@/context/authContext";
 import styles from "./PropertyCard.module.css";
 
 interface PropertyCardProps {
@@ -10,6 +13,7 @@ interface PropertyCardProps {
 }
 
 export default function PropertyCard({ property }: PropertyCardProps) {
+  const { user } = useAuth();
   const formattedPrice = new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
@@ -48,10 +52,12 @@ export default function PropertyCard({ property }: PropertyCardProps) {
         <div className={styles.header}>
           <div className={styles.titleInfo}>
             <h3 className={styles.title}>{property.title}</h3>
-            <span className={styles.location}>
-              <MapPin size={14} className={styles.locationIcon} />
-              {property.location}
-            </span>
+            {user && (
+              <span className={styles.location}>
+                <MapPin size={14} className={styles.locationIcon} />
+                {property.location}
+              </span>
+            )}
           </div>
           <div className={styles.priceInfo}>
             <span className={styles.price}>{formattedPrice}</span>
@@ -60,18 +66,35 @@ export default function PropertyCard({ property }: PropertyCardProps) {
 
         {/* Specifications */}
         <div className={styles.specs}>
-          <div className={styles.specItem}>
-            <BedDouble size={16} className={styles.specIcon} />
-            <span>{property.beds} Beds</span>
-          </div>
-          <div className={styles.specItem}>
-            <Bath size={16} className={styles.specIcon} />
-            <span>{property.baths} Baths</span>
-          </div>
-          <div className={styles.specItem}>
-            <Square size={16} className={styles.specIcon} />
-            <span>{property.area} Sq Ft</span>
-          </div>
+          {property.customFields && Object.keys(property.customFields).length > 0 ? (
+            Object.entries(property.customFields).slice(0, 3).map(([key, value]) => (
+              <div key={key} className={styles.specItem}>
+                <Square size={16} className={styles.specIcon} />
+                <span>{String(value)} {key}</span>
+              </div>
+            ))
+          ) : (
+            <>
+              {property.beds ? (
+                <div className={styles.specItem}>
+                  <BedDouble size={16} className={styles.specIcon} />
+                  <span>{property.beds} Beds</span>
+                </div>
+              ) : null}
+              {property.baths ? (
+                <div className={styles.specItem}>
+                  <Bath size={16} className={styles.specIcon} />
+                  <span>{property.baths} Baths</span>
+                </div>
+              ) : null}
+              {property.area ? (
+                <div className={styles.specItem}>
+                  <Square size={16} className={styles.specIcon} />
+                  <span>{property.area} Sq Ft</span>
+                </div>
+              ) : null}
+            </>
+          )}
         </div>
       </div>
     </Link>

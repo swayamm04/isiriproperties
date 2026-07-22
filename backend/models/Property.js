@@ -16,6 +16,11 @@ const propertySchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    city: {
+      type: String,
+      required: true,
+      trim: true,
+    },
     location: {
       type: String,
       required: true,
@@ -39,13 +44,15 @@ const propertySchema = new mongoose.Schema(
     },
     area: {
       type: String,
-      required: true,
       trim: true,
     },
     type: {
       type: String,
-      enum: ["Villa", "Chalet", "Penthouse", "Site"],
       required: true,
+    },
+    customFields: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
     },
     addedBy: {
       type: mongoose.Schema.Types.ObjectId,

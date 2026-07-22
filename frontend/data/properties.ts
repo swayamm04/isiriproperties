@@ -9,6 +9,7 @@ export interface Property {
   area: string;
   type: "Villa" | "Chalet" | "Penthouse" | "Site";
   description: string;
+  customFields?: any;
 }
 
 export const PROPERTIES: Property[] = [

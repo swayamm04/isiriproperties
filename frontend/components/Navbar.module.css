@@ -94,12 +94,17 @@
 }
 
 .mobileMenuBtn {
-  display: none;
   background: none;
   border: none;
   color: var(--color-dark);
   cursor: pointer;
   padding: 0.25rem;
+}
+
+.mobileActions {
+  display: none;
+  align-items: center;
+  gap: 1.25rem;
 }
 
 /* Mobile Sidebar Drawer */
@@ -195,8 +200,8 @@
     display: none;
   }
   
-  .mobileMenuBtn {
-    display: block;
+  .mobileActions {
+    display: flex;
   }
   
   .container {

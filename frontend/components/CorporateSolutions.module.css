@@ -1,0 +1,119 @@
+.section {
+  padding: 6rem 2rem;
+  background-color: var(--color-bg-light); /* Or a very light blue if preferred, but bg-light usually matches the theme */
+  text-align: center;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header {
+  margin-bottom: 4rem;
+}
+
+.title {
+  font-family: var(--font-serif);
+  font-size: 2.5rem;
+  color: var(--color-dark);
+  margin-bottom: 1rem;
+}
+
+.titleHighlight {
+  color: var(--color-primary);
+}
+
+.subtitle {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-primary-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  margin-bottom: 1.5rem;
+}
+
+.starDivider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.line {
+  display: block;
+  height: 1px;
+  width: 60px;
+  background-color: var(--color-primary);
+  opacity: 0.5;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+}
+
+.card {
+  background-color: var(--color-bg-white);
+  border-radius: 12px;
+  padding: 2.5rem 1.5rem;
+  text-align: left;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid rgba(76, 131, 161, 0.05);
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+}
+
+.iconWrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  background-color: rgba(76, 131, 161, 0.1);
+  color: var(--color-primary-dark);
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.cardTitle {
+  font-family: var(--font-serif);
+  font-size: 1.3rem;
+  color: var(--color-dark);
+  margin-bottom: 1rem;
+}
+
+.cardText {
+  font-size: 0.9rem;
+  color: var(--color-dark-muted);
+  line-height: 1.6;
+}
+
+@media (max-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .section {
+    padding: 4rem 1rem;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .title {
+    font-size: 2rem;
+  }
+
+  .subtitle {
+    font-size: 0.7rem;
+  }
+}

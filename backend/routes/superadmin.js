@@ -39,7 +39,7 @@ router.get("/stats", async (req, res) => {
 // @desc    Add a new admin
 // @access  Private (Super Admin)
 router.post("/admins", async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, phone, password } = req.body;
 
   try {
     if (!name || !email || !password) {
@@ -54,6 +54,7 @@ router.post("/admins", async (req, res) => {
     const newAdmin = new User({
       name,
       email,
+      phone,
       password,
       role: "admin",
     });
@@ -65,6 +66,7 @@ router.post("/admins", async (req, res) => {
         id: newAdmin._id,
         name: newAdmin.name,
         email: newAdmin.email,
+        phone: newAdmin.phone,
         role: newAdmin.role,
       },
     });
@@ -91,7 +93,7 @@ router.get("/admins", async (req, res) => {
 // @desc    Edit admin details
 // @access  Private (Super Admin)
 router.put("/admins/:id", async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, phone, password } = req.body;
 
   try {
     const admin = await User.findOne({ _id: req.params.id, role: "admin" });
@@ -100,6 +102,7 @@ router.put("/admins/:id", async (req, res) => {
     }
 
     if (name) admin.name = name;
+    if (phone) admin.phone = phone;
     if (email) {
       if (email !== admin.email) {
         const existing = await User.findOne({ email });

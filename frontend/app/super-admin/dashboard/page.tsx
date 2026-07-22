@@ -41,6 +41,7 @@ interface AdminProfile {
   _id: string;
   name: string;
   email: string;
+  phone?: string;
   createdAt: string;
 }
 
@@ -65,6 +66,18 @@ interface Property {
   addedBy: string;
   addedByName: string;
   status: "available" | "sold";
+}
+
+interface CategoryField {
+  name: string;
+  type: string;
+  unit?: string;
+}
+
+interface Category {
+  _id: string;
+  name: string;
+  fields: CategoryField[];
 }
 
 interface InterestInquiry {
@@ -98,6 +111,7 @@ export default function SuperAdminDashboardPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isAddPropModalOpen, setIsAddPropModalOpen] = useState(false);
   const [isAddAdminModalOpen, setIsAddAdminModalOpen] = useState(false);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
 
   // State values
   const [stats, setStats] = useState<Stats | null>(null);
@@ -105,6 +119,8 @@ export default function SuperAdminDashboardPage() {
   const [admins, setAdmins] = useState<AdminProfile[]>([]);
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [citySuggestions, setCitySuggestions] = useState<string[]>([]);
   
   // Loading & Error states
   const [statsLoading, setStatsLoading] = useState(false);
@@ -116,21 +132,26 @@ export default function SuperAdminDashboardPage() {
   const [editingAdminId, setEditingAdminId] = useState<string | null>(null);
   const [adminName, setAdminName] = useState("");
   const [adminEmail, setAdminEmail] = useState("");
+  const [adminPhone, setAdminPhone] = useState("");
   const [adminPassword, setAdminPassword] = useState("");
   const [addAdminLoading, setAddAdminLoading] = useState(false);
 
   // Add Property form state (Super Admin listing properties directly)
   const [propTitle, setPropTitle] = useState("");
+  const [propCity, setPropCity] = useState("");
   const [propLocation, setPropLocation] = useState("");
   const [propPrice, setPropPrice] = useState("");
-  const [propType, setPropType] = useState("Villa");
-  const [propBeds, setPropBeds] = useState("3");
-  const [propBaths, setPropBaths] = useState("2.5");
-  const [propArea, setPropArea] = useState("");
+  const [propType, setPropType] = useState("");
   const [propDescription, setPropDescription] = useState("");
   const [propSelectedFiles, setPropSelectedFiles] = useState<FileList | null>(null);
-  const [propImageUrls, setPropImageUrls] = useState("");
   const [propAddLoading, setPropAddLoading] = useState(false);
+  const [propCustomFields, setPropCustomFields] = useState<Record<string, any>>({});
+
+  // Category form state
+  const [catName, setCatName] = useState("");
+  const [catFields, setCatFields] = useState<CategoryField[]>([]);
+  const [catAddLoading, setCatAddLoading] = useState(false);
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
 
   // Property filtering state
   const [selectedAdminId, setSelectedAdminId] = useState("");
@@ -178,8 +199,16 @@ export default function SuperAdminDashboardPage() {
         const endpoint = selectedAdminId 
           ? `/superadmin/properties?adminId=${selectedAdminId}` 
           : "/superadmin/properties";
-        const data = await apiRequest(endpoint);
-        setProperties(data);
+        const [propData, catData, adminsData, cityData] = await Promise.all([
+          apiRequest(endpoint),
+          apiRequest("/categories"),
+          apiRequest("/superadmin/admins"),
+          apiRequest("/properties/cities/all")
+        ]);
+        setProperties(propData);
+        setCategories(catData);
+        setAdmins(adminsData);
+        setCitySuggestions(cityData);
       }
     } catch (err: any) {
       console.error(`Error loading data for ${activeTab}:`, err);
@@ -234,6 +263,7 @@ export default function SuperAdminDashboardPage() {
           body: JSON.stringify({
             name: adminName,
             email: adminEmail,
+            phone: adminPhone,
             password: adminPassword || undefined,
           }),
         });
@@ -248,12 +278,13 @@ export default function SuperAdminDashboardPage() {
         }
         await apiRequest("/superadmin/admins", {
           method: "POST",
-          body: JSON.stringify({ name: adminName, email: adminEmail, password: adminPassword }),
+          body: JSON.stringify({ name: adminName, email: adminEmail, phone: adminPhone, password: adminPassword }),
         });
         setSuccessMsg(`Admin "${adminName}" created successfully.`);
       }
       setAdminName("");
       setAdminEmail("");
+      setAdminPhone("");
       setAdminPassword("");
       setTimeout(() => {
         setIsAddAdminModalOpen(false);
@@ -268,6 +299,51 @@ export default function SuperAdminDashboardPage() {
     }
   };
 
+  // Actions: Add Category Submit
+  const handleAddCategorySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCatAddLoading(true);
+    setErrorMsg("");
+    setSuccessMsg("");
+
+    if (!catName.trim()) {
+      setErrorMsg("Category name is required.");
+      setCatAddLoading(false);
+      return;
+    }
+
+    try {
+      if (editingCategoryId) {
+        await apiRequest(`/categories/${editingCategoryId}`, {
+          method: "PUT",
+          body: JSON.stringify({ name: catName, fields: catFields }),
+        });
+        setSuccessMsg("Property Type updated successfully!");
+        setEditingCategoryId(null);
+      } else {
+        await apiRequest("/categories", {
+          method: "POST",
+          body: JSON.stringify({ name: catName, fields: catFields }),
+        });
+        setSuccessMsg("Property Type added successfully!");
+      }
+      
+      setCatName("");
+      setCatFields([]);
+      
+      const newCatData = await apiRequest("/categories");
+      setCategories(newCatData);
+      
+      setTimeout(() => {
+        setSuccessMsg("");
+      }, 2000);
+    } catch (err: any) {
+      setErrorMsg(err.message || "Failed to add category.");
+    } finally {
+      setCatAddLoading(false);
+    }
+  };
+
   // Actions: Add Property Submit (Super Admin)
   const handleAddPropertySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -275,7 +351,7 @@ export default function SuperAdminDashboardPage() {
     setErrorMsg("");
     setSuccessMsg("");
 
-    if (!propTitle || !propLocation || !propPrice || !propArea || !propDescription) {
+    if (!propTitle || !propCity || !propLocation || !propPrice || !propDescription) {
       setErrorMsg("Please fill out all required fields.");
       setPropAddLoading(false);
       return;
@@ -284,14 +360,12 @@ export default function SuperAdminDashboardPage() {
     try {
       const formData = new FormData();
       formData.append("title", propTitle);
+      formData.append("city", propCity);
       formData.append("location", propLocation);
       formData.append("price", propPrice);
       formData.append("type", propType);
-      formData.append("beds", propBeds);
-      formData.append("baths", propBaths);
-      formData.append("area", propArea);
       formData.append("description", propDescription);
-      formData.append("imageUrls", propImageUrls);
+      formData.append("customFields", JSON.stringify(propCustomFields));
 
       if (propSelectedFiles && propSelectedFiles.length > 0) {
         for (let i = 0; i < propSelectedFiles.length; i++) {
@@ -306,15 +380,13 @@ export default function SuperAdminDashboardPage() {
 
       setSuccessMsg("Property added successfully!");
       setPropTitle("");
+      setPropCity("");
       setPropLocation("");
       setPropPrice("");
-      setPropType("Villa");
-      setPropBeds("3");
-      setPropBaths("2.5");
-      setPropArea("");
+      setPropType("");
       setPropDescription("");
       setPropSelectedFiles(null);
-      setPropImageUrls("");
+      setPropCustomFields({});
 
       const fileInput = document.getElementById("superImageFiles") as HTMLInputElement;
       if (fileInput) fileInput.value = "";
@@ -340,6 +412,7 @@ export default function SuperAdminDashboardPage() {
     setEditingAdminId(adm._id);
     setAdminName(adm.name);
     setAdminEmail(adm.email);
+    setAdminPhone(adm.phone || "");
     setAdminPassword("");
     setIsAddAdminModalOpen(true);
   };
@@ -348,6 +421,7 @@ export default function SuperAdminDashboardPage() {
     setEditingAdminId(null);
     setAdminName("");
     setAdminEmail("");
+    setAdminPhone("");
     setAdminPassword("");
     setIsAddAdminModalOpen(false);
   };
@@ -917,6 +991,23 @@ export default function SuperAdminDashboardPage() {
                       </div>
 
                       <button
+                        onClick={() => setIsCategoryModalOpen(true)}
+                        className={styles.submitBtn}
+                        style={{ 
+                          padding: "0.6rem 1.5rem", 
+                          fontSize: "0.8rem", 
+                          display: "flex", 
+                          alignItems: "center", 
+                          gap: "0.5rem",
+                          backgroundColor: "transparent",
+                          color: "var(--color-dark)",
+                          border: "1px solid var(--color-border)"
+                        }}
+                      >
+                        <Settings size={16} />
+                        <span>Property Type</span>
+                      </button>
+                      <button
                         onClick={() => setIsAddPropModalOpen(true)}
                         className={styles.submitBtn}
                         style={{ 
@@ -1156,6 +1247,18 @@ export default function SuperAdminDashboardPage() {
               </div>
 
               <div className={styles.formGroup}>
+                <label className={styles.label}>Phone Number</label>
+                <input
+                  type="tel"
+                  placeholder="e.g. +91 99000 99000"
+                  value={adminPhone}
+                  onChange={(e) => setAdminPhone(e.target.value)}
+                  className={styles.input}
+                  required
+                />
+              </div>
+
+              <div className={styles.formGroup}>
                 <label className={styles.label}>
                   {editingAdminId ? "New Password (optional)" : "Default Password"}
                 </label>
@@ -1184,6 +1287,164 @@ export default function SuperAdminDashboardPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Category Management Modal */}
+      {isCategoryModalOpen && (
+        <div className={styles.modalOverlay} onClick={() => setIsCategoryModalOpen(false)}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()} style={{ maxWidth: "800px" }}>
+            <button 
+              className={styles.modalCloseBtn} 
+              onClick={() => setIsCategoryModalOpen(false)}
+            >
+              <X size={20} />
+            </button>
+            <h2 className={styles.modalTitle} style={{ fontFamily: "var(--font-serif)", fontSize: "1.6rem", fontWeight: 400, marginBottom: "2rem" }}>
+              Property Type Management
+            </h2>
+            <div style={{ display: "flex", gap: "2rem", flexWrap: "wrap" }}>
+              {/* New Category Form */}
+              <div style={{ flex: "1 1 300px" }}>
+                <h3 style={{ fontSize: "1.1rem", marginBottom: "1rem", color: "var(--color-primary-dark)" }}>{editingCategoryId ? "EDIT PROPERTY TYPE" : "NEW PROPERTY TYPE"}</h3>
+                <form onSubmit={handleAddCategorySubmit}>
+                  {errorMsg && <div className={styles.errorBox}>{errorMsg}</div>}
+                  {successMsg && <div className={styles.successBox}>{successMsg}</div>}
+                  <div className={styles.formGroup}>
+                    <label className={styles.label}>Property Type Name</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Commercial"
+                      value={catName}
+                      onChange={(e) => setCatName(e.target.value)}
+                      className={styles.input}
+                      required
+                    />
+                  </div>
+                  
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
+                    <label className={styles.label} style={{ margin: 0 }}>Fields</label>
+                    <button 
+                      type="button" 
+                      onClick={() => setCatFields([...catFields, { name: "", type: "text", unit: "" }])}
+                      style={{ background: "none", border: "1px solid var(--color-border)", padding: "0.2rem 0.5rem", borderRadius: "4px", fontSize: "0.8rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.2rem" }}
+                    >
+                      <PlusCircle size={14} /> Add
+                    </button>
+                  </div>
+                  
+                  {catFields.length === 0 ? (
+                    <div style={{ padding: "1rem", border: "1px dashed var(--color-border)", textAlign: "center", fontSize: "0.8rem", color: "var(--color-dark-muted)", marginBottom: "1.5rem" }}>
+                      NO CUSTOM FIELDS
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginBottom: "1.5rem", maxHeight: "250px", overflowY: "auto", paddingRight: "0.5rem" }}>
+                      {catFields.map((field, index) => (
+                        <div key={index} style={{ display: "flex", gap: "0.5rem", alignItems: "center", backgroundColor: "var(--color-bg-light)", padding: "0.5rem", borderRadius: "4px", border: "1px solid var(--color-border)" }}>
+                          <input 
+                            type="text" 
+                            placeholder="Field Name" 
+                            value={field.name}
+                            onChange={(e) => {
+                              const newFields = [...catFields];
+                              newFields[index].name = e.target.value;
+                              setCatFields(newFields);
+                            }}
+                            className={styles.input}
+                            style={{ flex: 2, padding: "0.4rem" }}
+                            required
+                          />
+
+                          <button 
+                            type="button" 
+                            onClick={() => {
+                              const newFields = [...catFields];
+                              newFields.splice(index, 1);
+                              setCatFields(newFields);
+                            }}
+                            style={{ background: "none", border: "none", color: "#e05e5e", cursor: "pointer", padding: "0.2rem" }}
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div style={{ display: "flex", gap: "1rem" }}>
+                    <button type="submit" className={styles.submitBtn} disabled={catAddLoading} style={{ flex: 1 }}>
+                      {catAddLoading ? "Saving..." : editingCategoryId ? "Update Property Type" : "Add Property Type"}
+                    </button>
+                    {editingCategoryId && (
+                      <button 
+                        type="button" 
+                        onClick={() => {
+                          setEditingCategoryId(null);
+                          setCatName("");
+                          setCatFields([]);
+                        }}
+                        className={styles.submitBtn} 
+                        style={{ flex: 1, backgroundColor: "transparent", color: "var(--color-dark)", border: "1px solid var(--color-border)" }}
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+                </form>
+              </div>
+
+              {/* Existing Categories List */}
+              <div style={{ flex: "1 1 300px" }}>
+                <h3 style={{ fontSize: "1.1rem", marginBottom: "1rem", color: "var(--color-primary-dark)" }}>EXISTING PROPERTY TYPES</h3>
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", maxHeight: "350px", overflowY: "auto", paddingRight: "0.5rem" }}>
+                  {categories.length > 0 ? (
+                    categories.map(cat => (
+                      <div key={cat._id} style={{ border: "1px solid var(--color-border)", borderRadius: "6px", padding: "0.6rem 0.8rem", backgroundColor: "#fff" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.2rem" }}>
+                          <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: 500 }}>{cat.name}</h4>
+                          <div style={{ display: "flex", gap: "0.8rem" }}>
+                            <button 
+                              onClick={() => {
+                                setEditingCategoryId(cat._id);
+                                setCatName(cat.name);
+                                setCatFields(cat.fields);
+                              }}
+                              style={{ background: "none", border: "none", color: "var(--color-primary)", cursor: "pointer", padding: 0 }}
+                              title="Edit Property Type"
+                            >
+                              <Edit size={16} />
+                            </button>
+                            <button 
+                              onClick={async () => {
+                              if(confirm(`Delete category ${cat.name}?`)) {
+                                try {
+                                  await apiRequest(`/categories/${cat._id}`, { method: 'DELETE' });
+                                  const newCatData = await apiRequest("/categories");
+                                  setCategories(newCatData);
+                                } catch(e: any) {
+                                  alert(e.message);
+                                }
+                              }
+                            }}
+                            style={{ background: "none", border: "none", color: "#e05e5e", cursor: "pointer", padding: 0 }}
+                            title="Delete Property Type"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                          </div>
+                        </div>
+                        <div style={{ fontSize: "0.75rem", color: "var(--color-dark-muted)" }}>
+                          {cat.fields.length} fields defined
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div style={{ fontSize: "0.9rem", color: "var(--color-dark-muted)" }}>No categories created yet.</div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -1221,6 +1482,22 @@ export default function SuperAdminDashboardPage() {
                 </div>
 
                 <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
+                  <label className={styles.label}>City *</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. New York"
+                    value={propCity}
+                    onChange={(e) => setPropCity(e.target.value)}
+                    className={styles.input}
+                    list="superAdminCitySuggestions"
+                    required
+                  />
+                  <datalist id="superAdminCitySuggestions">
+                    {citySuggestions.map((c, i) => <option key={i} value={c} />)}
+                  </datalist>
+                </div>
+
+                <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
                   <label className={styles.label}>Location Address *</label>
                   <input
                     type="text"
@@ -1239,6 +1516,7 @@ export default function SuperAdminDashboardPage() {
                     placeholder="e.g. 45000000"
                     value={propPrice}
                     onChange={(e) => setPropPrice(e.target.value)}
+                    onWheel={(e) => (e.target as HTMLInputElement).blur()}
                     className={styles.input}
                     required
                   />
@@ -1248,52 +1526,37 @@ export default function SuperAdminDashboardPage() {
                   <label className={styles.label}>Property Type *</label>
                   <select
                     value={propType}
-                    onChange={(e) => setPropType(e.target.value)}
+                    onChange={(e) => {
+                      setPropType(e.target.value);
+                      setPropCustomFields({});
+                    }}
                     className={styles.select}
                     style={{ border: "1px solid var(--color-border)", padding: "0.8rem 1rem", fontSize: "0.9rem" }}
                   >
-                    <option value="Villa">Villa</option>
-                    <option value="Chalet">Chalet</option>
-                    <option value="Penthouse">Penthouse</option>
+                    <option value="" disabled>Select Property Type</option>
+                    {categories.length > 0 ? (
+                      categories.map(c => <option key={c._id} value={c.name}>{c.name}</option>)
+                    ) : (
+                      <option value="" disabled>No results found</option>
+                    )}
                   </select>
                 </div>
 
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>Bedrooms *</label>
-                  <input
-                    type="number"
-                    placeholder="e.g. 4"
-                    value={propBeds}
-                    onChange={(e) => setPropBeds(e.target.value)}
-                    className={styles.input}
-                    required
-                  />
-                </div>
 
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>Bathrooms *</label>
-                  <input
-                    type="number"
-                    placeholder="e.g. 3.5"
-                    step="0.5"
-                    value={propBaths}
-                    onChange={(e) => setPropBaths(e.target.value)}
-                    className={styles.input}
-                    required
-                  />
-                </div>
 
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>Area size *</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. 5,400 sqft"
-                    value={propArea}
-                    onChange={(e) => setPropArea(e.target.value)}
-                    className={styles.input}
-                    required
-                  />
-                </div>
+                {/* Custom Fields Rendering */}
+                {categories.find(c => c.name === propType)?.fields.map(field => (
+                  <div key={field.name} className={styles.formGroup}>
+                    <label className={styles.label}>{field.name} {field.unit ? `(${field.unit})` : ""}</label>
+                    <input
+                      type={field.type === "number" ? "number" : "text"}
+                      placeholder={`Enter ${field.name}`}
+                      value={propCustomFields[field.name] || ""}
+                      onChange={(e) => setPropCustomFields({...propCustomFields, [field.name]: e.target.value})}
+                      className={styles.input}
+                    />
+                  </div>
+                ))}
 
                 <div className={styles.formGroup}>
                   <label className={styles.label}>Upload Local Images (max 6)</label>
@@ -1309,17 +1572,7 @@ export default function SuperAdminDashboardPage() {
                   <span className={styles.helperText}>Select multiple image files to upload to the server.</span>
                 </div>
 
-                <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
-                  <label className={styles.label}>Or Provide Remote Image URLs (comma separated)</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. https://domain.com/img1.jpg, https://domain.com/img2.jpg"
-                    value={propImageUrls}
-                    onChange={(e) => setPropImageUrls(e.target.value)}
-                    className={styles.input}
-                  />
-                  <span className={styles.helperText}>You can mix both file uploads and image URLs.</span>
-                </div>
+
 
                 <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
                   <label className={styles.label}>Architectural Description *</label>
