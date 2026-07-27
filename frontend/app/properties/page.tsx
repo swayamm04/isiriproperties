@@ -24,6 +24,8 @@ interface Property {
   area: string;
   type: "Villa" | "Chalet" | "Penthouse";
   description: string;
+  listingType?: "Sell" | "Rent";
+  isPremium?: boolean;
   status: "available" | "sold";
 }
 
@@ -39,6 +41,7 @@ function PropertiesList() {
 
   // State values for filters
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedListingType, setSelectedListingType] = useState("");
   const [selectedType, setSelectedType] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
 
@@ -47,10 +50,13 @@ function PropertiesList() {
     const loc = searchParams.get("location") || searchParams.get("search") || "";
     const type = searchParams.get("type") || "";
     const city = searchParams.get("city") || "";
+    const storedListingType = typeof window !== "undefined" ? sessionStorage.getItem("homeListingType") : "";
+    const listingType = searchParams.get("listingType") || storedListingType || "";
 
     if (loc) setSearchQuery(loc);
     if (type) setSelectedType(type);
     if (city) setSelectedCity(city);
+    if (listingType) setSelectedListingType(listingType);
     
     // Auto-focus search input if navigated via #search
     if (window.location.hash === "#search") {
@@ -92,15 +98,17 @@ function PropertiesList() {
       property.propertyId.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesType = selectedType ? property.type === selectedType : true;
+    const matchesListingType = selectedListingType ? property.listingType === selectedListingType : true;
     const matchesCity = selectedCity ? property.city === selectedCity : true;
 
-    return matchesSearch && matchesType && matchesCity;
+    return matchesSearch && matchesType && matchesListingType && matchesCity;
   });
 
   const uniqueCities = Array.from(new Set(properties.map(p => p.city).filter(Boolean)));
 
   const handleReset = () => {
     setSearchQuery("");
+    setSelectedListingType("");
     setSelectedType("");
     setSelectedCity("");
   };
@@ -149,6 +157,20 @@ function PropertiesList() {
         </div>
 
         <div className={styles.filterBar}>
+          {/* Listing Type Select */}
+          <div className={styles.filterGroup}>
+            <label className={styles.label}>Listing Type</label>
+            <select
+              value={selectedListingType}
+              onChange={(e) => setSelectedListingType(e.target.value)}
+              className={styles.select}
+            >
+              <option value="">All (Buy & Rent)</option>
+              <option value="Sell">Buy</option>
+              <option value="Rent">Rent</option>
+            </select>
+          </div>
+
           {/* Type Select */}
           <div className={styles.filterGroup}>
             <label className={styles.label}>Property Type</label>
@@ -205,6 +227,8 @@ function PropertiesList() {
                 baths: property.baths,
                 area: property.area,
                 type: property.type,
+                listingType: property.listingType,
+                isPremium: property.isPremium,
                 description: property.description,
                 customFields: (property as any).customFields,
               };

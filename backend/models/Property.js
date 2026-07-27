@@ -50,6 +50,15 @@ const propertySchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    listingType: {
+      type: String,
+      enum: ["Sell", "Rent"],
+      default: "Sell",
+    },
+    isPremium: {
+      type: Boolean,
+      default: false,
+    },
     customFields: {
       type: mongoose.Schema.Types.Mixed,
       default: {},

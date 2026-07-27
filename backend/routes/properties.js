@@ -39,6 +39,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
+  limits: { fileSize: 3 * 1024 * 1024 }, // 3MB limit
   fileFilter: (req, file, cb) => {
     const filetypes = /jpeg|jpg|png|webp|gif/;
     const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
@@ -55,7 +56,7 @@ const upload = multer({
 // @desc    Get all properties (with search & filters)
 // @access  Public
 router.get("/", async (req, res) => {
-  const { search, type, price, status } = req.query;
+  const { search, type, price, status, listingType, isPremium } = req.query;
 
   try {
     let query = {};
@@ -85,7 +86,17 @@ router.get("/", async (req, res) => {
       query.price = { $lte: Number(price) };
     }
 
-    const properties = await Property.find(query).sort({ createdAt: -1 });
+    if (listingType) {
+      query.listingType = listingType;
+    }
+
+    if (isPremium === 'true') {
+      query.isPremium = true;
+    } else if (isPremium === 'false') {
+      query.isPremium = false;
+    }
+
+    const properties = await Property.find(query).sort({ isPremium: -1, createdAt: -1 });
     res.json(properties);
   } catch (error) {
     console.error(error);
@@ -170,7 +181,7 @@ router.get("/:id", async (req, res) => {
 // @access  Private (Admin & Super Admin)
 router.post("/", auth, authorize(["admin", "super_admin"]), upload.array("imageFiles", 6), async (req, res) => {
   try {
-    const { title, description, city, location, price, beds, baths, area, type, imageUrls, customFields } = req.body;
+    const { title, description, city, location, price, beds, baths, area, type, imageUrls, customFields, listingType, isPremium } = req.body;
 
     if (!title || !description || !city || !location || !price || !type) {
       return res.status(400).json({ error: "Please provide all required fields (title, description, city, location, price, type)" });
@@ -239,6 +250,8 @@ router.post("/", auth, authorize(["admin", "super_admin"]), upload.array("imageF
       baths: Number(baths) || 0,
       area,
       type: type || "Villa",
+      listingType: listingType || "Sell",
+      isPremium: isPremium === "true" || isPremium === true,
       customFields: parsedCustomFields,
       addedBy: req.user._id,
       addedByName: req.user.role === "super_admin" ? "Super Admin" : req.user.name,
@@ -255,8 +268,8 @@ router.post("/", auth, authorize(["admin", "super_admin"]), upload.array("imageF
 
 // @route   POST api/properties/wishlist/:id
 // @desc    Add or remove a property from the user's wishlist
-// @access  Private (User only)
-router.post("/wishlist/:id", auth, authorize("user"), async (req, res) => {
+// @access  Private (All authenticated users)
+router.post("/wishlist/:id", auth, authorize(["user", "admin", "super_admin"]), async (req, res) => {
   try {
     const propertyId = req.params.id;
     const property = await Property.findById(propertyId);
@@ -283,6 +296,107 @@ router.post("/wishlist/:id", auth, authorize("user"), async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error managing wishlist" });
+  }
+});
+
+// @route   PUT api/properties/:id
+// @desc    Update a property
+// @access  Private (Admin & Super Admin)
+router.put("/:id", auth, authorize(["admin", "super_admin"]), upload.array("imageFiles", 6), async (req, res) => {
+  try {
+    const { title, description, city, location, price, beds, baths, area, type, imageUrls, customFields, removedImages, listingType, isPremium } = req.body;
+
+    const property = await Property.findById(req.params.id);
+    if (!property) return res.status(404).json({ error: "Property not found" });
+
+    // Check ownership
+    if (req.user.role === "admin" && property.addedBy.toString() !== req.user.id) {
+      return res.status(403).json({ error: "Not authorized to update this property" });
+    }
+
+    let parsedCustomFields = property.customFields || {};
+    if (customFields) {
+      try {
+        parsedCustomFields = typeof customFields === 'string' ? JSON.parse(customFields) : customFields;
+      } catch (e) {
+        console.error("Error parsing customFields:", e);
+      }
+    }
+
+    let currentImages = [...property.images];
+    
+    // Process removed images
+    if (removedImages) {
+      let toRemove = Array.isArray(removedImages) ? removedImages : removedImages.split(",").map(i => i.trim());
+      currentImages = currentImages.filter(img => !toRemove.includes(img));
+    }
+
+    // Process newly uploaded files
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        if (isCloudinaryConfigured) {
+          try {
+            const result = await cloudinary.uploader.upload(file.path, { folder: "i_siri_properties" });
+            currentImages.push(result.secure_url);
+            fs.unlink(file.path, (err) => { if (err) console.error("Error deleting local temp file:", err); });
+          } catch (uploadError) {
+            console.error("Cloudinary upload failure, fallback to local file:", uploadError);
+            currentImages.push(`/uploads/${file.filename}`);
+          }
+        } else {
+          currentImages.push(`/uploads/${file.filename}`);
+        }
+      }
+    }
+
+    // Process image URLs
+    if (imageUrls) {
+      let urls = Array.isArray(imageUrls) ? imageUrls : imageUrls.split(",").map((url) => url.trim());
+      urls.forEach((url) => { if (url && !currentImages.includes(url)) currentImages.push(url); });
+    }
+
+    if (currentImages.length === 0) currentImages.push("/prop-1.png");
+
+    property.title = title || property.title;
+    property.description = description || property.description;
+    property.city = city || property.city;
+    property.location = location || property.location;
+    property.price = price ? Number(price) : property.price;
+    property.beds = beds ? Number(beds) : property.beds;
+    property.baths = baths ? Number(baths) : property.baths;
+    property.area = area || property.area;
+    property.type = type || property.type;
+    if (listingType) property.listingType = listingType;
+    if (isPremium !== undefined) property.isPremium = isPremium === "true" || isPremium === true;
+    property.images = currentImages;
+    property.customFields = parsedCustomFields;
+
+    await property.save();
+    res.json(property);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message || "Error updating property" });
+  }
+});
+
+// @route   DELETE api/properties/:id
+// @desc    Delete a property
+// @access  Private (Admin & Super Admin)
+router.delete("/:id", auth, authorize(["admin", "super_admin"]), async (req, res) => {
+  try {
+    const property = await Property.findById(req.params.id);
+    if (!property) return res.status(404).json({ error: "Property not found" });
+
+    // Check ownership
+    if (req.user.role === "admin" && property.addedBy.toString() !== req.user.id) {
+      return res.status(403).json({ error: "Not authorized to delete this property" });
+    }
+
+    await Property.findByIdAndDelete(req.params.id);
+    res.json({ message: "Property deleted successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error deleting property" });
   }
 });
 

@@ -10,6 +10,7 @@ export interface UserProfile {
   phone?: string;
   city?: string;
   role: "super_admin" | "admin" | "user";
+  profileImage?: string;
   wishlist: string[];
 }
 
@@ -18,11 +19,17 @@ interface AuthContextType {
   loading: boolean;
   error: string | null;
   login: (email: string, password: string) => Promise<UserProfile>;
-  signup: (userData: { name: string; email: string; phone: string; city: string; password: string }) => Promise<UserProfile>;
+  signup: (userData: { name: string; email: string; phone: string; city: string; password: string; otp: string }) => Promise<UserProfile>;
   logout: () => void;
   toggleWishlist: (propertyId: string) => Promise<boolean>;
   refreshProfile: () => Promise<void>;
   clearError: () => void;
+  sendOtp: (phone: string) => Promise<boolean>;
+  forgotPassword: (phone: string, otp: string, newPassword: string) => Promise<boolean>;
+  getPhoneByEmail: (email: string) => Promise<{ maskedPhone: string; phone: string }>;
+  updatePhone: (newPhone: string, currentPassword: string) => Promise<boolean>;
+  updateProfileImage: (file: File) => Promise<boolean>;
+  updateProfile: (data: { name?: string; phone?: string; city?: string }) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -50,6 +57,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           phone: data.phone,
           city: data.city,
           role: data.role,
+          profileImage: data.profileImage,
           wishlist: data.wishlist ? data.wishlist.map((item: any) => typeof item === "string" ? item : item._id || item.id) : [],
         });
       } catch (err: any) {
@@ -84,6 +92,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         phone: data.user.phone,
         city: data.user.city,
         role: data.user.role,
+        profileImage: data.user.profileImage,
         wishlist: data.user.wishlist || [],
       };
       
@@ -95,7 +104,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signup = async (userData: { name: string; email: string; phone: string; city: string; password: string }): Promise<UserProfile> => {
+  const signup = async (userData: { name: string; email: string; phone: string; city: string; password: string; otp: string }): Promise<UserProfile> => {
     setError(null);
     try {
       const data = await apiRequest("/auth/signup", {
@@ -112,6 +121,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         phone: data.user.phone,
         city: data.user.city,
         role: data.user.role,
+        profileImage: data.user.profileImage,
         wishlist: data.user.wishlist || [],
       };
 
@@ -160,6 +170,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         phone: data.phone,
         city: data.city,
         role: data.role,
+        profileImage: data.profileImage,
         wishlist: data.wishlist ? data.wishlist.map((item: any) => typeof item === "string" ? item : item._id || item.id) : [],
       });
     } catch (err) {
@@ -168,6 +179,98 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const clearError = () => setError(null);
+
+  const sendOtp = async (phone: string): Promise<boolean> => {
+    setError(null);
+    try {
+      await apiRequest("/auth/send-otp", {
+        method: "POST",
+        body: JSON.stringify({ phone }),
+      });
+      return true;
+    } catch (err: any) {
+      setError(err.message || "Failed to send OTP");
+      return false;
+    }
+  };
+
+  const forgotPassword = async (phone: string, otp: string, newPassword: string): Promise<boolean> => {
+    setError(null);
+    try {
+      await apiRequest("/auth/forgot-password", {
+        method: "POST",
+        body: JSON.stringify({ phone, otp, newPassword }),
+      });
+      return true;
+    } catch (err: any) {
+      setError(err.message || "Failed to reset password");
+      return false;
+    }
+  };
+
+  const getPhoneByEmail = async (email: string): Promise<{ maskedPhone: string; phone: string }> => {
+    setError(null);
+    try {
+      const data = await apiRequest("/auth/get-phone-by-email", {
+        method: "POST",
+        body: JSON.stringify({ email }),
+      });
+      return data;
+    } catch (err: any) {
+      setError(err.message || "Failed to find account");
+      throw err;
+    }
+  };
+
+  const updatePhone = async (newPhone: string, currentPassword: string): Promise<boolean> => {
+    setError(null);
+    try {
+      await apiRequest("/auth/update-phone", {
+        method: "PUT",
+        body: JSON.stringify({ newPhone, currentPassword }),
+      });
+      await refreshProfile();
+      return true;
+    } catch (err: any) {
+      setError(err.message || "Failed to update phone number");
+      return false;
+    }
+  };
+
+  const updateProfileImage = async (file: File): Promise<boolean> => {
+    setError(null);
+    try {
+      const formData = new FormData();
+      formData.append("profileImage", file);
+
+      await apiRequest("/auth/update-profile-image", {
+        method: "PUT",
+        body: formData,
+        // Remove Content-Type header so browser sets multipart/form-data boundary
+        headers: { "Authorization": `Bearer ${localStorage.getItem("isiri_token")}` }
+      });
+      await refreshProfile();
+      return true;
+    } catch (err: any) {
+      setError(err.message || "Failed to update profile image");
+      return false;
+    }
+  };
+
+  const updateProfile = async (data: { name?: string; phone?: string; city?: string }): Promise<boolean> => {
+    setError(null);
+    try {
+      await apiRequest("/auth/update-profile", {
+        method: "PUT",
+        body: JSON.stringify(data),
+      });
+      await refreshProfile();
+      return true;
+    } catch (err: any) {
+      setError(err.message || "Failed to update profile");
+      return false;
+    }
+  };
 
   return (
     <AuthContext.Provider
@@ -181,6 +284,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         toggleWishlist,
         refreshProfile,
         clearError,
+        sendOtp,
+        forgotPassword,
+        getPhoneByEmail,
+        updatePhone,
+        updateProfileImage,
+        updateProfile,
       }}
     >
       {children}

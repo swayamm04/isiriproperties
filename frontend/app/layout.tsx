@@ -1,13 +1,7 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, Inter } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/authContext";
-
-const cormorantGaramond = Cormorant_Garamond({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-serif",
-});
 
 const inter = Inter({
   subsets: ["latin"],
@@ -21,16 +15,19 @@ export const metadata: Metadata = {
   keywords: "real estate, luxury villas, architectural homes, premium properties, I Siri Properties",
 };
 
+import BottomNav from "@/components/BottomNav";
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${cormorantGaramond.variable} ${inter.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${inter.variable}`} suppressHydrationWarning>
       <body suppressHydrationWarning>
         <AuthProvider>
           {children}
+          <BottomNav />
         </AuthProvider>
       </body>
     </html>

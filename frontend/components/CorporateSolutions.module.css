@@ -100,20 +100,70 @@
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 900px) {
   .section {
-    padding: 4rem 1rem;
+    padding: 2rem 1rem;
+    background-color: #FFFFFF; /* Match white bg from screenshot */
+  }
+
+  .header {
+    display: none; /* Hide corporate solutions header on mobile based on screenshot */
   }
 
   .grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr; /* 2 columns */
+    gap: 1rem 0.5rem;
   }
 
-  .title {
-    font-size: 2rem;
+  .card {
+    background-color: transparent;
+    border: none;
+    padding: 0;
+    box-shadow: none;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.75rem;
   }
 
-  .subtitle {
-    font-size: 0.7rem;
+  .card:hover {
+    transform: none;
+    box-shadow: none;
+  }
+
+  .iconWrapper {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    margin-bottom: 0;
+    flex-shrink: 0;
+    background-color: rgba(212, 175, 55, 0.1);
+    color: #D4AF37; /* Use gold icon color */
+  }
+
+  .iconWrapper svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .cardTitle {
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--color-dark);
+    margin-bottom: 0.1rem;
+    line-height: 1.1;
+  }
+
+  .cardText {
+    font-size: 0.65rem;
+    line-height: 1.2;
+    color: var(--color-dark-muted);
+    /* Trim text to 1 line for mobile layout */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
   }
 }

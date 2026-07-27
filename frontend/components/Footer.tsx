@@ -34,13 +34,30 @@ export default function Footer() {
             <li>
               <Link href="/#testimonials" className={styles.link}>Testimonials</Link>
             </li>
-            <li>
-              <Link href="/#contact" className={styles.link}>Contact Us</Link>
-            </li>
           </ul>
         </div>
 
-
+        {/* Contact Info Column */}
+        <div>
+          <h4 className={styles.colTitle}>Contact Us</h4>
+          <ul className={styles.linksList} style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.85rem', lineHeight: '1.6' }}>
+            <li style={{ marginBottom: '1rem' }}>
+              <strong style={{ color: 'var(--color-primary)' }}>Address:</strong><br />
+              02, Basaveshwara complex, 60 Feet Rd,<br />
+              near kariyanna building, Adarsh Layout,<br />
+              Vinoba Nagara, Shivamogga, KA 577204
+            </li>
+            <li style={{ marginBottom: '1rem' }}>
+              <strong style={{ color: 'var(--color-primary)' }}>Phone:</strong><br />
+              +91 99644 96644 / 09964496644
+            </li>
+            <li>
+              <strong style={{ color: 'var(--color-primary)' }}>Email:</strong><br />
+              advisory@isiriproperties.com<br />
+              concierge@isiriproperties.com
+            </li>
+          </ul>
+        </div>
 
       </div>
 

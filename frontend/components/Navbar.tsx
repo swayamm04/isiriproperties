@@ -3,33 +3,32 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
-import { Menu, X, Building2, Eye, EyeOff, Phone, Search } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { Menu, X, Building2, Eye, EyeOff, Phone, Search, Home, LayoutGrid, ClipboardList, User, Heart, ShoppingCart, Lock } from "lucide-react";
 import { useAuth } from "@/context/authContext";
 import styles from "./Navbar.module.css";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [selectedType, setSelectedType] = useState("Sell");
   const pathname = usePathname();
-  
-  const { user, login, signup, logout, error, clearError } = useAuth();
+  const router = useRouter();
 
-  // Auth modal state
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [authMode, setAuthMode] = useState<"login" | "signup">("login");
-  const [authLoading, setAuthLoading] = useState(false);
-  
-  // Eye icon toggle state
-  const [showPassword, setShowPassword] = useState(false);
+  const { user, logout } = useAuth();
 
-  // Form states
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [city, setCity] = useState("");
-  const [validationError, setValidationError] = useState("");
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setSelectedType(sessionStorage.getItem("homeListingType") || "Sell");
+      
+      const handleTypeChange = () => {
+        setSelectedType(sessionStorage.getItem("homeListingType") || "Sell");
+      };
+      
+      window.addEventListener("homeListingTypeChanged", handleTypeChange);
+      return () => window.removeEventListener("homeListingTypeChanged", handleTypeChange);
+    }
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -40,76 +39,21 @@ export default function Navbar() {
       }
     };
 
-    const handleOpenAuth = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      setAuthMode(customEvent.detail?.mode || "login");
-      setValidationError("");
-      clearError();
-      setIsModalOpen(true);
-      setShowPassword(false);
-      setIsMenuOpen(false);
-    };
-
     window.addEventListener("scroll", handleScroll);
-    window.addEventListener("openAuthModal", handleOpenAuth);
-    
     return () => {
       window.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("openAuthModal", handleOpenAuth);
     };
-  }, [clearError]);
+  }, []);
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   const closeMenu = () => setIsMenuOpen(false);
 
-  const openAuthModal = (mode: "login" | "signup") => {
-    setAuthMode(mode);
-    setValidationError("");
-    clearError();
-    setIsModalOpen(true);
-    setShowPassword(false); // Reset visibility when opening
-    closeMenu();
-  };
-
-  const closeAuthModal = () => {
-    setIsModalOpen(false);
-    setEmail("");
-    setPassword("");
-    setName("");
-    setPhone("");
-    setCity("");
-    setValidationError("");
-    setShowPassword(false); // Reset visibility when closing
-    clearError();
-  };
-
-  const handleAuthSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setValidationError("");
-    setAuthLoading(true);
-
-    try {
-      if (authMode === "login") {
-        if (!email || !password) {
-          setValidationError("Email/Username and Password are required.");
-          setAuthLoading(false);
-          return;
-        }
-        await login(email, password);
-      } else {
-        if (!name || !email || !phone || !city || !password) {
-          setValidationError("All fields are required.");
-          setAuthLoading(false);
-          return;
-        }
-        await signup({ name, email, phone, city, password });
-      }
-      closeAuthModal();
-    } catch {
-      // Errors handled by context
-    } finally {
-      setAuthLoading(false);
-    }
+  const handleSelection = (type: string) => {
+    if (type === selectedType) return;
+    
+    setSelectedType(type);
+    sessionStorage.setItem("homeListingType", type);
+    window.dispatchEvent(new Event("homeListingTypeChanged"));
   };
 
   // Helper to determine if link is active
@@ -132,29 +76,24 @@ export default function Navbar() {
 
           {/* Desktop Nav Links */}
           <div className={styles.navLinks}>
-            <Link 
-              href="/" 
+            <Link
+              href="/"
               className={`${styles.navLink} ${isActive("/") ? styles.navLinkActive : ""}`}
             >
               Home
             </Link>
-            <Link 
-              href="/properties" 
+            <Link
+              href="/properties"
               className={`${styles.navLink} ${isActive("/properties") ? styles.navLinkActive : ""}`}
             >
               Properties
             </Link>
-            <Link 
-              href="/#contact" 
-              className={`${styles.navLink} ${isActive("/#contact") ? styles.navLinkActive : ""}`}
-            >
-              Contact
-            </Link>
+
 
             {/* Role-based Links */}
             {user && user.role === "user" && (
-              <Link 
-                href="/wishlist" 
+              <Link
+                href="/wishlist"
                 className={`${styles.navLink} ${isActive("/wishlist") ? styles.navLinkActive : ""}`}
               >
                 Wishlist
@@ -162,8 +101,8 @@ export default function Navbar() {
             )}
 
             {user && user.role === "admin" && (
-              <Link 
-                href="/admin/dashboard" 
+              <Link
+                href="/admin/dashboard"
                 className={`${styles.navLink} ${isActive("/admin/dashboard") ? styles.navLinkActive : ""}`}
               >
                 Admin Panel
@@ -171,8 +110,8 @@ export default function Navbar() {
             )}
 
             {user && user.role === "super_admin" && (
-              <Link 
-                href="/super-admin/dashboard" 
+              <Link
+                href="/super-admin/dashboard"
                 className={`${styles.navLink} ${isActive("/super-admin/dashboard") ? styles.navLinkActive : ""}`}
               >
                 Super Admin
@@ -181,46 +120,69 @@ export default function Navbar() {
 
             {/* Auth / Greeting */}
             {user ? (
-              <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
                 <span className={styles.userInfo}>Hi, {user.name.split(" ")[0]}</span>
-                <button 
+                {user.profileImage ? (
+                  <img src={user.profileImage} alt={user.name} style={{ width: "36px", height: "36px", borderRadius: "50%", objectFit: "cover", border: "2px solid var(--color-primary)" }} />
+                ) : (
+                  <div style={{ width: "36px", height: "36px", borderRadius: "50%", backgroundColor: "var(--color-primary)", color: "var(--color-dark)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: "16px" }}>
+                    {user.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <button
                   onClick={() => {
                     logout();
                     window.location.href = "/";
-                  }} 
+                  }}
                   className={styles.ctaButton}
                   style={{ padding: "0.4rem 1rem", fontSize: "0.75rem" }}
                 >
                   Logout
                 </button>
+                <div className={styles.desktopToggle}>
+                  <button className={`${styles.toggleBtn} ${selectedType === 'Sell' ? styles.toggleBtnActive : ''}`} onClick={() => handleSelection('Sell')}>Sell</button>
+                  <button className={`${styles.toggleBtn} ${selectedType === 'Rent' ? styles.toggleBtnActive : ''}`} onClick={() => handleSelection('Rent')}>Rent</button>
+                </div>
               </div>
             ) : (
               <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-                <button 
-                  onClick={() => openAuthModal("login")} 
+                <Link
+                  href="/login"
                   className={styles.ctaButton}
                 >
                   Login Free
-                </button>
+                </Link>
+                <div className={styles.desktopToggle}>
+                  <button className={`${styles.toggleBtn} ${selectedType === 'Sell' ? styles.toggleBtnActive : ''}`} onClick={() => handleSelection('Sell')}>Sell</button>
+                  <button className={`${styles.toggleBtn} ${selectedType === 'Rent' ? styles.toggleBtnActive : ''}`} onClick={() => handleSelection('Rent')}>Rent</button>
+                </div>
               </div>
             )}
           </div>
 
           {/* Mobile Actions (Search + Menu) */}
           <div className={styles.mobileActions}>
-            <Link href="/properties#search" aria-label="Search Properties" style={{ color: "var(--color-dark)", display: "flex", alignItems: "center" }}>
-              <Search size={22} strokeWidth={1.5} />
-            </Link>
-            <button className={styles.mobileMenuBtn} onClick={toggleMenu} aria-label="Toggle Menu">
-              <Menu size={24} />
-            </button>
+            {user ? (
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+              >
+                <span style={{ fontSize: "0.9rem", fontWeight: "600", color: "var(--color-dark)" }}>Hi, {user.name.split(" ")[0]}</span>
+                {user.profileImage ? (
+                  <img src={user.profileImage} alt={user.name} style={{ width: "32px", height: "32px", borderRadius: "50%", objectFit: "cover", border: "2px solid var(--color-primary)" }} />
+                ) : (
+                  <div style={{ width: "32px", height: "32px", borderRadius: "50%", backgroundColor: "var(--color-primary)", color: "var(--color-dark)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: "14px" }}>
+                    {user.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
+              </div>
+            ) : null}
           </div>
         </div>
       </nav>
 
       {/* Overlay */}
-      <div 
-        className={`${styles.overlay} ${isMenuOpen ? styles.overlayVisible : ""}`} 
+      <div
+        className={`${styles.overlay} ${isMenuOpen ? styles.overlayVisible : ""}`}
         onClick={closeMenu}
       />
 
@@ -231,25 +193,25 @@ export default function Navbar() {
         </button>
 
         <div className={styles.drawerLinks}>
-          <Link 
-            href="/" 
-            className={styles.drawerLink} 
+          <Link
+            href="/"
+            className={styles.drawerLink}
             onClick={closeMenu}
           >
             Home
           </Link>
-          <Link 
-            href="/properties" 
-            className={styles.drawerLink} 
+          <Link
+            href="/properties"
+            className={styles.drawerLink}
             onClick={closeMenu}
           >
             Properties
           </Link>
 
           {user && user.role === "user" && (
-            <Link 
-              href="/wishlist" 
-              className={styles.drawerLink} 
+            <Link
+              href="/wishlist"
+              className={styles.drawerLink}
               onClick={closeMenu}
             >
               Wishlist
@@ -257,9 +219,9 @@ export default function Navbar() {
           )}
 
           {user && user.role === "admin" && (
-            <Link 
-              href="/admin/dashboard" 
-              className={styles.drawerLink} 
+            <Link
+              href="/admin/dashboard"
+              className={styles.drawerLink}
               onClick={closeMenu}
             >
               Admin Panel
@@ -267,9 +229,9 @@ export default function Navbar() {
           )}
 
           {user && user.role === "super_admin" && (
-            <Link 
-              href="/super-admin/dashboard" 
-              className={styles.drawerLink} 
+            <Link
+              href="/super-admin/dashboard"
+              className={styles.drawerLink}
               onClick={closeMenu}
             >
               Super Admin
@@ -278,173 +240,39 @@ export default function Navbar() {
 
           {user ? (
             <div style={{ marginTop: "1rem" }}>
-              <div className={styles.userInfo} style={{ marginBottom: "1rem" }}>Logged in as: {user.name}</div>
-              <button 
+              <div className={styles.userInfo} style={{ marginBottom: "1rem", display: "flex", alignItems: "center", gap: "10px" }}>
+                {user.profileImage ? (
+                  <img src={user.profileImage} alt={user.name} style={{ width: "40px", height: "40px", borderRadius: "50%", objectFit: "cover", border: "2px solid var(--color-primary)" }} />
+                ) : (
+                  <div style={{ width: "40px", height: "40px", borderRadius: "50%", backgroundColor: "var(--color-primary)", color: "var(--color-dark)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: "16px" }}>
+                    {user.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                Logged in as: {user.name}
+              </div>
+              <button
                 onClick={() => {
                   logout();
                   closeMenu();
                   window.location.href = "/";
-                }} 
-                className={styles.mobileAuthBtn} 
+                }}
+                className={styles.mobileAuthBtn}
               >
                 Logout
               </button>
             </div>
           ) : (
-            <button 
-              onClick={() => openAuthModal("login")} 
-              className={styles.mobileAuthBtn} 
+            <Link
+              href="/login"
+              className={styles.mobileAuthBtn}
+              onClick={closeMenu}
             >
               Login Free
-            </button>
+            </Link>
           )}
         </div>
       </div>
 
-      {/* Auth Modal */}
-      {isModalOpen && (
-        <div className={styles.modalOverlay} onClick={closeAuthModal}>
-          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <button className={styles.modalCloseBtn} onClick={closeAuthModal} aria-label="Close Modal">
-              <X size={20} />
-            </button>
-
-            <h2 className={styles.modalTitle}>
-              {authMode === "login" ? "Welcome Back" : "Create Account"}
-            </h2>
-            <p className={styles.modalSubtitle}>
-              {authMode === "login" ? "Sign in to access exclusive estates" : "Register to start your property wishlist"}
-            </p>
-
-            <form onSubmit={handleAuthSubmit}>
-              {/* Validation or API error display */}
-              {(validationError || error) && (
-                <div className={styles.errorMsg}>
-                  {validationError || error}
-                </div>
-              )}
-
-              {authMode === "signup" && (
-                <>
-                  <div className={styles.formGroup}>
-                    <label className={styles.formLabel}>Full Name</label>
-                    <input 
-                      type="text" 
-                      placeholder="e.g. John Doe"
-                      value={name} 
-                      onChange={(e) => setName(e.target.value)}
-                      className={styles.inputField}
-                      required
-                    />
-                  </div>
-
-                  <div className={styles.formGroup}>
-                    <label className={styles.formLabel}>Phone Number</label>
-                    <input 
-                      type="tel" 
-                      placeholder="e.g. +91 98765 43210"
-                      value={phone} 
-                      onChange={(e) => setPhone(e.target.value)}
-                      className={styles.inputField}
-                      required
-                    />
-                  </div>
-
-                  <div className={styles.formGroup}>
-                    <label className={styles.formLabel}>City</label>
-                    <input 
-                      type="text" 
-                      placeholder="e.g. Bengaluru"
-                      value={city} 
-                      onChange={(e) => setCity(e.target.value)}
-                      className={styles.inputField}
-                      required
-                    />
-                  </div>
-                </>
-              )}
-
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Username / Email ID</label>
-                <input 
-                  type="email" 
-                  placeholder="e.g. email@isiri.com"
-                  value={email} 
-                  onChange={(e) => setEmail(e.target.value)}
-                  className={styles.inputField}
-                  required
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Password</label>
-                <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
-                  <input 
-                    type={showPassword ? "text" : "password"} 
-                    placeholder="••••••••"
-                    value={password} 
-                    onChange={(e) => setPassword(e.target.value)}
-                    className={styles.inputField}
-                    style={{ width: "100%", paddingRight: "3rem" }}
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    style={{
-                      position: "absolute",
-                      right: "1rem",
-                      background: "none",
-                      border: "none",
-                      color: "rgba(255, 255, 255, 0.6)",
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      padding: 0,
-                    }}
-                    aria-label={showPassword ? "Hide password" : "Show password"}
-                  >
-                    {showPassword ? <EyeOff size={18} style={{ strokeWidth: 1.5 }} /> : <Eye size={18} style={{ strokeWidth: 1.5 }} />}
-                  </button>
-                </div>
-              </div>
-
-              <button 
-                type="submit" 
-                className={styles.submitBtn} 
-                disabled={authLoading}
-              >
-                {authLoading ? "Please wait..." : authMode === "login" ? "Login" : "Create Account"}
-              </button>
-            </form>
-
-            <div className={styles.switchText}>
-              {authMode === "login" ? (
-                <>
-                  New user? 
-                  <button 
-                    onClick={() => openAuthModal("signup")} 
-                    className={styles.switchBtn}
-                  >
-                    Create an account
-                  </button>
-                </>
-              ) : (
-                <>
-                  Old user? 
-                  <button 
-                    onClick={() => openAuthModal("login")} 
-                    className={styles.switchBtn}
-                  >
-                    Login here
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }

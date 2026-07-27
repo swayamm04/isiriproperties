@@ -48,8 +48,7 @@ export default function PropertyDetailPage() {
   const [interestSuccess, setInterestSuccess] = useState("");
   const [interestError, setInterestError] = useState("");
   
-  // Custom Alert Modal state
-  const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
+  // Custom Alert Modal state removed
 
   useEffect(() => {
     if (!id) return;
@@ -101,7 +100,7 @@ export default function PropertyDetailPage() {
 
   const handleWishlistToggle = async () => {
     if (!user) {
-      setIsAlertModalOpen(true);
+      router.push("/login");
       return;
     }
     await toggleWishlist(property._id);
@@ -254,7 +253,13 @@ export default function PropertyDetailPage() {
             {/* Action buttons */}
             <div className={styles.actionGroup}>
               <button
-                onClick={() => setIsInterestModalOpen(true)}
+                onClick={() => {
+                  if (user) {
+                    setIsInterestModalOpen(true);
+                  } else {
+                    router.push("/login");
+                  }
+                }}
                 className={styles.interestBtn}
                 disabled={property.status === "sold"}
                 style={property.status === "sold" ? { backgroundColor: "#888", borderColor: "#888", cursor: "not-allowed" } : {}}
@@ -288,8 +293,6 @@ export default function PropertyDetailPage() {
 
             <h2 className={styles.modalTitle}>Express Interest</h2>
             <p className={styles.modalSubtitle}>Inquire about Ref: #{property.propertyId}</p>
-
-            {user ? (
               <form onSubmit={handleInterestSubmit}>
                 {interestError && <div className={styles.errorBox}>{interestError}</div>}
                 {interestSuccess && <div className={styles.successBox}>{interestSuccess}</div>}
@@ -323,52 +326,11 @@ export default function PropertyDetailPage() {
                   {interestLoading ? "Submitting Inquiry..." : "Submit Inquiry"}
                 </button>
               </form>
-            ) : (
-              <div style={{ textAlign: "center" }}>
-                <p className={styles.loginPromptText}>
-                  Please sign in or register an account before submitting purchase inquiries.
-                </p>
-                <button
-                  onClick={() => {
-                    setIsInterestModalOpen(false);
-                    window.dispatchEvent(new CustomEvent("openAuthModal", { detail: { mode: "login" } }));
-                  }}
-                  className={styles.modalBtn}
-                >
-                  Login to Inquire
-                </button>
-              </div>
-            )}
           </div>
         </div>
       )}
 
-      {/* Alert Modal for Unauthenticated Users */}
-      {isAlertModalOpen && (
-        <div className={styles.modalOverlay} onClick={() => setIsAlertModalOpen(false)}>
-          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()} style={{ maxWidth: "400px", textAlign: "center" }}>
-            <button className={styles.closeBtn} onClick={() => setIsAlertModalOpen(false)}>
-              <X size={20} />
-            </button>
 
-            <h2 className={styles.modalTitle} style={{ marginBottom: "1.5rem" }}>Authentication Required</h2>
-            <p className={styles.loginPromptText}>
-              Please sign in or register an account before adding properties to your wishlist.
-            </p>
-
-            <button
-              onClick={() => {
-                setIsAlertModalOpen(false);
-                window.dispatchEvent(new CustomEvent("openAuthModal", { detail: { mode: "login" } }));
-              }}
-              className={styles.modalBtn}
-              style={{ marginTop: "1rem" }}
-            >
-              Login / Register
-            </button>
-          </div>
-        </div>
-      )}
     </>
   );
 }

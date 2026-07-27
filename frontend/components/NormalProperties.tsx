@@ -21,7 +21,7 @@ interface Property {
   description: string;
 }
 
-export default function PropertySlider() {
+export default function NormalProperties() {
   const sliderRef = useRef<HTMLDivElement>(null);
 
   const [properties, setProperties] = useState<Property[]>([]);
@@ -32,7 +32,7 @@ export default function PropertySlider() {
       try {
         setLoading(true);
         const listingType = sessionStorage.getItem("homeListingType") || "Sell";
-        const data = await apiRequest(`/properties?status=available&isPremium=true&listingType=${listingType}`);
+        const data = await apiRequest(`/properties?status=available&listingType=${listingType}`);
         setProperties(data.slice(0, 4)); // Get first 4 properties
       } catch (err) {
         console.error("Failed to load featured properties for slider:", err);
@@ -79,8 +79,8 @@ export default function PropertySlider() {
         {/* Header Block */}
         <div className={styles.header}>
           <div className={styles.titleBlock}>
-            <span className={styles.subtitle}>FEATURED PROPERTIES</span>
-            <h2 className={styles.title}>Explore Our Best Properties</h2>
+            <span className={styles.subtitle}>LATEST LISTINGS</span>
+            <h2 className={styles.title}>Recently Added Properties</h2>
           </div>
           <div className={styles.headerControls}>
             <div className={styles.navArrows}>

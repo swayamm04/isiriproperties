@@ -9,16 +9,31 @@
   overflow: hidden;
 }
 
+.sliderContainer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
 .contentContainer {
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
+  padding-top: 100px; /* Offset for navbar to perfectly center in visible space */
   width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
   gap: 2rem;
   position: relative;
   z-index: 10;
+}
+
+.mobileTopActions, .mobileDots {
+  display: none;
 }
 
 .textContainer {
@@ -75,7 +90,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(to right, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.5) 40%, rgba(0,0,0,0.1) 100%);
+  background: linear-gradient(to right, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.75) 40%, rgba(0,0,0,0.4) 100%);
   z-index: 2;
 }
 
@@ -143,56 +158,251 @@
 
 @media (max-width: 900px) {
   .hero {
-    min-height: 85vh;
+    min-height: auto;
     height: auto;
-    padding-top: 100px; 
-    padding-bottom: 40px;
+    padding-top: 0; /* Override desktop padding */
+    padding-bottom: 0.5rem; /* Reduced from 2rem to remove gap */
+    flex-direction: column;
+    background-color: var(--color-bg-light, #f8f9fa);
+    display: flex;
+    justify-content: flex-start;
+    align-items: stretch;
+  }
+
+  /* NEW MOBILE LAYOUT ELEMENTS */
+  .mobileTopActions {
+    display: flex;
+    flex-direction: column;
+    padding: calc(65px + 0.5rem) 1.5rem 1.5rem 1.5rem; /* Increased bottom padding */
+    gap: 1.25rem; /* Increased gap to move buttons slightly down */
+    position: relative;
+    z-index: 20;
+    width: 100%;
+    /* Gradient flows down from light gray at top (matching navbar) to blue at bottom */
+    background: linear-gradient(to bottom, var(--color-bg-light) 0%, var(--color-bg-light) 85px, var(--color-primary) 100%);
+    border-radius: 0 0 40px 40px; /* Curved edge like screenshot */
+    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+  }
+
+  .mobileSearchBar {
+    display: flex;
+    align-items: center;
+    background: #FFFFFF;
+    border-radius: var(--radius-full);
+    padding: 0.75rem 1rem;
+    gap: 0.75rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  }
+
+  .searchIconMobile {
+    color: var(--color-dark-muted);
+  }
+
+  .searchInputMobile {
+    border: none;
+    background: none;
+    outline: none;
+    width: 100%;
+    font-size: 0.95rem;
+    color: var(--color-dark);
+  }
+
+  .mobileActionButtons {
+    display: flex;
+    justify-content: center;
+    gap: 3rem; /* Space between the two circles */
+    width: 100%;
+    margin-top: 0; /* Reduced from 0.5rem */
+  }
+
+  .circleBtn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+  }
+
+  .circleBtn:active {
+    transform: scale(0.95);
+  }
+
+  .circleIconWrapper {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background-color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-primary); /* Blue icon */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    position: relative;
+    z-index: 2;
+  }
+
+  /* Animated background blob */
+  .circleIconWrapper::before {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: -5px;
+    right: -5px;
+    bottom: -5px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.4), rgba(255,255,255,0.1), rgba(255,255,255,0.3));
+    border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
+    z-index: -1;
+    animation: blobMorph 4s ease-in-out infinite alternate;
+  }
+
+  @keyframes blobMorph {
+    0% {
+      border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
+      transform: rotate(0deg) scale(1);
+    }
+    100% {
+      border-radius: 60% 40% 30% 70% / 60% 50% 40% 50%;
+      transform: rotate(45deg) scale(1.05);
+    }
+  }
+
+  .circleBtn span {
+    color: #FFFFFF;
+    font-weight: 700;
+    font-size: 0.75rem;
+    font-family: var(--font-sans);
+  }
+
+  .circleBtnActive .circleIconWrapper {
+    background-color: var(--color-primary);
+    color: #FFFFFF;
+  }
+
+  .circleBtnActive .circleIconWrapper::before {
+    background: linear-gradient(135deg, rgba(var(--color-primary-rgb), 0.4), rgba(var(--color-primary-rgb), 0.1), rgba(var(--color-primary-rgb), 0.3));
+  }
+
+  .fullScreenLoader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(5px);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .sliderContainer {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    height: auto;
+    width: calc(100% - 3rem);
+    margin: 0 auto;
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    margin-top: 0.5rem; /* Reduced from 1rem */
+  }
+
+  .slide {
+    background-position: center;
   }
 
   .contentContainer {
     padding: 1.5rem;
+    height: 100%;
+    align-items: flex-start; /* Start from top side */
+    justify-content: flex-start;
   }
 
   .overlay {
-    background: linear-gradient(to bottom, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.65) 100%);
+    /* Adjusted overlay to be slightly less dark */
+    background: linear-gradient(to right, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.3) 100%);
   }
 
   .textContainer {
-    max-width: 100%;
+    max-width: 50%; /* Only take up half the width on mobile */
+    min-width: 150px;
+    justify-content: flex-start;
+    margin-bottom: 0.5rem;
+    margin-top: 0; /* Reset desktop margin */
   }
 
   .subtitle {
-    font-size: 0.85rem;
-    margin-bottom: 0.75rem;
+    font-size: 0.6rem;
+    margin-bottom: 0.25rem;
+    color: #FFFFFF;
   }
 
   .title {
-    font-size: 2.25rem;
-    margin-bottom: 1rem;
-    line-height: 1.15;
-    max-width: 90%;
+    font-size: 1.15rem; /* Reduced text size */
+    margin-bottom: 0.5rem;
+    line-height: 1.2;
+    max-width: 100%;
   }
 
   .description {
-    font-size: 1rem;
-    margin-bottom: 1.5rem;
-    line-height: 1.5;
-    max-width: 85%;
+    font-size: 0.8rem;
+    margin-bottom: 1rem;
+    line-height: 1.4;
+    max-width: 100%;
+    display: none; /* Hide on mobile to match screenshot */
   }
 
   .staticCta {
-    margin-top: 1rem;
+    margin-top: 0; /* Placed slightly upside */
   }
 
   .ctaBtn {
-    padding: 0.85rem 1.5rem;
-    font-size: 0.95rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
     gap: 0.5rem;
+    background-color: #333333;
+    border: 1px solid var(--color-primary); /* Added blue border */
+    white-space: nowrap; /* Ensure it stays on a single line */
   }
   
   .ctaBtn svg {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
+  }
+
+  .mobileDots {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    position: absolute;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.4);
+    transition: all 0.3s ease;
+  }
+
+  .dotActive {
+    width: 24px;
+    border-radius: 4px;
+    background-color: #FFFFFF;
+  }
+  
+  /* Hide desktop search overlap on mobile completely */
+  .searchBarWrapper {
+    display: none;
   }
 }
 

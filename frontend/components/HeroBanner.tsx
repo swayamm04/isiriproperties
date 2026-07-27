@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Search, Handshake, Key } from "lucide-react";
+import Loader from "@/components/Loader";
 import styles from "./HeroBanner.module.css";
 
 const SLIDES = [
@@ -27,8 +28,16 @@ const SLIDES = [
 ];
 
 export default function HeroBanner() {
-  const [currentSlide, setCurrentSlide] = useState(0);
   const router = useRouter();
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [selectedType, setSelectedType] = useState("Sell");
+  const [isFakingLoad, setIsFakingLoad] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setSelectedType(sessionStorage.getItem("homeListingType") || "Sell");
+    }
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -37,43 +46,102 @@ export default function HeroBanner() {
     return () => clearInterval(timer);
   }, []);
 
+  const handleSelection = (type: string) => {
+    if (type === selectedType) return;
+    
+    setIsFakingLoad(true);
+    setSelectedType(type);
+    sessionStorage.setItem("homeListingType", type);
+    
+    // Dispatch event so other components update their fetch
+    window.dispatchEvent(new Event("homeListingTypeChanged"));
+    
+    setTimeout(() => {
+      setIsFakingLoad(false);
+    }, 3000);
+  };
+
   return (
     <section className={styles.hero}>
-      {/* Background Slider */}
-      {SLIDES.map((slide, idx) => (
-        <div
-          key={idx}
-          className={`${styles.slide} ${idx === currentSlide ? styles.slideActive : ""}`}
-          style={{ backgroundImage: `url(${slide.image})` }}
-        />
-      ))}
-      <div className={styles.overlay} />
+      {isFakingLoad && (
+        <div className={styles.fullScreenLoader}>
+          <Loader />
+        </div>
+      )}
 
-      <div className={styles.contentContainer}>
-        {/* Text Section (Left) */}
-        <div className={styles.textContainer}>
-          <div className={styles.slidesWrapper}>
-            {SLIDES.map((slide, idx) => (
-              <div 
-                key={idx} 
-                className={`${styles.textBlock} ${idx === currentSlide ? styles.textActive : ""}`}
-              >
-                <span className={styles.subtitle}>{slide.subtitle}</span>
-                <h1 className={styles.title} dangerouslySetInnerHTML={{ __html: slide.title }}></h1>
-                <p className={styles.description}>{slide.description}</p>
-              </div>
-            ))}
-          </div>
-          
-          <div className={styles.staticCta}>
-            <button onClick={() => router.push("/properties")} className={styles.ctaBtn}>
-              Explore Properties
-              <ArrowRight size={16} strokeWidth={2} />
-            </button>
-          </div>
+      {/* Mobile Top Actions */}
+      <div className={styles.mobileTopActions}>
+        <div className={styles.mobileSearchBar}>
+          <Search size={20} className={styles.searchIconMobile} />
+          <input type="text" placeholder="Search for city, locality, or project..." className={styles.searchInputMobile} />
+        </div>
+        
+        <div className={styles.mobileActionButtons}>
+          <button 
+            className={`${styles.circleBtn} ${selectedType === 'Sell' ? styles.circleBtnActive : ''}`} 
+            onClick={() => handleSelection('Sell')}
+          >
+            <div className={styles.circleIconWrapper}>
+              <Handshake size={20} strokeWidth={1.5} />
+            </div>
+            <span>Sell</span>
+          </button>
+          <button 
+            className={`${styles.circleBtn} ${selectedType === 'Rent' ? styles.circleBtnActive : ''}`} 
+            onClick={() => handleSelection('Rent')}
+          >
+            <div className={styles.circleIconWrapper}>
+              <Key size={20} strokeWidth={1.5} />
+            </div>
+            <span>Rent</span>
+          </button>
         </div>
       </div>
 
+      <div className={styles.sliderContainer}>
+        {/* Background Slider */}
+        {SLIDES.map((slide, idx) => (
+          <div
+            key={idx}
+            className={`${styles.slide} ${idx === currentSlide ? styles.slideActive : ""}`}
+            style={{ backgroundImage: `url(${slide.image})` }}
+          />
+        ))}
+        
+        <div className={styles.overlay} />
+
+        <div className={styles.contentContainer}>
+          {/* Text Section */}
+          <div className={styles.textContainer}>
+            <div className={styles.slidesWrapper}>
+              {SLIDES.map((slide, idx) => (
+                <div 
+                  key={idx} 
+                  className={`${styles.textBlock} ${idx === currentSlide ? styles.textActive : ""}`}
+                >
+                  <span className={styles.subtitle}>{slide.subtitle}</span>
+                  <h1 className={styles.title} dangerouslySetInnerHTML={{ __html: slide.title }}></h1>
+                  <p className={styles.description}>{slide.description}</p>
+                </div>
+              ))}
+            </div>
+            
+            <div className={styles.staticCta}>
+              <button onClick={() => router.push("/properties")} className={styles.ctaBtn}>
+                Explore Properties
+                <ArrowRight size={16} strokeWidth={2} />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Dots */}
+        <div className={styles.mobileDots}>
+          {SLIDES.map((_, idx) => (
+            <span key={idx} className={`${styles.dot} ${idx === currentSlide ? styles.dotActive : ""}`}></span>
+          ))}
+        </div>
+      </div>
     </section>
   );
 }

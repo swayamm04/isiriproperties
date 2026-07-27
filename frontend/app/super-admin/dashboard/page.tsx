@@ -22,7 +22,11 @@ import {
   Shield,
   Eye,
   EyeOff,
-  Settings
+  Settings,
+  ChevronDown,
+  ChevronUp,
+  ChevronLeft,
+  MoreVertical
 } from "lucide-react";
 import Link from "next/link";
 import Loader from "@/components/Loader";
@@ -59,6 +63,7 @@ interface Property {
   _id: string;
   propertyId: string;
   title: string;
+  city?: string;
   location: string;
   price: number;
   images: string[];
@@ -66,6 +71,10 @@ interface Property {
   addedBy: string;
   addedByName: string;
   status: "available" | "sold";
+  listingType?: string;
+  isPremium?: boolean;
+  description?: string;
+  customFields?: Record<string, any>;
 }
 
 interface CategoryField {
@@ -103,7 +112,7 @@ interface InterestInquiry {
 }
 
 export default function SuperAdminDashboardPage() {
-  const { user, loading, logout } = useAuth();
+  const { user, loading, logout, updatePhone } = useAuth();
   const router = useRouter();
 
   const [activeTab, setActiveTab] = useState<"dashboard" | "inquiries" | "admins" | "users" | "properties" | "settings">("dashboard");
@@ -134,6 +143,7 @@ export default function SuperAdminDashboardPage() {
   const [adminEmail, setAdminEmail] = useState("");
   const [adminPhone, setAdminPhone] = useState("");
   const [adminPassword, setAdminPassword] = useState("");
+  const [adminProfileImage, setAdminProfileImage] = useState<File | null>(null);
   const [addAdminLoading, setAddAdminLoading] = useState(false);
 
   // Add Property form state (Super Admin listing properties directly)
@@ -142,10 +152,23 @@ export default function SuperAdminDashboardPage() {
   const [propLocation, setPropLocation] = useState("");
   const [propPrice, setPropPrice] = useState("");
   const [propType, setPropType] = useState("");
+  const [propListingType, setPropListingType] = useState("Sell");
+  const [propIsPremium, setPropIsPremium] = useState(false);
   const [propDescription, setPropDescription] = useState("");
   const [propSelectedFiles, setPropSelectedFiles] = useState<FileList | null>(null);
   const [propAddLoading, setPropAddLoading] = useState(false);
   const [propCustomFields, setPropCustomFields] = useState<Record<string, any>>({});
+  const [propEditMode, setPropEditMode] = useState(false);
+  const [editingPropId, setEditingPropId] = useState<string | null>(null);
+  const [propExistingImages, setPropExistingImages] = useState<string[]>([]);
+  const [propRemovedImages, setPropRemovedImages] = useState<string[]>([]);
+  const [propImagePreviews, setPropImagePreviews] = useState<string[]>([]);
+  
+  const [openPropertyMenuId, setOpenPropertyMenuId] = useState<string | null>(null);
+  const [propConfirmStatusModal, setPropConfirmStatusModal] = useState<{isOpen: boolean, property: Property | null}>({ isOpen: false, property: null });
+  const [propStatusUpdateLoading, setPropStatusUpdateLoading] = useState(false);
+  const [propConfirmDeleteModal, setPropConfirmDeleteModal] = useState<{isOpen: boolean, property: Property | null}>({ isOpen: false, property: null });
+  const [propDeleteLoading, setPropDeleteLoading] = useState(false);
 
   // Category form state
   const [catName, setCatName] = useState("");
@@ -164,6 +187,15 @@ export default function SuperAdminDashboardPage() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Phone settings state
+  const [phoneCurrentPassword, setPhoneCurrentPassword] = useState("");
+  const [newPhone, setNewPhone] = useState("");
+  const [phoneLoading, setPhoneLoading] = useState(false);
+  const [phoneSuccess, setPhoneSuccess] = useState("");
+  const [phoneError, setPhoneError] = useState("");
+
+  const [expandedSetting, setExpandedSetting] = useState<"password" | "phone" | null>(null);
 
   const loadStats = async () => {
     try {
@@ -219,6 +251,22 @@ export default function SuperAdminDashboardPage() {
   };
 
   useEffect(() => {
+    if (!propSelectedFiles || propSelectedFiles.length === 0) {
+      setPropImagePreviews([]);
+      return;
+    }
+    const previews: string[] = [];
+    for (let i = 0; i < propSelectedFiles.length; i++) {
+      previews.push(URL.createObjectURL(propSelectedFiles[i]));
+    }
+    setPropImagePreviews(previews);
+
+    return () => {
+      previews.forEach(url => URL.revokeObjectURL(url));
+    };
+  }, [propSelectedFiles]);
+
+  useEffect(() => {
     if (loading) return;
     if (!user || user.role !== "super_admin") {
       router.push("/");
@@ -256,16 +304,19 @@ export default function SuperAdminDashboardPage() {
     setSuccessMsg("");
 
     try {
+      const formData = new FormData();
+      formData.append("name", adminName);
+      formData.append("email", adminEmail);
+      formData.append("phone", adminPhone);
+      if (adminPassword) formData.append("password", adminPassword);
+      if (adminProfileImage) formData.append("profileImage", adminProfileImage);
+
       if (editingAdminId) {
         // PUT /superadmin/admins/:id
         await apiRequest(`/superadmin/admins/${editingAdminId}`, {
           method: "PUT",
-          body: JSON.stringify({
-            name: adminName,
-            email: adminEmail,
-            phone: adminPhone,
-            password: adminPassword || undefined,
-          }),
+          body: formData,
+          headers: { "Authorization": `Bearer ${localStorage.getItem("isiri_token")}` }
         });
         setSuccessMsg(`Admin details updated successfully.`);
         setEditingAdminId(null);
@@ -278,7 +329,8 @@ export default function SuperAdminDashboardPage() {
         }
         await apiRequest("/superadmin/admins", {
           method: "POST",
-          body: JSON.stringify({ name: adminName, email: adminEmail, phone: adminPhone, password: adminPassword }),
+          body: formData,
+          headers: { "Authorization": `Bearer ${localStorage.getItem("isiri_token")}` }
         });
         setSuccessMsg(`Admin "${adminName}" created successfully.`);
       }
@@ -286,6 +338,8 @@ export default function SuperAdminDashboardPage() {
       setAdminEmail("");
       setAdminPhone("");
       setAdminPassword("");
+      setAdminProfileImage(null);
+      setIsAddAdminModalOpen(false);
       setTimeout(() => {
         setIsAddAdminModalOpen(false);
         setSuccessMsg("");
@@ -344,6 +398,60 @@ export default function SuperAdminDashboardPage() {
     }
   };
 
+  const handleEditProperty = (property: Property) => {
+    setPropTitle(property.title);
+    setPropCity(property.city || "");
+    setPropLocation(property.location);
+    setPropPrice(property.price.toString());
+    setPropType(property.type);
+    setPropListingType(property.listingType || "Sell");
+    setPropIsPremium(property.isPremium || false);
+    setPropDescription(property.description || "");
+    setPropCustomFields(property.customFields || {});
+    setPropExistingImages(property.images || []);
+    setPropRemovedImages([]);
+    setPropEditMode(true);
+    setEditingPropId(property._id);
+    setIsAddPropModalOpen(true);
+    setOpenPropertyMenuId(null);
+  };
+
+  const handleDeleteProperty = async () => {
+    if (!propConfirmDeleteModal.property) return;
+    try {
+      setPropDeleteLoading(true);
+      await apiRequest(`/properties/${propConfirmDeleteModal.property._id}`, {
+        method: "DELETE",
+      });
+      setProperties(properties.filter(p => p._id !== propConfirmDeleteModal.property?._id));
+      setPropConfirmDeleteModal({ isOpen: false, property: null });
+    } catch (err: any) {
+      alert(err.message || "Failed to delete property.");
+    } finally {
+      setPropDeleteLoading(false);
+    }
+  };
+
+  const handleStatusUpdateProperty = async () => {
+    if (!propConfirmStatusModal.property) return;
+    try {
+      setPropStatusUpdateLoading(true);
+      const newStatus = propConfirmStatusModal.property.status === "available" ? "sold" : "available";
+      await apiRequest(`/superadmin/properties/${propConfirmStatusModal.property._id}/sold`, {
+        method: "PUT",
+        body: JSON.stringify({ status: newStatus }),
+      });
+      setProperties(properties.map(p => 
+        p._id === propConfirmStatusModal.property?._id ? { ...p, status: newStatus } : p
+      ));
+      setPropConfirmStatusModal({ isOpen: false, property: null });
+    } catch (err: any) {
+      alert(err.message || "Failed to update property status.");
+    } finally {
+      setPropStatusUpdateLoading(false);
+    }
+  };
+
   // Actions: Add Property Submit (Super Admin)
   const handleAddPropertySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -364,6 +472,8 @@ export default function SuperAdminDashboardPage() {
       formData.append("location", propLocation);
       formData.append("price", propPrice);
       formData.append("type", propType);
+      formData.append("listingType", propListingType);
+      formData.append("isPremium", String(propIsPremium));
       formData.append("description", propDescription);
       formData.append("customFields", JSON.stringify(propCustomFields));
 
@@ -372,21 +482,38 @@ export default function SuperAdminDashboardPage() {
           formData.append("imageFiles", propSelectedFiles[i]);
         }
       }
+      if (propRemovedImages.length > 0) {
+        formData.append("removedImages", propRemovedImages.join(","));
+      }
 
-      await apiRequest("/properties", {
-        method: "POST",
+      let url = "/properties";
+      let method = "POST";
+      
+      if (propEditMode && editingPropId) {
+        url = `/properties/${editingPropId}`;
+        method = "PUT";
+      }
+
+      await apiRequest(url, {
+        method: method,
         body: formData,
       });
 
-      setSuccessMsg("Property added successfully!");
+      setSuccessMsg(propEditMode ? "Property updated successfully!" : "Property added successfully!");
       setPropTitle("");
       setPropCity("");
       setPropLocation("");
       setPropPrice("");
       setPropType("");
+      setPropListingType("Sell");
+      setPropIsPremium(false);
       setPropDescription("");
       setPropSelectedFiles(null);
       setPropCustomFields({});
+      setPropEditMode(false);
+      setEditingPropId(null);
+      setPropExistingImages([]);
+      setPropRemovedImages([]);
 
       const fileInput = document.getElementById("superImageFiles") as HTMLInputElement;
       if (fileInput) fileInput.value = "";
@@ -423,6 +550,7 @@ export default function SuperAdminDashboardPage() {
     setAdminEmail("");
     setAdminPhone("");
     setAdminPassword("");
+    setAdminProfileImage(null);
     setIsAddAdminModalOpen(false);
   };
 
@@ -484,25 +612,7 @@ export default function SuperAdminDashboardPage() {
     }
   };
 
-  // Actions: Mark Property as Sold
-  const handleToggleSoldProperty = async (propertyId: string, propertyTitle: string, currentStatus: "available" | "sold") => {
-    const nextStatus = currentStatus === "available" ? "sold" : "available";
-    if (!confirm(`Mark property "${propertyTitle}" as ${nextStatus === "sold" ? "SOLD" : "AVAILABLE"}?`)) {
-      return;
-    }
 
-    try {
-      await apiRequest(`/superadmin/properties/${propertyId}/sold`, {
-        method: "PUT",
-        body: JSON.stringify({ status: nextStatus }),
-      });
-      setSuccessMsg("Property status updated.");
-      loadStats();
-      loadTabData();
-    } catch (err: any) {
-      setErrorMsg(err.message || "Failed to update property status.");
-    }
-  };
 
   // Actions: Update Password
   const handleUpdatePassword = async (e: React.FormEvent) => {
@@ -534,6 +644,31 @@ export default function SuperAdminDashboardPage() {
     } finally {
       setSettingsUpdateLoading(false);
     }
+  };
+
+  const handleUpdatePhone = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPhoneLoading(true);
+    setPhoneError("");
+    setPhoneSuccess("");
+
+    if (!phoneCurrentPassword || !newPhone) {
+      setPhoneError("Both fields are required.");
+      setPhoneLoading(false);
+      return;
+    }
+
+    if (updatePhone) {
+      const success = await updatePhone(newPhone, phoneCurrentPassword);
+      if (success) {
+        setPhoneSuccess("Phone number updated successfully!");
+        setPhoneCurrentPassword("");
+        setNewPhone("");
+      } else {
+        setPhoneError("Failed to update phone number. Please check your password.");
+      }
+    }
+    setPhoneLoading(false);
   };
 
   if (loading) {
@@ -632,20 +767,8 @@ export default function SuperAdminDashboardPage() {
             <span>All Properties</span>
           </button>
 
-          <button
-            onClick={() => {
-              setActiveTab("settings");
-              cancelEditAdmin();
-              setIsSidebarOpen(false);
-            }}
-            className={`${styles.menuItem} ${activeTab === "settings" ? styles.activeMenuItem : ""}`}
-          >
-            <Settings size={18} strokeWidth={1.5} />
-            <span>Settings</span>
-          </button>
-
           <div style={{ marginTop: "auto", borderTop: "1px solid rgba(76, 131, 161, 0.1)", paddingTop: "1rem" }}>
-            <Link href="/" className={styles.menuItem}>
+            <Link href="/" className={`${styles.menuItem} ${styles.hideOnMobile}`}>
               <ExternalLink size={18} strokeWidth={1.5} />
               <span>Return to site</span>
             </Link>
@@ -655,7 +778,7 @@ export default function SuperAdminDashboardPage() {
                 logout();
                 window.location.href = "/";
               }} 
-              className={styles.menuItem}
+              className={`${styles.menuItem} ${styles.hideOnMobile}`}
               style={{ width: "100%" }}
             >
               <LogOut size={18} strokeWidth={1.5} />
@@ -667,6 +790,13 @@ export default function SuperAdminDashboardPage() {
         <div className={styles.sidebarFooter}>
           © {new Date().getFullYear()} I Siri Properties
         </div>
+        <button 
+          className={styles.sidebarCloseBtn}
+          onClick={() => setIsSidebarOpen(false)}
+          aria-label="Close Sidebar"
+        >
+          <ChevronLeft size={16} strokeWidth={2.5} />
+        </button>
       </aside>
 
       {/* Main Wrapper Column */}
@@ -691,7 +821,11 @@ export default function SuperAdminDashboardPage() {
               <div className={styles.profileRole}>Super Admin</div>
             </div>
             <div className={styles.avatar}>
-              {user.name.charAt(0).toUpperCase()}
+              {user.profileImage ? (
+                <img src={user.profileImage} alt={user.name} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+              ) : (
+                user.name.charAt(0).toUpperCase()
+              )}
             </div>
           </div>
         </header>
@@ -711,6 +845,8 @@ export default function SuperAdminDashboardPage() {
           {/* Messages */}
           {errorMsg && <div className={styles.errorBox}>{errorMsg}</div>}
           {successMsg && <div className={styles.successBox}>{successMsg}</div>}
+          {phoneError && <div className={styles.errorBox}>{phoneError}</div>}
+          {phoneSuccess && <div className={styles.successBox}>{phoneSuccess}</div>}
 
           {/* Tab Render Content */}
           {tabLoading ? (
@@ -872,6 +1008,7 @@ export default function SuperAdminDashboardPage() {
                             <tr>
                               <th>Name</th>
                               <th>Email ID</th>
+                              <th>Phone No.</th>
                               <th>Created On</th>
                               <th>Actions</th>
                             </tr>
@@ -881,6 +1018,7 @@ export default function SuperAdminDashboardPage() {
                               <tr key={adm._id}>
                                 <td style={{ fontWeight: 500 }}>{adm.name}</td>
                                 <td>{adm.email}</td>
+                                <td>{adm.phone || "N/A"}</td>
                                 <td>{new Date(adm.createdAt).toLocaleDateString()}</td>
                                 <td>
                                   <div style={{ display: "flex", gap: "1.25rem", alignItems: "center" }}>
@@ -1032,6 +1170,7 @@ export default function SuperAdminDashboardPage() {
                             <th>Ref ID</th>
                             <th>Image</th>
                             <th>Title</th>
+                            <th>City</th>
                             <th>Location</th>
                             <th>Price</th>
                             <th>Vendor</th>
@@ -1058,6 +1197,7 @@ export default function SuperAdminDashboardPage() {
                                   />
                                 </td>
                                 <td style={{ fontWeight: 500 }}>{prop.title}</td>
+                                <td>{prop.city || "N/A"}</td>
                                 <td>{prop.location}</td>
                                 <td style={{ color: "var(--color-primary-dark)", fontWeight: 600 }}>{formattedVal}</td>
                                 <td style={{ fontWeight: 500 }}>{prop.addedByName}</td>
@@ -1067,39 +1207,95 @@ export default function SuperAdminDashboardPage() {
                                   </span>
                                 </td>
                                 <td>
-                                  <div style={{ display: "flex", gap: "0.5rem" }}>
-                                    <button
-                                      onClick={() => handleToggleSoldProperty(prop._id, prop.title, prop.status)}
-                                      className={styles.actionBtn}
-                                      style={{ 
-                                        color: "var(--color-dark)", 
-                                        textDecoration: "none", 
-                                        border: "1px solid var(--color-border)", 
-                                        padding: "0.4rem 0.8rem", 
-                                        fontSize: "0.75rem",
-                                        whiteSpace: "nowrap",
-                                        backgroundColor: "var(--color-bg-light)",
-                                        display: "inline-flex",
-                                        alignItems: "center",
-                                        justifyContent: "center"
-                                      }}
+                                  <div style={{ position: "relative" }}>
+                                    <button 
+                                      onClick={() => setOpenPropertyMenuId(openPropertyMenuId === prop._id ? null : prop._id)}
+                                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem', color: 'var(--color-dark)' }}
+                                      aria-label="More actions"
                                     >
-                                      {prop.status === "available" ? "Mark Sold" : "Mark Available"}
+                                      <MoreVertical size={20} />
                                     </button>
-                                    <Link href={`/properties/${prop._id}`} className={`${styles.actionBtn} ${styles.viewBtn}`} style={{ 
-                                      textDecoration: "none", 
-                                      border: "1px solid var(--color-border)", 
-                                      padding: "0.4rem 0.8rem", 
-                                      fontSize: "0.75rem",
-                                      whiteSpace: "nowrap",
-                                      backgroundColor: "var(--color-bg-light)",
-                                      display: "inline-flex",
-                                      alignItems: "center",
-                                      justifyContent: "center",
-                                      color: "var(--color-primary-dark)"
-                                    }}>
-                                      View
-                                    </Link>
+                                    
+                                    {openPropertyMenuId === prop._id && (
+                                      <div style={{
+                                        position: 'absolute',
+                                        right: '0',
+                                        top: '100%',
+                                        background: 'white',
+                                        border: '1px solid var(--color-border)',
+                                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                                        borderRadius: '6px',
+                                        padding: '0.25rem 0',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        zIndex: 50,
+                                        minWidth: '130px'
+                                      }}>
+                                        <button 
+                                          onClick={() => {
+                                            setPropConfirmStatusModal({ isOpen: true, property: prop });
+                                            setOpenPropertyMenuId(null);
+                                          }}
+                                          style={{
+                                            padding: '0.5rem 1rem',
+                                            textAlign: 'left',
+                                            background: 'none',
+                                            border: 'none',
+                                            cursor: 'pointer',
+                                            fontSize: '0.85rem',
+                                            color: 'var(--color-dark)'
+                                          }}
+                                        >
+                                          {prop.status === "available" ? "Mark Sold" : "Mark Available"}
+                                        </button>
+                                        <Link 
+                                          href={`/properties/${prop._id}`} 
+                                          style={{
+                                            padding: '0.5rem 1rem',
+                                            textAlign: 'left',
+                                            background: 'none',
+                                            border: 'none',
+                                            cursor: 'pointer',
+                                            fontSize: '0.85rem',
+                                            color: 'var(--color-dark)',
+                                            textDecoration: 'none'
+                                          }}
+                                        >
+                                          View Property
+                                        </Link>
+                                        <button 
+                                          onClick={() => handleEditProperty(prop)}
+                                          style={{
+                                            padding: '0.5rem 1rem',
+                                            textAlign: 'left',
+                                            background: 'none',
+                                            border: 'none',
+                                            cursor: 'pointer',
+                                            fontSize: '0.85rem',
+                                            color: 'var(--color-primary-dark)'
+                                          }}
+                                        >
+                                          Edit Property
+                                        </button>
+                                        <button 
+                                          onClick={() => {
+                                            setPropConfirmDeleteModal({ isOpen: true, property: prop });
+                                            setOpenPropertyMenuId(null);
+                                          }}
+                                          style={{
+                                            padding: '0.5rem 1rem',
+                                            textAlign: 'left',
+                                            background: 'none',
+                                            border: 'none',
+                                            cursor: 'pointer',
+                                            fontSize: '0.85rem',
+                                            color: 'var(--color-error, #e05e5e)'
+                                          }}
+                                        >
+                                          Delete
+                                        </button>
+                                      </div>
+                                    )}
                                   </div>
                                 </td>
                               </tr>
@@ -1113,91 +1309,7 @@ export default function SuperAdminDashboardPage() {
                   )}
                 </div>
               )}
-              {activeTab === "settings" && (
-                <div style={{ maxWidth: "600px" }}>
-                  <div className={styles.formBox}>
-                    <h3 style={{ fontFamily: "var(--font-serif)", fontSize: "1.4rem", marginBottom: "1.5rem", fontWeight: 400 }}>
-                      Update Super Admin Password
-                    </h3>
-                    <form onSubmit={handleUpdatePassword}>
-                      <div className={styles.formGroup}>
-                        <label className={styles.label}>Current Password</label>
-                        <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
-                          <input
-                            type={showCurrentPassword ? "text" : "password"}
-                            placeholder="Enter current password"
-                            value={settingsCurrentPassword}
-                            onChange={(e) => setSettingsCurrentPassword(e.target.value)}
-                            className={styles.input}
-                            required
-                            style={{ width: "100%", paddingRight: "3rem" }}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                            style={{ position: "absolute", right: "1rem", background: "none", border: "none", color: "var(--color-dark-muted)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}
-                            aria-label={showCurrentPassword ? "Hide password" : "Show password"}
-                          >
-                            {showCurrentPassword ? <EyeOff size={18} strokeWidth={1.5} /> : <Eye size={18} strokeWidth={1.5} />}
-                          </button>
-                        </div>
-                      </div>
 
-                      <div className={styles.formGroup}>
-                        <label className={styles.label}>New Password</label>
-                        <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
-                          <input
-                            type={showNewPassword ? "text" : "password"}
-                            placeholder="Enter new password"
-                            value={settingsNewPassword}
-                            onChange={(e) => setSettingsNewPassword(e.target.value)}
-                            className={styles.input}
-                            required
-                            minLength={6}
-                            style={{ width: "100%", paddingRight: "3rem" }}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowNewPassword(!showNewPassword)}
-                            style={{ position: "absolute", right: "1rem", background: "none", border: "none", color: "var(--color-dark-muted)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}
-                            aria-label={showNewPassword ? "Hide password" : "Show password"}
-                          >
-                            {showNewPassword ? <EyeOff size={18} strokeWidth={1.5} /> : <Eye size={18} strokeWidth={1.5} />}
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className={styles.formGroup}>
-                        <label className={styles.label}>Confirm New Password</label>
-                        <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
-                          <input
-                            type={showConfirmPassword ? "text" : "password"}
-                            placeholder="Confirm new password"
-                            value={settingsConfirmPassword}
-                            onChange={(e) => setSettingsConfirmPassword(e.target.value)}
-                            className={styles.input}
-                            required
-                            minLength={6}
-                            style={{ width: "100%", paddingRight: "3rem" }}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                            style={{ position: "absolute", right: "1rem", background: "none", border: "none", color: "var(--color-dark-muted)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}
-                            aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                          >
-                            {showConfirmPassword ? <EyeOff size={18} strokeWidth={1.5} /> : <Eye size={18} strokeWidth={1.5} />}
-                          </button>
-                        </div>
-                      </div>
-
-                      <button type="submit" className={styles.submitBtn} disabled={settingsUpdateLoading} style={{ width: "100%" }}>
-                        {settingsUpdateLoading ? "Updating..." : "Update Password"}
-                      </button>
-                    </form>
-                  </div>
-                </div>
-              )}
             </>
           )}
         </main>
@@ -1271,6 +1383,8 @@ export default function SuperAdminDashboardPage() {
                   required={!editingAdminId}
                 />
               </div>
+
+
 
               <div className={styles.modalActionContainer} style={{ marginTop: "2rem" }}>
                 <button type="submit" className={styles.submitBtn} disabled={addAdminLoading}>
@@ -1462,7 +1576,7 @@ export default function SuperAdminDashboardPage() {
             </button>
 
             <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "1.6rem", fontWeight: 400, marginBottom: "2rem" }}>
-              Register Residence Listing (Super Admin)
+              {propEditMode ? "Edit Property (Super Admin)" : "Register Residence Listing (Super Admin)"}
             </h2>
             <form onSubmit={handleAddPropertySubmit}>
               {errorMsg && <div className={styles.errorBox}>{errorMsg}</div>}
@@ -1542,6 +1656,33 @@ export default function SuperAdminDashboardPage() {
                   </select>
                 </div>
 
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>Listing Type *</label>
+                  <select
+                    value={propListingType}
+                    onChange={(e) => setPropListingType(e.target.value)}
+                    className={styles.select}
+                    style={{ border: "1px solid var(--color-border)", padding: "0.8rem 1rem", fontSize: "0.9rem" }}
+                  >
+                    <option value="Sell">Sell</option>
+                    <option value="Rent">Rent</option>
+                  </select>
+                </div>
+
+                <div className={styles.formGroup} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '1.5rem' }}>
+                  <input
+                    type="checkbox"
+                    id="premiumPropertySuper"
+                    checked={propIsPremium}
+                    onChange={(e) => setPropIsPremium(e.target.checked)}
+                    style={{ width: "18px", height: "18px", cursor: "pointer" }}
+                  />
+                  <label htmlFor="premiumPropertySuper" className={styles.label} style={{ margin: 0, cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                    Premium Property 
+                    <span style={{ fontSize: "0.75rem", color: "var(--color-primary)", fontWeight: "normal" }}>(Shows in Best Properties)</span>
+                  </label>
+                </div>
+
 
 
                 {/* Custom Fields Rendering */}
@@ -1565,11 +1706,76 @@ export default function SuperAdminDashboardPage() {
                     id="superImageFiles"
                     multiple
                     accept="image/*"
-                    onChange={(e) => setPropSelectedFiles(e.target.files)}
+                    onChange={(e) => {
+                      const files = e.target.files;
+                      if (files) {
+                        const validFiles = Array.from(files).filter(file => file.size <= 3 * 1024 * 1024);
+                        if (validFiles.length !== files.length) {
+                          alert("Some files exceed the 3MB limit and were removed.");
+                        }
+                        
+                        // We need to create a new FileList, which isn't directly possible, 
+                        // so we might just use the raw files if they are all valid, or clear the input if any are invalid.
+                        if (validFiles.length !== files.length) {
+                          e.target.value = "";
+                          setPropSelectedFiles(null);
+                        } else {
+                          setPropSelectedFiles(files);
+                        }
+                      }
+                    }}
                     className={styles.input}
                     style={{ padding: "0.6rem" }}
                   />
-                  <span className={styles.helperText}>Select multiple image files to upload to the server.</span>
+                  <span className={styles.helperText}>Select multiple image files (Max 3MB per file).</span>
+
+                  {(propExistingImages.length > 0 || propImagePreviews.length > 0) && (
+                    <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap', marginTop: '1rem' }}>
+                      {propExistingImages.map((src, index) => (
+                        <div key={`existing-${index}`} style={{ position: 'relative' }}>
+                          <img 
+                            src={getImageUrl(src)} 
+                            alt={`Existing ${index}`} 
+                            style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '4px', border: '1px solid var(--color-border)' }} 
+                          />
+                          <button 
+                            type="button"
+                            onClick={() => {
+                              setPropExistingImages(prev => prev.filter((_, i) => i !== index));
+                              setPropRemovedImages(prev => [...prev, src]);
+                            }}
+                            style={{ position: 'absolute', top: '-8px', right: '-8px', background: '#e05e5e', color: 'white', borderRadius: '50%', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer', fontSize: '12px' }}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                      {propImagePreviews.map((src, index) => (
+                        <div key={`new-${index}`} style={{ position: 'relative' }}>
+                          <img 
+                            src={src} 
+                            alt={`New ${index}`} 
+                            style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '4px', border: '1px solid var(--color-border)' }} 
+                          />
+                          <button 
+                            type="button"
+                            onClick={() => {
+                              if (propSelectedFiles) {
+                                // Since propSelectedFiles is a FileList, we can't easily mutate it.
+                                // In a real app, it's better to store files in an array state.
+                                // For now, we just clear all selected files if they want to remove one,
+                                // or we just clear the preview. We'll just alert them to re-upload.
+                                alert("To remove a newly selected file, please clear and re-select your files.");
+                              }
+                            }}
+                            style={{ position: 'absolute', top: '-8px', right: '-8px', background: '#e05e5e', color: 'white', borderRadius: '50%', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer', fontSize: '12px' }}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
 
@@ -1587,7 +1793,7 @@ export default function SuperAdminDashboardPage() {
               </div>
 
               <button type="submit" className={styles.submitBtn} disabled={propAddLoading}>
-                {propAddLoading ? "Saving Property..." : "Submit Property Listing"}
+                {propAddLoading ? "Saving Property..." : propEditMode ? "Update Property Listing" : "Submit Property Listing"}
               </button>
             </form>
           </div>
@@ -1678,6 +1884,85 @@ export default function SuperAdminDashboardPage() {
                 }}
               >
                 Close Window
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Status Update Confirmation Modal */}
+      {propConfirmStatusModal.isOpen && propConfirmStatusModal.property && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent} style={{ maxWidth: "400px", textAlign: "center", padding: "3rem 2rem" }}>
+            <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "1.5rem", marginBottom: "1rem", color: "var(--color-dark)" }}>
+              Change Property Status
+            </h2>
+            <p style={{ color: "var(--color-dark-muted)", marginBottom: "2rem", lineHeight: "1.5" }}>
+              Are you sure you want to mark <strong>{propConfirmStatusModal.property.title}</strong> as{" "}
+              <span style={{ fontWeight: 600, color: propConfirmStatusModal.property.status === "available" ? "#e05e5e" : "#4eb570" }}>
+                {propConfirmStatusModal.property.status === "available" ? "Sold" : "Available"}
+              </span>?
+            </p>
+            <div style={{ display: "flex", gap: "1rem", justifyContent: "center" }}>
+              <button
+                onClick={() => setPropConfirmStatusModal({ isOpen: false, property: null })}
+                className={styles.submitBtn}
+                style={{ backgroundColor: "transparent", color: "var(--color-dark)", border: "1px solid var(--color-border)", flex: 1 }}
+                disabled={propStatusUpdateLoading}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleStatusUpdateProperty}
+                className={styles.submitBtn}
+                style={{ flex: 1 }}
+                disabled={propStatusUpdateLoading}
+              >
+                {propStatusUpdateLoading ? "Updating..." : "Yes, Change Status"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {propConfirmDeleteModal.isOpen && propConfirmDeleteModal.property && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent} style={{ maxWidth: "400px", textAlign: "center", padding: "3rem 2rem" }}>
+            <div style={{ 
+              width: "60px", 
+              height: "60px", 
+              borderRadius: "50%", 
+              backgroundColor: "rgba(224, 94, 94, 0.1)", 
+              color: "#e05e5e",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto 1.5rem auto"
+            }}>
+              <Trash2 size={28} />
+            </div>
+            <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "1.5rem", marginBottom: "1rem", color: "var(--color-dark)" }}>
+              Delete Property
+            </h2>
+            <p style={{ color: "var(--color-dark-muted)", marginBottom: "2rem", lineHeight: "1.5" }}>
+              Are you sure you want to delete <strong>{propConfirmDeleteModal.property.title}</strong>? This action cannot be undone.
+            </p>
+            <div style={{ display: "flex", gap: "1rem", justifyContent: "center" }}>
+              <button
+                onClick={() => setPropConfirmDeleteModal({ isOpen: false, property: null })}
+                className={styles.submitBtn}
+                style={{ backgroundColor: "transparent", color: "var(--color-dark)", border: "1px solid var(--color-border)", flex: 1 }}
+                disabled={propDeleteLoading}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteProperty}
+                className={styles.submitBtn}
+                style={{ backgroundColor: "#e05e5e", flex: 1 }}
+                disabled={propDeleteLoading}
+              >
+                {propDeleteLoading ? "Deleting..." : "Yes, Delete"}
               </button>
             </div>
           </div>

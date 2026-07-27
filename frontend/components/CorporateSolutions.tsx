@@ -59,8 +59,10 @@ export default function CorporateSolutions() {
               <div className={styles.iconWrapper}>
                 {item.icon}
               </div>
-              <h3 className={styles.cardTitle}>{item.title}</h3>
-              <p className={styles.cardText}>{item.text}</p>
+              <div className={styles.cardContent}>
+                <h3 className={styles.cardTitle}>{item.title}</h3>
+                <p className={styles.cardText}>{item.text}</p>
+              </div>
             </div>
           ))}
         </div>

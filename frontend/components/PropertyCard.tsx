@@ -13,7 +13,19 @@ interface PropertyCardProps {
 }
 
 export default function PropertyCard({ property }: PropertyCardProps) {
-  const { user } = useAuth();
+  const { user, toggleWishlist } = useAuth();
+  
+  const isWishlisted = user?.wishlist?.includes(property.id);
+
+  const handleWishlistClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!user) {
+      window.location.href = "/login?mode=login";
+      return;
+    }
+    await toggleWishlist(property.id);
+  };
   const formattedPrice = new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
@@ -35,15 +47,15 @@ export default function PropertyCard({ property }: PropertyCardProps) {
         <div className={styles.badge}>{property.type.toUpperCase()}</div>
         <div 
           className={styles.favoriteBtn} 
-          onClick={(e) => { 
-            e.preventDefault(); 
-            e.stopPropagation(); 
-            /* handle wishlist */ 
-          }}
+          onClick={handleWishlistClick}
           role="button"
           tabIndex={0}
         >
-          <Heart size={18} />
+          <Heart 
+            size={18} 
+            fill={isWishlisted ? "red" : "none"} 
+            color={isWishlisted ? "red" : "currentColor"} 
+          />
         </div>
       </div>
 

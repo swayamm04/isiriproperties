@@ -4,16 +4,50 @@
   left: 0;
   width: 100%;
   z-index: 1000;
-  background-color: var(--color-bg-white);
+  background-color: var(--color-bg-light); /* Changed to gray */
   border-bottom: 1px solid var(--color-border);
   backdrop-filter: blur(5px);
   transition: all 0.4s ease;
 }
 
 .scrolled {
-  background-color: rgba(255, 255, 255, 0.95);
+  background-color: var(--color-bg-light); /* Changed to gray */
   box-shadow: var(--shadow-sm);
   border-bottom: 1px solid transparent;
+}
+
+.announcementBar {
+  width: 100%;
+  position: relative;
+  height: 24px;
+  background-color: var(--color-bg-light); /* Changed to gray */
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: height 0.3s ease, opacity 0.3s ease, margin 0.3s ease;
+}
+
+.announcementHidden {
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.announcementText {
+  position: absolute;
+  width: 100%;
+  text-align: center;
+  color: var(--color-primary-dark);
+  font-size: 0.65rem; /* Made very small */
+  font-weight: 600;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  margin: 0;
+}
+
+.announcementActive {
+  opacity: 1;
 }
 
 .container {
@@ -91,6 +125,42 @@
   background-color: var(--color-primary);
   color: #FFFFFF;
   box-shadow: var(--shadow-sm);
+}
+
+.desktopToggle {
+  display: flex;
+  background-color: #FAFAFA;
+  border: 1px solid var(--color-border);
+  border-radius: 50px;
+  padding: 4px;
+  gap: 4px;
+  align-items: center;
+}
+
+.toggleBtn {
+  background: transparent;
+  border: none;
+  border-radius: 50px;
+  padding: 0.4rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-dark-muted);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.toggleBtn:hover {
+  color: var(--color-dark);
+}
+
+.toggleBtnActive {
+  background-color: var(--color-primary);
+  color: #FFFFFF;
+  box-shadow: var(--shadow-sm);
+}
+
+.toggleBtnActive:hover {
+  color: #FFFFFF;
 }
 
 .mobileMenuBtn {
@@ -196,17 +266,122 @@
 }
 
 @media (max-width: 768px) {
+  .navbar {
+    background: var(--color-bg-light); /* Changed to gray */
+    border-bottom: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    backdrop-filter: none;
+    padding: 0; /* Remove extra padding since container has padding */
+  }
+  
+  .scrolled {
+    background: var(--color-bg-light); /* Changed to gray */
+    box-shadow: var(--shadow-sm);
+  }
+
+  .logo {
+    /* Kept empty or just remove the filter to use original logo colors */
+  }
+  
+  .logo img {
+    max-width: 140px;
+    height: auto;
+  }
+  
+  .logoGold {
+    color: var(--color-primary) !important;
+  }
+
   .navLinks {
+    display: none;
+  }
+  
+  .desktopToggle {
     display: none;
   }
   
   .mobileActions {
     display: flex;
+    align-items: center;
+    gap: 0.75rem; /* reduce gap slightly */
+    color: var(--color-dark);
   }
   
-  .container {
-    padding: 1rem 1.5rem;
+  .mobileLogin {
+    font-size: 0.85rem; /* reduce font size slightly */
+    font-weight: 700;
+    cursor: pointer;
+    background: none;
+    border: none;
+    color: var(--color-dark);
+    font-family: var(--font-sans);
   }
+  
+  .mobileCart {
+    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: 50%;
+    padding: 0.4rem; /* smaller padding */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-dark);
+  }
+
+  .container {
+    padding: 0.75rem 1rem; /* reduce padding */
+    align-items: center;
+  }
+
+  .bottomNav {
+    display: flex !important;
+  }
+}
+
+/* Bottom Nav */
+.bottomNav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: #FFFFFF;
+  border-top: 1px solid var(--color-border);
+  z-index: 1000;
+  padding: 0.5rem 0;
+  justify-content: space-around;
+  align-items: center;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.bottomNavLink {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-dark-muted);
+  text-decoration: none;
+  padding: 0.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  min-width: 48px;
+}
+
+.bottomNavLinkActive {
+  color: var(--color-primary);
+}
+
+.bottomNavLinkActive::after {
+  content: '';
+  width: 5px;
+  height: 5px;
+  background-color: var(--color-primary);
+  border-radius: 50%;
+  margin-top: 4px;
 }
 
 /* Auth Modal Styles */
@@ -226,13 +401,14 @@
 }
 
 .modalContent {
-  background-color: #1A262E;
-  border: 1px solid var(--color-primary);
+  background-color: #FAFAFA; /* Changed to light background */
+  border-radius: 12px;
   width: 100%;
-  max-width: 480px;
-  padding: 3rem 2.5rem;
+  max-width: 420px; /* Made slightly narrower like the screenshot */
+  padding: 3rem 2.5rem 2rem 2.5rem;
   position: relative;
   animation: modalFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
 }
 
 @keyframes modalFadeIn {
@@ -252,7 +428,7 @@
   right: 1.5rem;
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--color-dark-muted);
   cursor: pointer;
   transition: color 0.3s ease;
 }
@@ -263,21 +439,18 @@
 
 .modalTitle {
   font-family: var(--font-sans);
-  font-size: 2rem;
-  color: #FFFFFF;
+  font-size: 1.8rem;
+  color: var(--color-dark);
   margin-bottom: 0.5rem;
-  font-weight: 500;
-  letter-spacing: 0.02em;
+  font-weight: 700;
   text-align: center;
 }
 
 .modalSubtitle {
-  font-size: 0.85rem;
-  color: var(--color-primary);
+  font-size: 0.9rem;
+  color: var(--color-dark-muted);
   margin-bottom: 2.5rem;
   text-align: center;
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
 }
 
 .formGroup {
@@ -287,26 +460,34 @@
 }
 
 .formLabel {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: rgba(255, 255, 255, 0.6);
-  margin-bottom: 0.5rem;
+  display: none; /* Hidden to match screenshot */
 }
 
 .inputField {
-  background-color: #1a1a1a;
-  border: 1px solid rgba(76, 131, 161, 0.3);
-  color: #FFFFFF;
-  padding: 0.8rem 1rem;
-  font-size: 0.9rem;
-  letter-spacing: 0.05em;
+  background-color: #FFFFFF;
+  border: 1px solid var(--color-border);
+  border-radius: 50px;
+  color: var(--color-dark);
+  padding: 1rem 1.25rem 1rem 3rem; /* Left padding for icon */
+  font-size: 0.95rem;
+  width: 100%;
   transition: all 0.3s ease;
 }
 
 .inputField:focus {
   border-color: var(--color-primary);
-  background-color: #202020;
+  background-color: #FFFFFF;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
+}
+
+.inputIcon {
+  position: absolute;
+  left: 1.25rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-dark-muted);
+  pointer-events: none;
 }
 
 .errorMsg {
@@ -318,45 +499,57 @@
   background-color: rgba(224, 94, 94, 0.05);
 }
 
+.successMsg {
+  font-size: 0.8rem;
+  color: #4eb570;
+  margin-bottom: 1.5rem;
+  padding: 0.5rem 1rem;
+  border-left: 2px solid #4eb570;
+  background-color: rgba(78, 181, 112, 0.05);
+}
+
 .submitBtn {
   width: 100%;
   background-color: var(--color-primary);
-  color: #1A262E;
+  color: var(--color-dark);
   border: none;
+  border-radius: 50px;
   padding: 1rem;
-  font-size: 0.85rem;
+  font-size: 1rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.15em;
-  font-weight: 600;
+  letter-spacing: 0.05em;
   cursor: pointer;
   transition: all 0.3s ease;
-  margin-top: 1rem;
+  margin-top: 0.5rem;
+  box-shadow: 0 4px 12px rgba(var(--color-primary-rgb), 0.2);
 }
 
 .submitBtn:hover {
   background-color: var(--color-primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(var(--color-primary-rgb), 0.3);
 }
 
 .switchText {
   text-align: center;
-  margin-top: 2rem;
+  margin-top: 1.5rem;
   font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--color-dark-muted);
 }
 
 .switchBtn {
   background: none;
   border: none;
-  color: var(--color-primary);
+  color: var(--color-primary-dark);
   cursor: pointer;
-  font-weight: 500;
-  text-decoration: underline;
+  font-weight: 700;
   padding: 0;
   margin-left: 0.25rem;
 }
 
 .switchBtn:hover {
-  color: var(--color-primary-dark);
+  color: var(--color-primary);
 }
 
 .userInfo {

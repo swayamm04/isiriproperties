@@ -1,10 +1,54 @@
 const express = require("express");
+const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
+const cloudinary = require("cloudinary").v2;
 const User = require("../models/User");
 const Property = require("../models/Property");
 const InterestRequest = require("../models/InterestRequest");
 const { auth, authorize } = require("../middleware/auth");
 
 const router = express.Router();
+
+// Configure Cloudinary if credentials exist in .env
+let isCloudinaryConfigured = false;
+if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  });
+  isCloudinaryConfigured = true;
+}
+
+// Multer Storage Configuration
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadPath = path.join(__dirname, "../uploads");
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, { recursive: true });
+    }
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + "-" + file.originalname.replace(/\s+/g, "_"));
+  },
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 3 * 1024 * 1024 }, // 3MB limit
+  fileFilter: (req, file, cb) => {
+    const filetypes = /jpeg|jpg|png|webp|gif/;
+    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = filetypes.test(file.mimetype);
+    if (mimetype && extname) {
+      return cb(null, true);
+    } else {
+      cb(new Error("Only images are allowed (jpeg, jpg, png, webp, gif)!"));
+    }
+  },
+});
 
 // All routes here require super_admin authorization
 router.use(auth, authorize("super_admin"));
@@ -38,11 +82,11 @@ router.get("/stats", async (req, res) => {
 // @route   POST api/superadmin/admins
 // @desc    Add a new admin
 // @access  Private (Super Admin)
-router.post("/admins", async (req, res) => {
+router.post("/admins", upload.single("profileImage"), async (req, res) => {
   const { name, email, phone, password } = req.body;
 
   try {
-    if (!name || !email || !password) {
+    if (!name || !email || !password || !phone) {
       return res.status(400).json({ error: "Please enter all required fields" });
     }
 
@@ -51,12 +95,24 @@ router.post("/admins", async (req, res) => {
       return res.status(400).json({ error: "Email or username is already registered" });
     }
 
+    let profileImageUrl = "";
+    if (req.file) {
+      if (isCloudinaryConfigured) {
+        const result = await cloudinary.uploader.upload(req.file.path, { folder: "isiri_profiles" });
+        profileImageUrl = result.secure_url;
+        fs.unlinkSync(req.file.path);
+      } else {
+        profileImageUrl = req.file.filename;
+      }
+    }
+
     const newAdmin = new User({
       name,
       email,
       phone,
       password,
       role: "admin",
+      profileImage: profileImageUrl,
     });
 
     await newAdmin.save();
@@ -68,6 +124,7 @@ router.post("/admins", async (req, res) => {
         email: newAdmin.email,
         phone: newAdmin.phone,
         role: newAdmin.role,
+        profileImage: newAdmin.profileImage,
       },
     });
   } catch (error) {
@@ -92,7 +149,7 @@ router.get("/admins", async (req, res) => {
 // @route   PUT api/superadmin/admins/:id
 // @desc    Edit admin details
 // @access  Private (Super Admin)
-router.put("/admins/:id", async (req, res) => {
+router.put("/admins/:id", upload.single("profileImage"), async (req, res) => {
   const { name, email, phone, password } = req.body;
 
   try {
@@ -113,6 +170,16 @@ router.put("/admins/:id", async (req, res) => {
       }
     }
     if (password) admin.password = password;
+
+    if (req.file) {
+      if (isCloudinaryConfigured) {
+        const result = await cloudinary.uploader.upload(req.file.path, { folder: "isiri_profiles" });
+        admin.profileImage = result.secure_url;
+        fs.unlinkSync(req.file.path);
+      } else {
+        admin.profileImage = req.file.filename;
+      }
+    }
 
     await admin.save();
     res.json({ message: "Admin updated successfully", admin });

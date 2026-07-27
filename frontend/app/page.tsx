@@ -1,7 +1,7 @@
 import Navbar from "@/components/Navbar";
 import HeroBanner from "@/components/HeroBanner";
-import ContactForm from "@/components/ContactForm";
-
+import MobileCategoryGrid from "@/components/MobileCategoryGrid";
+import NormalProperties from "@/components/NormalProperties";
 import AboutUs from "@/components/AboutUs";
 import PropertySlider from "@/components/PropertySlider";
 import CorporateSolutions from "@/components/CorporateSolutions";
@@ -16,12 +16,13 @@ export default function Home() {
       <main className="fade-in">
         <HeroBanner />
         <PropertySlider />
+        <MobileCategoryGrid />
+        <NormalProperties />
         <AboutUs />
         <CorporateSolutions />
 
         <Testimonials />
         <ScheduleVisitBanner />
-        <ContactForm />
       </main>
       <Footer />
     </>

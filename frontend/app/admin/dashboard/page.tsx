@@ -14,7 +14,11 @@ import {
   Menu, 
   X, 
   LayoutDashboard,
-  Eye 
+  Eye,
+  ChevronDown,
+  ChevronUp,
+  MoreVertical,
+  ChevronLeft
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -37,16 +41,21 @@ interface Property {
   _id: string;
   propertyId: string;
   title: string;
+  city?: string;
   location: string;
   price: number;
   images: string[];
   type: string;
   status: "available" | "sold";
   customFields?: Record<string, any>;
+  description?: string;
+  beds?: number;
+  baths?: number;
+  area?: string;
 }
 
 export default function AdminDashboardPage() {
-  const { user, loading, logout } = useAuth();
+  const { user, loading, logout, updatePhone } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"my_properties" | "settings">("my_properties");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -59,6 +68,11 @@ export default function AdminDashboardPage() {
   const [viewStatus, setViewStatus] = useState<"available" | "sold">("available");
   const [confirmStatusModal, setConfirmStatusModal] = useState<{ isOpen: boolean, property: Property | null }>({ isOpen: false, property: null });
   const [statusUpdateLoading, setStatusUpdateLoading] = useState(false);
+  const [confirmDeleteModal, setConfirmDeleteModal] = useState<{ isOpen: boolean, property: Property | null }>({ isOpen: false, property: null });
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [editingPropertyId, setEditingPropertyId] = useState<string | null>(null);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
 
   // Add Property form state
   const [title, setTitle] = useState("");
@@ -66,12 +80,32 @@ export default function AdminDashboardPage() {
   const [location, setLocation] = useState("");
   const [price, setPrice] = useState("");
   const [type, setType] = useState("");
+  const [propListingType, setPropListingType] = useState("Sell");
+  const [propIsPremium, setPropIsPremium] = useState(false);
   const [description, setDescription] = useState("");
   const [propCustomFields, setPropCustomFields] = useState<Record<string, any>>({});
-  const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [existingImages, setExistingImages] = useState<string[]>([]);
+  const [removedImages, setRemovedImages] = useState<string[]>([]);
   const [addLoading, setAddLoading] = useState(false);
   const [addSuccess, setAddSuccess] = useState("");
   const [addError, setAddError] = useState("");
+
+  useEffect(() => {
+    if (!selectedFiles || selectedFiles.length === 0) {
+      setImagePreviews([]);
+      return;
+    }
+    const previews: string[] = [];
+    for (let i = 0; i < selectedFiles.length; i++) {
+      previews.push(URL.createObjectURL(selectedFiles[i]));
+    }
+    setImagePreviews(previews);
+
+    return () => {
+      previews.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [selectedFiles]);
 
   // Password settings state
   const [currentPassword, setCurrentPassword] = useState("");
@@ -80,6 +114,16 @@ export default function AdminDashboardPage() {
   const [passLoading, setPassLoading] = useState(false);
   const [passSuccess, setPassSuccess] = useState("");
   const [passError, setPassError] = useState("");
+
+  // Phone settings state
+  const [phoneCurrentPassword, setPhoneCurrentPassword] = useState("");
+  const [newPhone, setNewPhone] = useState("");
+  const [phoneLoading, setPhoneLoading] = useState(false);
+  const [phoneSuccess, setPhoneSuccess] = useState("");
+  const [phoneError, setPhoneError] = useState("");
+
+  const [expandedSetting, setExpandedSetting] = useState<"password" | "phone" | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [citySuggestions, setCitySuggestions] = useState<string[]>([]);
@@ -136,6 +180,8 @@ export default function AdminDashboardPage() {
       formData.append("location", location);
       formData.append("price", price);
       formData.append("type", type);
+      formData.append("listingType", propListingType);
+      formData.append("isPremium", String(propIsPremium));
       formData.append("description", description);
       formData.append("customFields", JSON.stringify(propCustomFields));
 
@@ -145,20 +191,38 @@ export default function AdminDashboardPage() {
         }
       }
 
-      await apiRequest("/properties", {
-        method: "POST",
+      if (removedImages.length > 0) {
+        formData.append("removedImages", removedImages.join(","));
+      }
+
+      let url = "/properties";
+      let method = "POST";
+      
+      if (editMode && editingPropertyId) {
+        url = `/properties/${editingPropertyId}`;
+        method = "PUT";
+      }
+
+      await apiRequest(url, {
+        method: method,
         body: formData,
       });
 
-      setAddSuccess("Property added successfully!");
+      setAddSuccess(editMode ? "Property updated successfully!" : "Property added successfully!");
       setTitle("");
       setCity("");
       setLocation("");
       setPrice("");
       setType("");
+      setPropListingType("Sell");
+      setPropIsPremium(false);
       setPropCustomFields({});
       setDescription("");
-      setSelectedFiles(null);
+      setSelectedFiles([]);
+      setExistingImages([]);
+      setRemovedImages([]);
+      setEditMode(false);
+      setEditingPropertyId(null);
       
       const fileInput = document.getElementById("imageFiles") as HTMLInputElement;
       if (fileInput) fileInput.value = "";
@@ -175,6 +239,46 @@ export default function AdminDashboardPage() {
       setAddError(err.message || "Failed to add property.");
     } finally {
       setAddLoading(false);
+    }
+  };
+
+  const handleDeleteProperty = async () => {
+    if (!confirmDeleteModal.property) return;
+    try {
+      setDeleteLoading(true);
+      await apiRequest(`/properties/${confirmDeleteModal.property._id}`, {
+        method: "DELETE",
+      });
+      setConfirmDeleteModal({ isOpen: false, property: null });
+      fetchMyProperties();
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || "Failed to delete property");
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  const handleEditClick = async (prop: Property) => {
+    try {
+      const fullProp = await apiRequest(`/properties/${prop._id}`);
+      setEditMode(true);
+      setEditingPropertyId(prop._id);
+      setTitle(fullProp.title || "");
+      setCity(fullProp.city || "");
+      setLocation(fullProp.location || "");
+      setPrice(fullProp.price?.toString() || "");
+      setType(fullProp.type || "");
+      setPropListingType(fullProp.listingType || "Sell");
+      setPropIsPremium(fullProp.isPremium || false);
+      setDescription(fullProp.description || "");
+      setPropCustomFields(fullProp.customFields || {});
+      setExistingImages(fullProp.images || []);
+      setRemovedImages([]);
+      setSelectedFiles([]);
+      setIsAddPropModalOpen(true);
+    } catch (err) {
+      console.error("Failed to fetch full property details for edit", err);
     }
   };
 
@@ -211,6 +315,31 @@ export default function AdminDashboardPage() {
     } finally {
       setPassLoading(false);
     }
+  };
+
+  const handleChangePhoneSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPhoneLoading(true);
+    setPhoneError("");
+    setPhoneSuccess("");
+
+    if (!phoneCurrentPassword || !newPhone) {
+      setPhoneError("Both fields are required.");
+      setPhoneLoading(false);
+      return;
+    }
+
+    if (updatePhone) {
+      const success = await updatePhone(newPhone, phoneCurrentPassword);
+      if (success) {
+        setPhoneSuccess("Phone number updated successfully!");
+        setPhoneCurrentPassword("");
+        setNewPhone("");
+      } else {
+        setPhoneError("Failed to update phone number. Please check your password.");
+      }
+    }
+    setPhoneLoading(false);
   };
 
   if (loading) {
@@ -257,19 +386,8 @@ export default function AdminDashboardPage() {
             <span>My Properties</span>
           </button>
 
-          <button
-            onClick={() => {
-              setActiveTab("settings");
-              setIsSidebarOpen(false);
-            }}
-            className={`${styles.menuItem} ${activeTab === "settings" ? styles.activeMenuItem : ""}`}
-          >
-            <Settings size={18} strokeWidth={1.5} />
-            <span>Settings</span>
-          </button>
-
           <div style={{ marginTop: "auto", borderTop: "1px solid rgba(76, 131, 161, 0.1)", paddingTop: "1rem" }}>
-            <Link href="/" className={styles.menuItem}>
+            <Link href="/" className={`${styles.menuItem} ${styles.hideOnMobile}`}>
               <ExternalLink size={18} strokeWidth={1.5} />
               <span>Return to site</span>
             </Link>
@@ -279,7 +397,7 @@ export default function AdminDashboardPage() {
                 logout();
                 window.location.href = "/";
               }} 
-              className={styles.menuItem}
+              className={`${styles.menuItem} ${styles.hideOnMobile}`}
               style={{ width: "100%" }}
             >
               <LogOut size={18} strokeWidth={1.5} />
@@ -291,6 +409,13 @@ export default function AdminDashboardPage() {
         <div className={styles.sidebarFooter}>
           © {new Date().getFullYear()} I Siri Properties
         </div>
+        <button 
+          className={styles.sidebarCloseBtn}
+          onClick={() => setIsSidebarOpen(false)}
+          aria-label="Close Sidebar"
+        >
+          <ChevronLeft size={16} strokeWidth={2.5} />
+        </button>
       </aside>
 
       {/* Main Wrapper Column */}
@@ -315,7 +440,11 @@ export default function AdminDashboardPage() {
               <div className={styles.profileRole}>Vendor Admin</div>
             </div>
             <div className={styles.avatar}>
-              {user.name.charAt(0).toUpperCase()}
+              {user.profileImage ? (
+                <img src={user.profileImage} alt={user.name} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+              ) : (
+                user.name.charAt(0).toUpperCase()
+              )}
             </div>
           </div>
         </header>
@@ -336,7 +465,23 @@ export default function AdminDashboardPage() {
               
               {activeTab === "my_properties" && (
                 <button
-                  onClick={() => setIsAddPropModalOpen(true)}
+                  onClick={() => {
+                    setEditMode(false);
+                    setEditingPropertyId(null);
+                    setTitle("");
+                    setCity("");
+                    setLocation("");
+                    setPrice("");
+                    setType("");
+                    setPropListingType("Sell");
+                    setPropIsPremium(false);
+                    setDescription("");
+                    setPropCustomFields({});
+                    setSelectedFiles([]);
+                    setExistingImages([]);
+                    setRemovedImages([]);
+                    setIsAddPropModalOpen(true);
+                  }}
                   className={styles.submitBtn}
                   style={{ 
                     padding: "0.6rem 1.5rem", 
@@ -384,6 +529,7 @@ export default function AdminDashboardPage() {
                         <th>Ref ID</th>
                         <th>Image</th>
                         <th>Title</th>
+                        <th>City</th>
                         <th>Location</th>
                         <th>Price</th>
                         <th>Type</th>
@@ -411,6 +557,7 @@ export default function AdminDashboardPage() {
                               />
                             </td>
                             <td style={{ fontWeight: 500 }}>{prop.title}</td>
+                            <td>{prop.city || "N/A"}</td>
                             <td>{prop.location}</td>
                             <td style={{ color: "var(--color-primary-dark)", fontWeight: 600 }}>{formattedVal}</td>
                             <td>{prop.type}</td>
@@ -424,23 +571,65 @@ export default function AdminDashboardPage() {
                                 {prop.status === "available" ? "Available" : "Sold"}
                               </span>
                             </td>
-                            <td style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-                              <label className={styles.toggleSwitch} title="Toggle Sold/Available Status">
-                                <input 
-                                  type="checkbox" 
-                                  checked={prop.status === "available"}
-                                  onChange={async (e) => {
-                                    const eTarget = e.target;
-                                    // Revert checkbox visual change temporarily until confirmed
-                                    eTarget.checked = prop.status === "available";
-                                    setConfirmStatusModal({ isOpen: true, property: prop });
-                                  }}
-                                />
-                                <span className={styles.toggleSlider}></span>
-                              </label>
-                              <Link href={`/properties/${prop._id}`} className={styles.viewBtn} title="View Page">
-                                <Eye size={20} />
-                              </Link>
+                            <td style={{ position: "relative" }}>
+                              <button 
+                                onClick={() => setOpenMenuId(openMenuId === prop._id ? null : prop._id)}
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem', color: 'var(--color-dark)' }}
+                                aria-label="More actions"
+                              >
+                                <MoreVertical size={20} />
+                              </button>
+                              
+                              {openMenuId === prop._id && (
+                                <div style={{
+                                  position: 'absolute',
+                                  right: '0',
+                                  top: '100%',
+                                  background: 'white',
+                                  border: '1px solid var(--color-border)',
+                                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                                  borderRadius: '6px',
+                                  padding: '0.25rem 0',
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  zIndex: 50,
+                                  minWidth: '130px'
+                                }}>
+                                  <button 
+                                    onClick={() => {
+                                      setConfirmStatusModal({ isOpen: true, property: prop });
+                                      setOpenMenuId(null);
+                                    }}
+                                    style={{ background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: '0.4rem 1rem', fontSize: '0.85rem', color: 'var(--color-dark)', width: '100%' }}
+                                  >
+                                    {prop.status === "available" ? "Mark as Sold" : "Mark as Available"}
+                                  </button>
+                                  <button 
+                                    onClick={() => {
+                                      handleEditClick(prop);
+                                      setOpenMenuId(null);
+                                    }}
+                                    style={{ background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: '0.4rem 1rem', fontSize: '0.85rem', color: 'var(--color-dark)', width: '100%' }}
+                                  >
+                                    Edit Property
+                                  </button>
+                                  <Link 
+                                    href={`/properties/${prop._id}`} 
+                                    style={{ textDecoration: 'none', color: 'var(--color-dark)', padding: '0.4rem 1rem', fontSize: '0.85rem', display: 'block', width: '100%' }}
+                                  >
+                                    View Details
+                                  </Link>
+                                  <button 
+                                    onClick={() => {
+                                      setConfirmDeleteModal({ isOpen: true, property: prop });
+                                      setOpenMenuId(null);
+                                    }}
+                                    style={{ background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: '0.4rem 1rem', fontSize: '0.85rem', color: '#e05e5e', width: '100%' }}
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
+                              )}
                             </td>
                           </tr>
                         );
@@ -456,56 +645,16 @@ export default function AdminDashboardPage() {
             </div>
           )}
 
-          {activeTab === "settings" && (
-            <div className={styles.formBox} style={{ maxWidth: "550px" }}>
-              <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "1.6rem", fontWeight: 400, marginBottom: "2rem" }}>
-                Change Password
-              </h2>
-              <form onSubmit={handleChangePasswordSubmit}>
-                {passError && <div className={styles.errorBox}>{passError}</div>}
-                {passSuccess && <div className={styles.successBox}>{passSuccess}</div>}
 
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>Current Password *</label>
-                  <input
-                    type="password"
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    className={styles.input}
-                    required
-                  />
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>New Password *</label>
-                  <input
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className={styles.input}
-                    required
-                  />
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>Confirm New Password *</label>
-                  <input
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className={styles.input}
-                    required
-                  />
-                </div>
-
-                <button type="submit" className={styles.submitBtn} disabled={passLoading}>
-                  {passLoading ? "Updating Password..." : "Update Password"}
-                </button>
-              </form>
-            </div>
-          )}
         </main>
       </div>
+
+      {openMenuId && (
+        <div 
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9 }}
+          onClick={() => setOpenMenuId(null)}
+        />
+      )}
 
       {/* Add Property Modal */}
       {isAddPropModalOpen && (
@@ -520,7 +669,7 @@ export default function AdminDashboardPage() {
             </button>
 
             <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "1.6rem", fontWeight: 400, marginBottom: "2rem" }}>
-              Register Residence Listing
+              {editMode ? "Edit Residence Listing" : "Register Residence Listing"}
             </h2>
             <form onSubmit={handleAddPropertySubmit}>
               {addError && <div className={styles.errorBox}>{addError}</div>}
@@ -600,6 +749,33 @@ export default function AdminDashboardPage() {
                   </select>
                 </div>
 
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>Listing Type *</label>
+                  <select
+                    value={propListingType}
+                    onChange={(e) => setPropListingType(e.target.value)}
+                    className={styles.select}
+                    style={{ border: "1px solid var(--color-border)", padding: "0.8rem 1rem", fontSize: "0.9rem" }}
+                  >
+                    <option value="Sell">Sell</option>
+                    <option value="Rent">Rent</option>
+                  </select>
+                </div>
+
+                <div className={styles.formGroup} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '1.5rem' }}>
+                  <input
+                    type="checkbox"
+                    id="premiumPropertyAdmin"
+                    checked={propIsPremium}
+                    onChange={(e) => setPropIsPremium(e.target.checked)}
+                    style={{ width: "18px", height: "18px", cursor: "pointer" }}
+                  />
+                  <label htmlFor="premiumPropertyAdmin" className={styles.label} style={{ margin: 0, cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                    Premium Property 
+                    <span style={{ fontSize: "0.75rem", color: "var(--color-primary)", fontWeight: "normal" }}>(Shows in Best Properties)</span>
+                  </label>
+                </div>
+
                 {/* Custom Fields Rendering */}
                 {categories.find(c => c.name === type)?.fields.map(field => (
                   <div key={field.name} className={styles.formGroup}>
@@ -621,11 +797,62 @@ export default function AdminDashboardPage() {
                     id="imageFiles"
                     multiple
                     accept="image/*"
-                    onChange={(e) => setSelectedFiles(e.target.files)}
+                    onChange={(e) => {
+                      if (e.target.files) {
+                        const validFiles = Array.from(e.target.files).filter(file => file.size <= 3 * 1024 * 1024);
+                        if (validFiles.length !== e.target.files.length) {
+                          alert("Some files exceed the 3MB limit and were removed.");
+                        }
+                        setSelectedFiles(prev => [...prev, ...validFiles]);
+                      }
+                      e.target.value = "";
+                    }}
                     className={styles.input}
                     style={{ padding: "0.6rem" }}
                   />
-                  <span className={styles.helperText}>Select multiple image files to upload to the server.</span>
+                  <span className={styles.helperText}>Select multiple image files (Max 3MB per file).</span>
+
+                  {(existingImages.length > 0 || imagePreviews.length > 0) && (
+                    <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap', marginTop: '1rem' }}>
+                      {existingImages.map((src, index) => (
+                        <div key={`existing-${index}`} style={{ position: 'relative' }}>
+                          <img 
+                            src={getImageUrl(src)} 
+                            alt={`Existing ${index}`} 
+                            style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '4px', border: '1px solid var(--color-border)' }} 
+                          />
+                          <button 
+                            type="button"
+                            onClick={() => {
+                              setExistingImages(prev => prev.filter((_, i) => i !== index));
+                              setRemovedImages(prev => [...prev, src]);
+                            }}
+                            style={{ position: 'absolute', top: '-8px', right: '-8px', background: '#e05e5e', color: 'white', borderRadius: '50%', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer', fontSize: '12px' }}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                      {imagePreviews.map((src, index) => (
+                        <div key={`new-${index}`} style={{ position: 'relative' }}>
+                          <img 
+                            src={src} 
+                            alt={`New ${index}`} 
+                            style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '4px', border: '1px solid var(--color-border)' }} 
+                          />
+                          <button 
+                            type="button"
+                            onClick={() => {
+                              setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+                            }}
+                            style={{ position: 'absolute', top: '-8px', right: '-8px', background: '#e05e5e', color: 'white', borderRadius: '50%', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer', fontSize: '12px' }}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
 
@@ -643,7 +870,7 @@ export default function AdminDashboardPage() {
               </div>
 
               <button type="submit" className={styles.submitBtn} disabled={addLoading}>
-                {addLoading ? "Saving Property..." : "Submit Property Listing"}
+                {addLoading ? (editMode ? "Updating Property..." : "Saving Property...") : (editMode ? "Update Property Listing" : "Submit Property Listing")}
               </button>
             </form>
           </div>
@@ -684,6 +911,35 @@ export default function AdminDashboardPage() {
                 className={styles.submitBtn}
               >
                 {statusUpdateLoading ? "Updating..." : "Confirm"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Confirm Delete Modal */}
+      {confirmDeleteModal.isOpen && confirmDeleteModal.property && (
+        <div className={styles.modalOverlay} onClick={() => !deleteLoading && setConfirmDeleteModal({ isOpen: false, property: null })}>
+          <div className={styles.modalContent} style={{ maxWidth: '450px', padding: '2rem' }} onClick={(e) => e.stopPropagation()}>
+            <h3 style={{ fontFamily: "var(--font-serif)", fontSize: "1.4rem", marginBottom: "1rem", color: "var(--color-dark)" }}>Confirm Delete</h3>
+            <p style={{ color: "var(--color-dark-muted)", marginBottom: "2rem", lineHeight: "1.5" }}>
+              Are you sure you want to delete <strong>{confirmDeleteModal.property.title}</strong>? This action cannot be undone.
+            </p>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+              <button 
+                onClick={() => setConfirmDeleteModal({ isOpen: false, property: null })}
+                disabled={deleteLoading}
+                className={styles.submitBtn}
+                style={{ backgroundColor: 'transparent', color: 'var(--color-dark)', border: '1px solid var(--color-border)' }}
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleDeleteProperty}
+                disabled={deleteLoading}
+                className={styles.submitBtn}
+                style={{ backgroundColor: '#e05e5e' }}
+              >
+                {deleteLoading ? "Deleting..." : "Delete Property"}
               </button>
             </div>
           </div>
