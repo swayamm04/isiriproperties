@@ -299,10 +299,10 @@ export default function PropertyDetailPage() {
 
                 {/* Prepopulated user profile summary */}
                 <div className={styles.metaGrid}>
-                  <div className={styles.metaItem}>Name: <strong>{user.name}</strong></div>
-                  <div className={styles.metaItem}>Phone: <strong>{user.phone}</strong></div>
-                  <div className={styles.metaItem}>City: <strong>{user.city}</strong></div>
-                  <div className={styles.metaItem}>Mail ID: <strong>{user.email}</strong></div>
+                  <div className={styles.metaItem}>Name: <strong>{user?.name}</strong></div>
+                  <div className={styles.metaItem}>Phone: <strong>{user?.phone}</strong></div>
+                  <div className={styles.metaItem}>City: <strong>{user?.city}</strong></div>
+                  <div className={styles.metaItem}>Mail ID: <strong>{user?.email}</strong></div>
                 </div>
 
                 <div style={{ display: "flex", flexDirection: "column", marginBottom: "1rem" }}>

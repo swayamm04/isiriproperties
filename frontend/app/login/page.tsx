@@ -19,11 +19,8 @@ function LoginContent() {
     signup, 
     error, 
     clearError, 
-    checkPhoneAndSendOtp, 
-    verifyOtp,
-    sendForgotPasswordOtp,
-    verifyForgotPasswordOtp,
-    resetPassword,
+    sendOtp,
+    forgotPassword,
     getPhoneByEmail 
   } = useAuth();
 
@@ -39,7 +36,6 @@ function LoginContent() {
   const [city, setCity] = useState("");
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
-  const [otpVerifiedUI, setOtpVerifiedUI] = useState(false);
   const [maskedPhone, setMaskedPhone] = useState("");
   const [validationError, setValidationError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -64,7 +60,6 @@ function LoginContent() {
     setShowPassword(false);
     setOtp("");
     setOtpSent(false);
-    setOtpVerifiedUI(false);
     setMaskedPhone("");
     router.replace(`/login?mode=${mode}`);
   };
@@ -98,37 +93,9 @@ function LoginContent() {
     }
     setAuthLoading(true);
     try {
-      if (authMode === "signup") {
-        if (checkPhoneAndSendOtp) await checkPhoneAndSendOtp(phone);
-      } else if (authMode === "forgot_password") {
-        if (sendForgotPasswordOtp) await sendForgotPasswordOtp(phone);
-      }
+      await sendOtp(phone);
       setOtpSent(true);
       setSuccessMessage("OTP sent successfully!");
-    } catch {
-      // Errors handled by context
-    } finally {
-      setAuthLoading(false);
-    }
-  };
-
-  const handleVerifyOtp = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    setValidationError("");
-    setSuccessMessage("");
-    if (!otp || otp.length !== 6) {
-      setValidationError("Please enter a valid 6-digit OTP.");
-      return;
-    }
-    setAuthLoading(true);
-    try {
-      if (authMode === "signup") {
-        if (verifyOtp) await verifyOtp(phone, otp);
-      } else if (authMode === "forgot_password") {
-        if (verifyForgotPasswordOtp) await verifyForgotPasswordOtp(phone, otp);
-      }
-      setOtpVerifiedUI(true);
-      setSuccessMessage("OTP verified successfully!");
     } catch {
       // Errors handled by context
     } finally {
@@ -165,7 +132,7 @@ function LoginContent() {
           setAuthLoading(false);
           return;
         }
-        if (resetPassword) await resetPassword(phone, otp, password);
+        await forgotPassword(phone, otp, password);
         switchMode("login");
         setPassword("");
         setSuccessMessage("Password updated successfully. Please login.");
@@ -297,24 +264,24 @@ function LoginContent() {
                     </div>
                   </div>
 
-                  {otpSent && !otpVerifiedUI && (
-                    <div className={styles.formGroup}>
-                      <label className={styles.formLabel} style={{ textAlign: "center", display: "block" }}>Enter OTP</label>
-                      {renderOtpInputs()}
-                    </div>
-                  )}
-
-                  {otpSent && otpVerifiedUI && (
-                    <div className={styles.formGroup}>
-                      <label className={styles.formLabel}>New Password</label>
-                      <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
-                        <Lock size={18} className={styles.inputIcon} />
-                        <input type={showPassword ? "text" : "password"} placeholder="New Password" value={password} onChange={(e) => setPassword(e.target.value)} className={styles.inputField} style={{ paddingRight: "3rem" }} required />
-                        <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: "absolute", right: "1rem", background: "none", border: "none", color: "var(--color-dark-muted)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }} aria-label={showPassword ? "Hide password" : "Show password"}>
-                          {showPassword ? <EyeOff size={18} style={{ strokeWidth: 1.5 }} /> : <Eye size={18} style={{ strokeWidth: 1.5 }} />}
-                        </button>
+                  {otpSent && (
+                    <>
+                      <div className={styles.formGroup}>
+                        <label className={styles.formLabel} style={{ textAlign: "center", display: "block" }}>Enter OTP</label>
+                        {renderOtpInputs()}
                       </div>
-                    </div>
+
+                      <div className={styles.formGroup}>
+                        <label className={styles.formLabel}>New Password</label>
+                        <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                          <Lock size={18} className={styles.inputIcon} />
+                          <input type={showPassword ? "text" : "password"} placeholder="New Password" value={password} onChange={(e) => setPassword(e.target.value)} className={styles.inputField} style={{ paddingRight: "3rem" }} required />
+                          <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: "absolute", right: "1rem", background: "none", border: "none", color: "var(--color-dark-muted)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }} aria-label={showPassword ? "Hide password" : "Show password"}>
+                            {showPassword ? <EyeOff size={18} style={{ strokeWidth: 1.5 }} /> : <Eye size={18} style={{ strokeWidth: 1.5 }} />}
+                          </button>
+                        </div>
+                      </div>
+                    </>
                   )}
                 </>
               )}
@@ -349,15 +316,14 @@ function LoginContent() {
           )}
 
           <button
-            type={authMode === "login" || (authMode === "signup" && otpSent) || (authMode === "forgot_password" && otpVerifiedUI) ? "submit" : "button"}
+            type={authMode === "login" || (authMode === "signup" && otpSent) || (authMode === "forgot_password" && otpSent) ? "submit" : "button"}
             className={styles.submitBtn}
             disabled={authLoading}
             onClick={
               authMode === "signup" && !otpSent ? handleSendOtp :
                 authMode === "forgot_password" && !maskedPhone ? handleSearchAccount :
                   authMode === "forgot_password" && maskedPhone && !otpSent ? handleSendOtp :
-                    authMode === "forgot_password" && otpSent && !otpVerifiedUI ? handleVerifyOtp :
-                      undefined
+                    undefined
             }
           >
             {authLoading ? "Please wait..." :
@@ -366,8 +332,7 @@ function LoginContent() {
                   authMode === "signup" ? "Create Account" :
                     authMode === "forgot_password" && !maskedPhone ? "Search Account" :
                       authMode === "forgot_password" && maskedPhone && !otpSent ? "Send OTP" :
-                        authMode === "forgot_password" && otpSent && !otpVerifiedUI ? "Verify OTP" :
-                          "Reset Password"}
+                        "Reset Password"}
           </button>
         </form>
 
