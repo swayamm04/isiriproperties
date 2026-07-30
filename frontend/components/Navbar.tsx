@@ -6,12 +6,17 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { Menu, X, Building2, Eye, EyeOff, Phone, Search, Home, LayoutGrid, ClipboardList, User, Heart, ShoppingCart, Lock, LogIn } from "lucide-react";
 import { useAuth } from "@/context/authContext";
+import { apiRequest } from "@/utils/api";
 import styles from "./Navbar.module.css";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [selectedType, setSelectedType] = useState("Sell");
+  const [isDesktopSearchOpen, setIsDesktopSearchOpen] = useState(false);
+  const [desktopSearchQuery, setDesktopSearchQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
@@ -45,6 +50,24 @@ export default function Navbar() {
     };
   }, []);
 
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (desktopSearchQuery.trim().length >= 2) {
+        setIsSearching(true);
+        apiRequest(`/properties?status=available&search=${desktopSearchQuery.trim()}`)
+          .then((data) => {
+            setSuggestions(data);
+          })
+          .catch((err) => console.error(err))
+          .finally(() => setIsSearching(false));
+      } else {
+        setSuggestions([]);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [desktopSearchQuery]);
+
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   const closeMenu = () => setIsMenuOpen(false);
 
@@ -64,6 +87,15 @@ export default function Navbar() {
     if (path.startsWith("/admin") && pathname.startsWith("/admin")) return true;
     if (path.startsWith("/super-admin") && pathname.startsWith("/super-admin")) return true;
     return false;
+  };
+
+  const handleDesktopSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (desktopSearchQuery.trim()) {
+      router.push(`/properties?search=${encodeURIComponent(desktopSearchQuery.trim())}`);
+      setIsDesktopSearchOpen(false);
+      setDesktopSearchQuery("");
+    }
   };
 
   return (
@@ -89,6 +121,64 @@ export default function Navbar() {
               Properties
             </Link>
 
+            <div className={styles.desktopSearchWrapper}>
+              <button 
+                className={styles.desktopSearchIconBtn}
+                onClick={() => setIsDesktopSearchOpen(!isDesktopSearchOpen)}
+              >
+                <Search size={18} />
+              </button>
+              <form 
+                onSubmit={handleDesktopSearch} 
+                className={`${styles.desktopSearchForm} ${isDesktopSearchOpen ? styles.desktopSearchFormOpen : ""}`}
+              >
+                <div className={styles.desktopSearchInputContainer}>
+                  <input
+                    type="text"
+                    placeholder="Search properties..."
+                    className={styles.desktopSearchInput}
+                    value={desktopSearchQuery}
+                    onChange={(e) => setDesktopSearchQuery(e.target.value)}
+                    onBlur={() => {
+                      // Slight delay to allow clicks on the icon or submit
+                      setTimeout(() => setIsDesktopSearchOpen(false), 200);
+                    }}
+                  />
+                  {isSearching && <div className={styles.searchSpinner}></div>}
+                </div>
+                
+                {isDesktopSearchOpen && suggestions.length > 0 && (
+                  <div className={styles.suggestionsDropdown}>
+                    {suggestions.map((prop) => (
+                      <div 
+                        key={prop._id} 
+                        className={styles.suggestionItem}
+                        onMouseDown={(e) => {
+                          // use onMouseDown instead of onClick so it fires before onBlur
+                          e.preventDefault();
+                          setIsDesktopSearchOpen(false);
+                          setDesktopSearchQuery("");
+                          router.push(`/properties/${prop.propertyId || prop._id}`);
+                        }}
+                      >
+                        <div className={styles.suggestionImage}>
+                          <img src={prop.images?.[0] || "/prop-1.png"} alt={prop.title} />
+                        </div>
+                        <div className={styles.suggestionTextContainer}>
+                          <div className={styles.suggestionTitle}>{prop.title}</div>
+                          <div className={styles.suggestionSubtitle}>{prop.location}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {isDesktopSearchOpen && suggestions.length === 0 && desktopSearchQuery.length >= 2 && !isSearching && (
+                  <div className={styles.suggestionsDropdown}>
+                    <div className={styles.suggestionNoResults}>No results found</div>
+                  </div>
+                )}
+              </form>
+            </div>
 
             {/* Role-based Links */}
             {user && user.role === "user" && (

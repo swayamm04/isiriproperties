@@ -43,7 +43,7 @@ export default function BottomNav() {
               href="/wishlist"
               className={`${styles.bottomNavLink} ${isActive("/wishlist") ? styles.bottomNavLinkActive : ""}`}
             >
-              <ClipboardList size={24} strokeWidth={isActive("/wishlist") ? 2 : 1.5} />
+              <Heart size={24} strokeWidth={isActive("/wishlist") ? 2 : 1.5} />
               <span className={styles.bottomNavLabel}>Wishlist</span>
             </Link>
           ) : (
@@ -66,7 +66,7 @@ export default function BottomNav() {
       ) : (
         <>
           <Link href="/login?mode=login" className={styles.bottomNavLink}>
-            <ClipboardList size={24} strokeWidth={1.5} />
+            <Heart size={24} strokeWidth={1.5} />
             <span className={styles.bottomNavLabel}>Wishlist</span>
           </Link>
           <Link href="/login?mode=login" className={styles.bottomNavLink}>

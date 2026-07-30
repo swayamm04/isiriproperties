@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Search, Handshake, Key } from "lucide-react";
 import Loader from "@/components/Loader";
+import { apiRequest } from "@/utils/api";
 import styles from "./HeroBanner.module.css";
 
 const SLIDES = [
@@ -32,6 +33,10 @@ export default function HeroBanner() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [selectedType, setSelectedType] = useState("Sell");
   const [isFakingLoad, setIsFakingLoad] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -45,6 +50,26 @@ export default function HeroBanner() {
     }, 6000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (searchQuery.length >= 2) {
+        setIsSearching(true);
+        apiRequest(`/properties?status=available&search=${searchQuery}`)
+          .then((data) => {
+            setSuggestions(data);
+            setIsDropdownOpen(true);
+          })
+          .catch((err) => console.error(err))
+          .finally(() => setIsSearching(false));
+      } else {
+        setSuggestions([]);
+        setIsDropdownOpen(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
 
   const handleSelection = (type: string) => {
     if (type === selectedType) return;
@@ -71,9 +96,50 @@ export default function HeroBanner() {
 
       {/* Mobile Top Actions */}
       <div className={styles.mobileTopActions}>
-        <div className={styles.mobileSearchBar}>
-          <Search size={20} className={styles.searchIconMobile} />
-          <input type="text" placeholder="Search for city, locality, or project..." className={styles.searchInputMobile} />
+        <div className={styles.mobileSearchBarWrapper}>
+          <div className={styles.mobileSearchBar}>
+            <Search size={20} className={styles.searchIconMobile} />
+            <input 
+              type="text" 
+              placeholder="Search for city, locality, or project..." 
+              className={styles.searchInputMobile} 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => {
+                if (searchQuery.length >= 2) setIsDropdownOpen(true);
+              }}
+            />
+            {isSearching && <div className={styles.searchSpinner}></div>}
+          </div>
+          
+          {isDropdownOpen && suggestions.length > 0 && (
+            <div className={styles.suggestionsDropdown}>
+              {suggestions.map((prop) => (
+                <div 
+                  key={prop._id} 
+                  className={styles.suggestionItem}
+                  onClick={() => {
+                    setIsDropdownOpen(false);
+                    setSearchQuery("");
+                    router.push(`/properties/${prop.propertyId || prop._id}`);
+                  }}
+                >
+                  <div className={styles.suggestionImage}>
+                    <img src={prop.images?.[0] || "/prop-1.png"} alt={prop.title} />
+                  </div>
+                  <div className={styles.suggestionTextContainer}>
+                    <div className={styles.suggestionTitle}>{prop.title}</div>
+                    <div className={styles.suggestionSubtitle}>{prop.location}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          {isDropdownOpen && suggestions.length === 0 && searchQuery.length >= 2 && !isSearching && (
+            <div className={styles.suggestionsDropdown}>
+              <div className={styles.suggestionNoResults}>No results found</div>
+            </div>
+          )}
         </div>
         
         <div className={styles.mobileActionButtons}>

@@ -152,9 +152,9 @@ export default function PropertyDetailPage() {
     <>
       <Navbar />
       <main className={styles.container}>
-        <Link href="/properties" className={styles.backLink}>
-          <ArrowLeft size={14} /> Back to Portfolio
-        </Link>
+        <button onClick={() => router.back()} className={styles.backLink} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit' }}>
+          <ArrowLeft size={14} /> Back
+        </button>
 
         <div className={styles.grid}>
           {/* Left Column: Image Slider */}
