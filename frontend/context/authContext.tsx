@@ -18,15 +18,14 @@ interface AuthContextType {
   user: UserProfile | null;
   loading: boolean;
   error: string | null;
-  login: (email: string, password: string) => Promise<UserProfile>;
-  signup: (userData: { name: string; email: string; phone: string; city: string; password: string; otp: string }) => Promise<UserProfile>;
+  login: (phone: string, password: string) => Promise<UserProfile>;
+  signup: (userData: { name: string; phone: string; password: string; otp: string }) => Promise<UserProfile>;
   logout: () => void;
   toggleWishlist: (propertyId: string) => Promise<boolean>;
   refreshProfile: () => Promise<void>;
   clearError: () => void;
   sendOtp: (phone: string) => Promise<boolean>;
   forgotPassword: (phone: string, otp: string, newPassword: string) => Promise<boolean>;
-  getPhoneByEmail: (email: string) => Promise<{ maskedPhone: string; phone: string }>;
   updatePhone: (newPhone: string, currentPassword: string) => Promise<boolean>;
   updateProfileImage: (file: File) => Promise<boolean>;
   updateProfile: (data: { name?: string; phone?: string; city?: string }) => Promise<boolean>;
@@ -75,12 +74,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     checkAuth();
   }, []);
 
-  const login = async (email: string, password: string): Promise<UserProfile> => {
+  const login = async (phone: string, password: string): Promise<UserProfile> => {
     setError(null);
     try {
       const data = await apiRequest("/auth/login", {
         method: "POST",
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ phone, password }),
       });
 
       localStorage.setItem("isiri_token", data.token);
@@ -104,7 +103,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signup = async (userData: { name: string; email: string; phone: string; city: string; password: string; otp: string }): Promise<UserProfile> => {
+  const signup = async (userData: { name: string; phone: string; password: string; otp: string }): Promise<UserProfile> => {
     setError(null);
     try {
       const data = await apiRequest("/auth/signup", {
@@ -208,20 +207,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const getPhoneByEmail = async (email: string): Promise<{ maskedPhone: string; phone: string }> => {
-    setError(null);
-    try {
-      const data = await apiRequest("/auth/get-phone-by-email", {
-        method: "POST",
-        body: JSON.stringify({ email }),
-      });
-      return data;
-    } catch (err: any) {
-      setError(err.message || "Failed to find account");
-      throw err;
-    }
-  };
-
   const updatePhone = async (newPhone: string, currentPassword: string): Promise<boolean> => {
     setError(null);
     try {
@@ -286,7 +271,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         clearError,
         sendOtp,
         forgotPassword,
-        getPhoneByEmail,
         updatePhone,
         updateProfileImage,
         updateProfile,

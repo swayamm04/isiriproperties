@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { Menu, X, Building2, Eye, EyeOff, Phone, Search, Home, LayoutGrid, ClipboardList, User, Heart, ShoppingCart, Lock } from "lucide-react";
+import { Menu, X, Building2, Eye, EyeOff, Phone, Search, Home, LayoutGrid, ClipboardList, User, Heart, ShoppingCart, Lock, LogIn } from "lucide-react";
 import { useAuth } from "@/context/authContext";
 import styles from "./Navbar.module.css";
 
@@ -175,7 +175,12 @@ export default function Navbar() {
                   </div>
                 )}
               </div>
-            ) : null}
+            ) : (
+              <Link href="/login" className={styles.mobileLogin}>
+                <span>Login Free</span>
+                <LogIn size={14} />
+              </Link>
+            )}
           </div>
         </div>
       </nav>

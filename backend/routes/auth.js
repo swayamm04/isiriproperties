@@ -30,35 +30,6 @@ const generateToken = (user) => {
   );
 };
 
-// @route   POST api/auth/get-phone-by-email
-// @desc    Get masked phone by email for forgot password
-// @access  Public
-router.post("/get-phone-by-email", async (req, res) => {
-  const { email } = req.body;
-  try {
-    if (!email) {
-      return res.status(400).json({ error: "Email is required" });
-    }
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(404).json({ error: "User not found with this email" });
-    }
-    if (!user.phone) {
-      return res.status(400).json({ error: "No phone number associated with this account" });
-    }
-    
-    // Mask phone number (e.g. +91 9876543210 -> ******3210)
-    const phoneStr = user.phone.toString();
-    const maskedPhone = phoneStr.length > 4 
-      ? '*'.repeat(phoneStr.length - 4) + phoneStr.slice(-4) 
-      : phoneStr;
-      
-    res.json({ maskedPhone, phone: user.phone });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Server error" });
-  }
-});
 
 // @route   POST api/auth/send-otp
 // @desc    Send OTP to phone
@@ -100,10 +71,10 @@ router.post("/send-otp", async (req, res) => {
 // @desc    Register a new user
 // @access  Public
 router.post("/signup", async (req, res) => {
-  const { name, email, phone, city, password, otp } = req.body;
+  const { name, phone, password, otp } = req.body;
 
   try {
-    if (!name || !email || !password || !phone || !otp) {
+    if (!name || !password || !phone || !otp) {
       return res.status(400).json({ error: "Please enter all required fields including OTP" });
     }
 
@@ -114,17 +85,15 @@ router.post("/signup", async (req, res) => {
     }
 
     // Check if user already exists
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ phone });
     if (existingUser) {
-      return res.status(400).json({ error: "Username or Email already registered" });
+      return res.status(400).json({ error: "Phone number already registered" });
     }
 
     // Create user (role defaults to "user")
     const user = new User({
       name,
-      email,
       phone,
-      city,
       password,
       role: "user",
     });
@@ -157,15 +126,15 @@ router.post("/signup", async (req, res) => {
 // @desc    Authenticate user & get token
 // @access  Public
 router.post("/login", async (req, res) => {
-  const { email, password } = req.body;
+  const { phone, password } = req.body;
 
   try {
-    if (!email || !password) {
-      return res.status(400).json({ error: "Please enter email and password" });
+    if (!phone || !password) {
+      return res.status(400).json({ error: "Please enter phone number and password" });
     }
 
     // Find user
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ phone });
     if (!user) {
       return res.status(400).json({ error: "Invalid credentials" });
     }

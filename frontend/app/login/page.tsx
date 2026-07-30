@@ -20,8 +20,7 @@ function LoginContent() {
     error, 
     clearError, 
     sendOtp,
-    forgotPassword,
-    getPhoneByEmail 
+    forgotPassword
   } = useAuth();
 
   const [authMode, setAuthMode] = useState<"login" | "signup" | "forgot_password">("login");
@@ -29,14 +28,11 @@ function LoginContent() {
   const [showPassword, setShowPassword] = useState(false);
 
   // Form states
-  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [city, setCity] = useState("");
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
-  const [maskedPhone, setMaskedPhone] = useState("");
   const [validationError, setValidationError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
@@ -60,28 +56,9 @@ function LoginContent() {
     setShowPassword(false);
     setOtp("");
     setOtpSent(false);
-    setMaskedPhone("");
     router.replace(`/login?mode=${mode}`);
   };
 
-  const handleSearchAccount = async () => {
-    if (!email) {
-      setValidationError("Email is required to find your account.");
-      return;
-    }
-    setValidationError("");
-    setSuccessMessage("");
-    setAuthLoading(true);
-    try {
-      const data = await getPhoneByEmail(email);
-      setPhone(data.phone);
-      setMaskedPhone(data.maskedPhone);
-    } catch (err: any) {
-      // Error handled by context
-    } finally {
-      setAuthLoading(false);
-    }
-  };
 
   const handleSendOtp = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -111,20 +88,20 @@ function LoginContent() {
 
     try {
       if (authMode === "login") {
-        if (!email || !password) {
-          setValidationError("Phone/Email and Password are required.");
+        if (!phone || !password) {
+          setValidationError("Phone Number and Password are required.");
           setAuthLoading(false);
           return;
         }
-        await login(email, password);
+        await login(phone, password);
         router.push("/");
       } else if (authMode === "signup") {
-        if (!name || !email || !phone || !city || !password || !otp) {
+        if (!name || !phone || !password || !otp) {
           setValidationError("All fields and OTP are required.");
           setAuthLoading(false);
           return;
         }
-        await signup({ name, email, phone, city, password, otp });
+        await signup({ name, phone, password, otp });
         router.push("/");
       } else if (authMode === "forgot_password") {
         if (!phone || !otp || !password) {
@@ -186,7 +163,7 @@ function LoginContent() {
           {authMode === "login" ? "Welcome Back!" : authMode === "signup" ? "Create Account" : "Reset Password"}
         </h2>
         <p className={styles.subtitle}>
-          {authMode === "login" ? "Login to continue to I Siri Properties" : authMode === "signup" ? "Register to start your property wishlist" : "Enter your email to search for your account"}
+          {authMode === "login" ? "Login to continue to I Siri Properties" : authMode === "signup" ? "Register to start your property wishlist" : "Enter your registered phone number to reset password"}
         </p>
 
         <form onSubmit={handleAuthSubmit}>
@@ -203,13 +180,7 @@ function LoginContent() {
                   <input type="text" placeholder="Full Name" value={name} onChange={(e) => setName(e.target.value)} className={styles.inputField} required />
                 </div>
               </div>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Email ID</label>
-                <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
-                  <span className={styles.inputIcon} style={{ fontSize: "14px", fontWeight: "bold" }}>@</span>
-                  <input type="email" placeholder="Email Address" value={email} onChange={(e) => setEmail(e.target.value)} className={styles.inputField} required />
-                </div>
-              </div>
+
               <div className={styles.formGroup}>
                 <label className={styles.formLabel}>Phone Number</label>
                 <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
@@ -217,14 +188,6 @@ function LoginContent() {
                   <input type="tel" placeholder="Phone Number" value={phone} onChange={(e) => setPhone(e.target.value)} className={styles.inputField} required disabled={otpSent} />
                 </div>
               </div>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>City</label>
-                <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
-                  <MapPin size={18} className={styles.inputIcon} />
-                  <input type="text" placeholder="City" value={city} onChange={(e) => setCity(e.target.value)} className={styles.inputField} required />
-                </div>
-              </div>
-              
               <div className={styles.formGroup} style={{ marginBottom: "1.5rem" }}>
                 <label className={styles.formLabel}>Password</label>
                 <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
@@ -247,42 +210,31 @@ function LoginContent() {
 
           {authMode === "forgot_password" && (
             <>
-              {!maskedPhone ? (
+              {!otpSent ? (
                 <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>Registered Email ID</label>
+                  <label className={styles.formLabel}>Registered Phone Number</label>
                   <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
-                    <span className={styles.inputIcon} style={{ fontSize: "14px", fontWeight: "bold" }}>@</span>
-                    <input type="email" placeholder="Email Address" value={email} onChange={(e) => setEmail(e.target.value)} className={styles.inputField} required />
+                    <Phone size={18} className={styles.inputIcon} />
+                    <input type="tel" placeholder="Phone Number" value={phone} onChange={(e) => setPhone(e.target.value)} className={styles.inputField} required />
                   </div>
                 </div>
               ) : (
                 <>
-                  <div className={styles.formGroup} style={{ textAlign: "center", marginBottom: "1.5rem" }}>
-                    <label className={styles.formLabel} style={{ marginBottom: "0.5rem", display: "block" }}>Account found. Phone Number associated:</label>
-                    <div style={{ fontSize: "1.2rem", fontWeight: "600", letterSpacing: "1px", color: "var(--color-primary-dark)" }}>
-                      {maskedPhone}
-                    </div>
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel} style={{ textAlign: "center", display: "block" }}>Enter OTP</label>
+                    {renderOtpInputs()}
                   </div>
 
-                  {otpSent && (
-                    <>
-                      <div className={styles.formGroup}>
-                        <label className={styles.formLabel} style={{ textAlign: "center", display: "block" }}>Enter OTP</label>
-                        {renderOtpInputs()}
-                      </div>
-
-                      <div className={styles.formGroup}>
-                        <label className={styles.formLabel}>New Password</label>
-                        <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
-                          <Lock size={18} className={styles.inputIcon} />
-                          <input type={showPassword ? "text" : "password"} placeholder="New Password" value={password} onChange={(e) => setPassword(e.target.value)} className={styles.inputField} style={{ paddingRight: "3rem" }} required />
-                          <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: "absolute", right: "1rem", background: "none", border: "none", color: "var(--color-dark-muted)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }} aria-label={showPassword ? "Hide password" : "Show password"}>
-                            {showPassword ? <EyeOff size={18} style={{ strokeWidth: 1.5 }} /> : <Eye size={18} style={{ strokeWidth: 1.5 }} />}
-                          </button>
-                        </div>
-                      </div>
-                    </>
-                  )}
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>New Password</label>
+                    <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                      <Lock size={18} className={styles.inputIcon} />
+                      <input type={showPassword ? "text" : "password"} placeholder="New Password" value={password} onChange={(e) => setPassword(e.target.value)} className={styles.inputField} style={{ paddingRight: "3rem" }} required />
+                      <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: "absolute", right: "1rem", background: "none", border: "none", color: "var(--color-dark-muted)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }} aria-label={showPassword ? "Hide password" : "Show password"}>
+                        {showPassword ? <EyeOff size={18} style={{ strokeWidth: 1.5 }} /> : <Eye size={18} style={{ strokeWidth: 1.5 }} />}
+                      </button>
+                    </div>
+                  </div>
                 </>
               )}
             </>
@@ -291,10 +243,10 @@ function LoginContent() {
           {authMode === "login" && (
             <>
               <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Phone Number or Email</label>
+                <label className={styles.formLabel}>Phone Number</label>
                 <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
-                  <User size={18} className={styles.inputIcon} />
-                  <input type="text" placeholder="Username / Email ID" value={email} onChange={(e) => setEmail(e.target.value)} className={styles.inputField} required />
+                  <Phone size={18} className={styles.inputIcon} />
+                  <input type="tel" placeholder="Phone Number" value={phone} onChange={(e) => setPhone(e.target.value)} className={styles.inputField} required />
                 </div>
               </div>
               <div className={styles.formGroup} style={{ marginBottom: "0.5rem" }}>
@@ -321,8 +273,7 @@ function LoginContent() {
             disabled={authLoading}
             onClick={
               authMode === "signup" && !otpSent ? handleSendOtp :
-                authMode === "forgot_password" && !maskedPhone ? handleSearchAccount :
-                  authMode === "forgot_password" && maskedPhone && !otpSent ? handleSendOtp :
+                authMode === "forgot_password" && !otpSent ? handleSendOtp :
                     undefined
             }
           >
@@ -330,8 +281,7 @@ function LoginContent() {
               authMode === "login" ? "Login" :
                 authMode === "signup" && !otpSent ? "Send OTP" :
                   authMode === "signup" ? "Create Account" :
-                    authMode === "forgot_password" && !maskedPhone ? "Search Account" :
-                      authMode === "forgot_password" && maskedPhone && !otpSent ? "Send OTP" :
+                      authMode === "forgot_password" && !otpSent ? "Send OTP" :
                         "Reset Password"}
           </button>
         </form>

@@ -78,13 +78,14 @@
 
 .header {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: flex-start;
   margin-bottom: 1.5rem;
+  gap: 0.25rem;
 }
 
 .titleInfo {
-  flex: 1;
+  width: 100%;
 }
 
 .title {
@@ -93,6 +94,11 @@
   color: var(--color-dark);
   margin-bottom: 0.25rem; /* Reduced from 0.5rem */
   line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  display: block;
 }
 
 .location {
@@ -108,8 +114,8 @@
 }
 
 .priceInfo {
-  margin-left: 1rem;
-  text-align: right;
+  margin-left: 0;
+  text-align: left;
 }
 
 .price {

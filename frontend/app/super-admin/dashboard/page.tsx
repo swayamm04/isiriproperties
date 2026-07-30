@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import Loader from "@/components/Loader";
+import { formatIndianPrice } from "@/utils/formatPrice";
 import styles from "./page.module.css";
 
 interface Stats {
@@ -1180,12 +1181,6 @@ export default function SuperAdminDashboardPage() {
                         </thead>
                         <tbody>
                           {properties.map((prop) => {
-                            const formattedVal = new Intl.NumberFormat("en-IN", {
-                              style: "currency",
-                              currency: "INR",
-                              maximumFractionDigits: 0,
-                            }).format(prop.price);
-
                             return (
                               <tr key={prop._id}>
                                 <td style={{ fontWeight: 600 }}>#{prop.propertyId}</td>
@@ -1199,7 +1194,7 @@ export default function SuperAdminDashboardPage() {
                                 <td style={{ fontWeight: 500 }}>{prop.title}</td>
                                 <td>{prop.city || "N/A"}</td>
                                 <td>{prop.location}</td>
-                                <td style={{ color: "var(--color-primary-dark)", fontWeight: 600 }}>{formattedVal}</td>
+                                <td style={{ color: "var(--color-primary-dark)", fontWeight: 600 }}>{formatIndianPrice(prop.price)}</td>
                                 <td style={{ fontWeight: 500 }}>{prop.addedByName}</td>
                                 <td>
                                   <span style={{ fontWeight: 600, color: prop.status === "available" ? "#4eb570" : "#888" }}>
@@ -1843,11 +1838,7 @@ export default function SuperAdminDashboardPage() {
                 <div className={styles.metaItem}>Ref ID: <strong>#{selectedInquiry.property.propertyId}</strong></div>
                 <div className={styles.metaItem}>Title: <strong>{selectedInquiry.property.title}</strong></div>
                 <div className={styles.metaItem}>Location: <strong>{selectedInquiry.property.location}</strong></div>
-                <div className={styles.metaItem}>Value: <strong>{new Intl.NumberFormat("en-IN", {
-                  style: "currency",
-                  currency: "INR",
-                  maximumFractionDigits: 0,
-                }).format(selectedInquiry.property.price)}</strong></div>
+                <div className={styles.metaItem}>Value: <strong>{formatIndianPrice(selectedInquiry.property.price)}</strong></div>
                 <div className={styles.metaItem}>Vendor Admin: <strong>{selectedInquiry.property.addedByAdminName}</strong></div>
               </div>
             </div>

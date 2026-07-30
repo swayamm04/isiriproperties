@@ -28,10 +28,12 @@ export default function BottomNav() {
   return (
     <div className={styles.bottomNav}>
       <Link href="/" className={`${styles.bottomNavLink} ${isActive("/") ? styles.bottomNavLinkActive : ""}`}>
-        <Compass size={28} strokeWidth={isActive("/") ? 2 : 1.5} />
+        <Compass size={24} strokeWidth={isActive("/") ? 2 : 1.5} />
+        <span className={styles.bottomNavLabel}>Explore</span>
       </Link>
       <Link href="/properties" className={`${styles.bottomNavLink} ${isActive("/properties") ? styles.bottomNavLinkActive : ""}`}>
-        <Building2 size={28} strokeWidth={isActive("/properties") ? 2 : 1.5} />
+        <Building2 size={24} strokeWidth={isActive("/properties") ? 2 : 1.5} />
+        <span className={styles.bottomNavLabel}>Properties</span>
       </Link>
 
       {user ? (
@@ -41,30 +43,35 @@ export default function BottomNav() {
               href="/wishlist"
               className={`${styles.bottomNavLink} ${isActive("/wishlist") ? styles.bottomNavLinkActive : ""}`}
             >
-              <ClipboardList size={28} strokeWidth={isActive("/wishlist") ? 2 : 1.5} />
+              <ClipboardList size={24} strokeWidth={isActive("/wishlist") ? 2 : 1.5} />
+              <span className={styles.bottomNavLabel}>Wishlist</span>
             </Link>
           ) : (
             <Link
               href={user.role === "admin" ? "/admin/dashboard" : "/super-admin/dashboard"}
               className={`${styles.bottomNavLink} ${isActive(user.role === "admin" ? "/admin/dashboard" : "/super-admin/dashboard") ? styles.bottomNavLinkActive : ""}`}
             >
-              <LayoutDashboard size={28} strokeWidth={isActive(user.role === "admin" ? "/admin/dashboard" : "/super-admin/dashboard") ? 2 : 1.5} />
+              <LayoutDashboard size={24} strokeWidth={isActive(user.role === "admin" ? "/admin/dashboard" : "/super-admin/dashboard") ? 2 : 1.5} />
+              <span className={styles.bottomNavLabel}>Dashboard</span>
             </Link>
           )}
           <Link
             href="/settings"
             className={`${styles.bottomNavLink} ${isActive("/settings") ? styles.bottomNavLinkActive : ""}`}
           >
-            <User size={28} strokeWidth={isActive("/settings") ? 2 : 1.5} />
+            <User size={24} strokeWidth={isActive("/settings") ? 2 : 1.5} />
+            <span className={styles.bottomNavLabel}>Profile</span>
           </Link>
         </>
       ) : (
         <>
           <Link href="/login?mode=login" className={styles.bottomNavLink}>
-            <ClipboardList size={28} strokeWidth={1.5} />
+            <ClipboardList size={24} strokeWidth={1.5} />
+            <span className={styles.bottomNavLabel}>Wishlist</span>
           </Link>
           <Link href="/login?mode=login" className={styles.bottomNavLink}>
-            <User size={28} strokeWidth={1.5} />
+            <User size={24} strokeWidth={1.5} />
+            <span className={styles.bottomNavLabel}>Login</span>
           </Link>
         </>
       )}

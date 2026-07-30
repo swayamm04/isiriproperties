@@ -20,9 +20,11 @@ import {
   MoreVertical,
   ChevronLeft
 } from "lucide-react";
+import { Loader2, Plus, Edit, Trash2, LayoutGrid, CheckCircle2, Copy } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import Loader from "@/components/Loader";
+import { formatIndianPrice } from "@/utils/formatPrice";
 import styles from "./page.module.css";
 
 interface CategoryField {
@@ -540,12 +542,6 @@ export default function AdminDashboardPage() {
                     </thead>
                     <tbody>
                       {properties.filter(p => p.status === viewStatus).map((prop) => {
-                        const formattedVal = new Intl.NumberFormat("en-IN", {
-                          style: "currency",
-                          currency: "INR",
-                          maximumFractionDigits: 0,
-                        }).format(prop.price);
-
                         return (
                           <tr key={prop._id}>
                             <td style={{ fontWeight: 600 }}>#{prop.propertyId}</td>
@@ -559,7 +555,7 @@ export default function AdminDashboardPage() {
                             <td style={{ fontWeight: 500 }}>{prop.title}</td>
                             <td>{prop.city || "N/A"}</td>
                             <td>{prop.location}</td>
-                            <td style={{ color: "var(--color-primary-dark)", fontWeight: 600 }}>{formattedVal}</td>
+                            <td style={{ color: "var(--color-primary-dark)", fontWeight: 600 }}>{formatIndianPrice(prop.price)}</td>
                             <td>{prop.type}</td>
                             <td style={{ fontSize: "0.8rem", color: "var(--color-dark-muted)" }}>
                               {prop.customFields && Object.keys(prop.customFields).length > 0
@@ -762,19 +758,6 @@ export default function AdminDashboardPage() {
                   </select>
                 </div>
 
-                <div className={styles.formGroup} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '1.5rem' }}>
-                  <input
-                    type="checkbox"
-                    id="premiumPropertyAdmin"
-                    checked={propIsPremium}
-                    onChange={(e) => setPropIsPremium(e.target.checked)}
-                    style={{ width: "18px", height: "18px", cursor: "pointer" }}
-                  />
-                  <label htmlFor="premiumPropertyAdmin" className={styles.label} style={{ margin: 0, cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                    Premium Property 
-                    <span style={{ fontSize: "0.75rem", color: "var(--color-primary)", fontWeight: "normal" }}>(Shows in Best Properties)</span>
-                  </label>
-                </div>
 
                 {/* Custom Fields Rendering */}
                 {categories.find(c => c.name === type)?.fields.map(field => (

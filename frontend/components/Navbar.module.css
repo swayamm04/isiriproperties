@@ -312,13 +312,19 @@
   }
   
   .mobileLogin {
-    font-size: 0.85rem; /* reduce font size slightly */
-    font-weight: 700;
+    font-size: 0.75rem;
+    font-weight: 600;
     cursor: pointer;
-    background: none;
-    border: none;
-    color: var(--color-dark);
+    background-color: var(--color-primary);
+    color: #fff;
+    padding: 0.25rem 0.6rem;
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
     font-family: var(--font-sans);
+    transform: translateY(2px);
   }
   
   .mobileCart {
@@ -369,6 +375,13 @@
   border: none;
   cursor: pointer;
   min-width: 48px;
+  gap: 0.15rem;
+}
+
+.bottomNavLabel {
+  font-size: 0.65rem;
+  font-weight: 500;
+  margin-top: 2px;
 }
 
 .bottomNavLinkActive {

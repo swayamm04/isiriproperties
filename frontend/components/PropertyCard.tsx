@@ -6,6 +6,7 @@ import { MapPin, BedDouble, Bath, Square, Heart } from "lucide-react";
 import { Property } from "@/data/properties";
 import { getImageUrl } from "@/utils/api";
 import { useAuth } from "@/context/authContext";
+import { formatIndianPrice } from "@/utils/formatPrice";
 import styles from "./PropertyCard.module.css";
 
 interface PropertyCardProps {
@@ -26,11 +27,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
     }
     await toggleWishlist(property.id);
   };
-  const formattedPrice = new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(property.price);
+  const formattedPrice = formatIndianPrice(property.price);
 
   return (
     <Link href={`/properties/${property.id}`} className={styles.card}>
@@ -53,8 +50,8 @@ export default function PropertyCard({ property }: PropertyCardProps) {
         >
           <Heart 
             size={18} 
-            fill={isWishlisted ? "red" : "none"} 
-            color={isWishlisted ? "red" : "currentColor"} 
+            fill={isWishlisted ? "var(--color-primary)" : "none"} 
+            color={isWishlisted ? "var(--color-primary)" : "currentColor"} 
           />
         </div>
       </div>
@@ -108,6 +105,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
             </>
           )}
         </div>
+
       </div>
     </Link>
   );
