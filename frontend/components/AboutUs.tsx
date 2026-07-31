@@ -1,38 +1,54 @@
 import Image from "next/image";
-import { Home, ShieldCheck, Tag, Headset } from "lucide-react";
+import { Layers, TrendingUp, Folder, Megaphone, Scale, Eye } from "lucide-react";
 import styles from "./AboutUs.module.css";
 
 export default function AboutUs() {
+  const solutions = [
+    {
+      title: "LAYOUT SITES",
+      icon: <Layers size={20} strokeWidth={2} />,
+      text: "Fully conceptualized dynamic layout infrastructure schemes featuring premium wide asphalt layouts, architectural modern streetlamps, and concrete utility spaces."
+    },
+    {
+      title: "PROPERTY INVESTMENT",
+      icon: <TrendingUp size={20} strokeWidth={2} />,
+      text: "Advanced real estate yield diagnostics and data-backed localized forecasting mapping parameters across the Kadur-Hassan corridor to secure immediate appreciation."
+    },
+    {
+      title: "DOCUMENTATION SUPPORT",
+      icon: <Folder size={20} strokeWidth={2} />,
+      text: "Rigorous management of clear titles, structural cross-verifications, fast Khata alterations, and legal framework navigation for error-free transactions."
+    },
+    {
+      title: "PROPERTY MARKETING",
+      icon: <Megaphone size={20} strokeWidth={2} />,
+      text: "High-end cinematic asset positioning, ultra-high-definition digital visualization networks, and calculated transactional strategies to move high-value listings efficiently."
+    },
+    {
+      title: "LEGAL GUIDANCE",
+      icon: <Scale size={20} strokeWidth={2} />,
+      text: "Complete compliance tracking in perfect agreement with statutory land-use acts and governmental town planning parameters."
+    },
+    {
+      title: "SITE VISITS",
+      icon: <Eye size={20} strokeWidth={2} />,
+      text: "Transparent, personalized executive site presentation workflows detailing structural design constraints and plot orientation benefits directly on-field."
+    }
+  ];
+
   const renderCards = (className: string) => (
     <div className={className}>
-      <div className={styles.featureCard}>
-        <div className={styles.featureIcon}>
-          <Home size={20} strokeWidth={2} />
+      {solutions.map((item, index) => (
+        <div key={index} className={styles.featureCard}>
+          <div className={styles.featureIcon}>
+            {item.icon}
+          </div>
+          <div className={styles.featureTextWrapper}>
+            <h3 className={styles.featureTitle}>{item.title}</h3>
+            <p className={styles.featureDesc}>{item.text}</p>
+          </div>
         </div>
-        <h3 className={styles.featureTitle}>Wide Range of Properties</h3>
-        <p className={styles.featureDesc}>Choose from apartments, villas, commercial spaces and more.</p>
-      </div>
-      <div className={styles.featureCard}>
-        <div className={styles.featureIcon}>
-          <ShieldCheck size={20} strokeWidth={2} />
-        </div>
-        <h3 className={styles.featureTitle}>Trusted and Verified</h3>
-        <p className={styles.featureDesc}>All properties are verified for quality and authenticity.</p>
-      </div>
-      <div className={styles.featureCard}>
-        <div className={styles.featureIcon}>
-          <Tag size={20} strokeWidth={2} />
-        </div>
-        <h3 className={styles.featureTitle}>Best Price Guarantee</h3>
-        <p className={styles.featureDesc}>We ensure the best deals and value for your money.</p>
-      </div>
-      <div className={styles.featureCard}>
-        <div className={styles.featureIcon}>
-          <Headset size={20} strokeWidth={2} />
-        </div>
-        <h3 className={styles.featureTitle}>Expert Support</h3>
-        <p className={styles.featureDesc}>Our experts are here to help you at every step.</p>
-      </div>
+      ))}
     </div>
   );
 

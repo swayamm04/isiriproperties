@@ -211,14 +211,16 @@ export default function Navbar() {
             {/* Auth / Greeting */}
             {user ? (
               <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                <span className={styles.userInfo}>Hi, {user.name.split(" ")[0]}</span>
-                {user.profileImage ? (
-                  <img src={user.profileImage} alt={user.name} style={{ width: "36px", height: "36px", borderRadius: "50%", objectFit: "cover", border: "2px solid var(--color-primary)" }} />
-                ) : (
-                  <div style={{ width: "36px", height: "36px", borderRadius: "50%", backgroundColor: "var(--color-primary)", color: "var(--color-dark)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: "16px" }}>
-                    {user.name.charAt(0).toUpperCase()}
-                  </div>
-                )}
+                <Link href="/settings" style={{ display: "flex", alignItems: "center", gap: "0.5rem", textDecoration: "none" }}>
+                  <span className={styles.userInfo}>Hi, {user.name.split(" ")[0]}</span>
+                  {user.profileImage ? (
+                    <img src={user.profileImage} alt={user.name} style={{ width: "36px", height: "36px", borderRadius: "50%", objectFit: "cover", border: "2px solid var(--color-primary)" }} />
+                  ) : (
+                    <div style={{ width: "36px", height: "36px", borderRadius: "50%", backgroundColor: "var(--color-primary)", color: "var(--color-dark)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: "16px" }}>
+                      {user.name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                </Link>
                 <button
                   onClick={() => {
                     logout();
@@ -230,7 +232,7 @@ export default function Navbar() {
                   Logout
                 </button>
                 <div className={styles.desktopToggle}>
-                  <button className={`${styles.toggleBtn} ${selectedType === 'Sell' ? styles.toggleBtnActive : ''}`} onClick={() => handleSelection('Sell')}>Sell</button>
+                  <button className={`${styles.toggleBtn} ${selectedType === 'Sell' ? styles.toggleBtnActive : ''}`} onClick={() => handleSelection('Sell')}>Buy</button>
                   <button className={`${styles.toggleBtn} ${selectedType === 'Rent' ? styles.toggleBtnActive : ''}`} onClick={() => handleSelection('Rent')}>Rent</button>
                 </div>
               </div>
@@ -243,7 +245,7 @@ export default function Navbar() {
                   Login Free
                 </Link>
                 <div className={styles.desktopToggle}>
-                  <button className={`${styles.toggleBtn} ${selectedType === 'Sell' ? styles.toggleBtnActive : ''}`} onClick={() => handleSelection('Sell')}>Sell</button>
+                  <button className={`${styles.toggleBtn} ${selectedType === 'Sell' ? styles.toggleBtnActive : ''}`} onClick={() => handleSelection('Sell')}>Buy</button>
                   <button className={`${styles.toggleBtn} ${selectedType === 'Rent' ? styles.toggleBtnActive : ''}`} onClick={() => handleSelection('Rent')}>Rent</button>
                 </div>
               </div>

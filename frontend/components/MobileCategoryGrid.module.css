@@ -1,154 +1,158 @@
 .categoryGridSection {
-  display: none; /* Hide on desktop by default */
   width: 100%;
   background-color: var(--color-bg-light, #f8f9fa);
+  display: flex;
+  justify-content: center;
 }
 
-@media (max-width: 900px) {
-  .categoryGridSection {
-    display: block;
-  }
+.gridContainer {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem;
+  height: 170px; /* Kept small */
+  width: 100%;
+  max-width: 1200px;
+}
 
+.gridCard {
+  position: relative;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 1rem;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+.cardLarge {
+  grid-column: 1;
+  grid-row: 1 / 3;
+}
+
+.rightStack {
+  display: contents; /* Let children join the grid */
+}
+
+.cardTopRight {
+  grid-column: 2;
+  grid-row: 1;
+  justify-content: flex-end;
+  align-items: flex-end;
+  text-align: right;
+  padding: 0.75rem 1rem;
+}
+
+.cardBottomRight {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.cardFullWidth {
+  grid-column: 3;
+  grid-row: 1 / 3;
+}
+
+.cardBg, .cardBgGold {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  z-index: 1;
+  transition: transform 0.5s ease;
+}
+
+.cardBgGold {
+  background-color: #D4AF37; /* Gold */
+}
+
+.cardOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 60%, rgba(0,0,0,0.4) 100%);
+  z-index: 2;
+}
+
+.cardOverlayLight {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.5) 100%);
+  z-index: 2;
+}
+
+.cardOverlayBlue {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 60%, rgba(0,0,0,0.4) 100%);
+  z-index: 2;
+}
+
+.cardContent {
+  position: relative;
+  z-index: 3;
+}
+
+.cardTitle {
+  color: #D1D5DB; /* Light gray */
+  font-size: 0.6rem; /* Even smaller text */
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 0.25rem;
+}
+
+.cardTitleGold {
+  color: #D1D5DB; /* Light gray */
+  font-size: 0.55rem; /* Even smaller text */
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.cardSubtitle {
+  color: rgba(255,255,255,0.55); /* Darker gray for subtitle */
+  font-size: 0.45rem; /* Even smaller subtitle */
+  margin-bottom: 0.75rem;
+}
+
+.exploreBtn {
+  display: inline-block;
+  background-color: #FFFFFF;
+  color: var(--color-dark);
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-full);
+}
+
+.exploreBtnGold {
+  display: inline-block;
+  background-color: #FFFFFF;
+  color: #D4AF37;
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 0.35rem 0.5rem;
+  border-radius: var(--radius-full);
+  text-align: center;
+}
+
+@media (min-width: 901px) {
   .gridContainer {
-    display: grid;
-    grid-template-columns: 1.2fr 1fr 1fr;
-    grid-template-rows: 1fr 1fr;
-    gap: 0.5rem;
-    padding: 0.5rem 1.5rem 0.5rem 1.5rem; /* Reduced bottom padding from 2rem to 0.5rem */
-    height: 230px; /* Reduced to look like a 16:9 landscape block */
-  }
-
-  .gridCard {
-    position: relative;
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    text-decoration: none;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    padding: 1rem;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-  }
-
-  .cardLarge {
-    grid-column: 1;
-    grid-row: 1 / 3;
-  }
-
-  .rightStack {
-    display: contents; /* Let children join the grid */
-  }
-
-  .cardTopRight {
-    grid-column: 2;
-    grid-row: 1;
-    justify-content: center;
-    align-items: center;
-    padding: 0.75rem;
-  }
-
-  .cardBottomRight {
-    grid-column: 2;
-    grid-row: 2;
-  }
-
-  .cardFullWidth {
-    grid-column: 3;
-    grid-row: 1 / 3;
-  }
-
-  .cardBg, .cardBgGold {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-size: cover;
-    background-position: center;
-    z-index: 1;
-    transition: transform 0.5s ease;
-  }
-
-  .cardBgGold {
-    background-color: #D4AF37; /* Gold */
-  }
-
-  .cardOverlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 60%, rgba(0,0,0,0.0) 100%);
-    z-index: 2;
-  }
-  
-  .cardOverlayLight {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.1) 100%);
-    z-index: 2;
-  }
-
-  .cardOverlayBlue {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(to top, rgba(16, 68, 107, 0.9) 0%, rgba(16, 68, 107, 0.4) 60%, rgba(16, 68, 107, 0.1) 100%);
-    z-index: 2;
-  }
-
-  .cardContent {
-    position: relative;
-    z-index: 3;
-  }
-
-  .cardTitle {
-    color: #FFFFFF;
-    font-size: 0.9rem;
-    font-weight: 700;
-    line-height: 1.2;
-    margin-bottom: 0.25rem;
-  }
-  
-  .cardTitleGold {
-    color: #FFFFFF;
-    font-size: 0.8rem;
-    font-weight: 700;
-    line-height: 1.2;
-    margin-bottom: 0.5rem;
-    text-align: center;
-  }
-
-  .cardSubtitle {
-    color: rgba(255,255,255,0.85);
-    font-size: 0.65rem;
-    margin-bottom: 0.75rem;
-  }
-
-  .exploreBtn {
-    display: inline-block;
-    background-color: #FFFFFF;
-    color: var(--color-dark);
-    font-size: 0.65rem;
-    font-weight: 700;
-    padding: 0.35rem 0.75rem;
-    border-radius: var(--radius-full);
-  }
-  
-  .exploreBtnGold {
-    display: inline-block;
-    background-color: #FFFFFF;
-    color: #D4AF37;
-    font-size: 0.6rem;
-    font-weight: 700;
-    padding: 0.35rem 0.5rem;
-    border-radius: var(--radius-full);
-    text-align: center;
+    height: 250px;
   }
 }

@@ -28,7 +28,7 @@ interface AuthContextType {
   forgotPassword: (phone: string, otp: string, newPassword: string) => Promise<boolean>;
   updatePhone: (newPhone: string, currentPassword: string) => Promise<boolean>;
   updateProfileImage: (file: File) => Promise<boolean>;
-  updateProfile: (data: { name?: string; phone?: string; city?: string }) => Promise<boolean>;
+  updateProfile: (data: { name?: string; phone?: string; city?: string; profileImage?: string }) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -242,7 +242,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const updateProfile = async (data: { name?: string; phone?: string; city?: string }): Promise<boolean> => {
+  const updateProfile = async (data: { name?: string; phone?: string; city?: string; profileImage?: string }): Promise<boolean> => {
     setError(null);
     try {
       await apiRequest("/auth/update-profile", {

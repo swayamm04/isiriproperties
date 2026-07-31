@@ -9,15 +9,15 @@ import Cropper from "react-easy-crop";
 import getCroppedImg from "@/utils/cropImage";
 import { 
   User, MapPin, Lock, Info, LogOut, 
-  ChevronRight, Edit2, Shield, X, Eye, EyeOff, LayoutDashboard 
+  ChevronRight, Edit2, Shield, X, Eye, EyeOff, LayoutDashboard, ArrowLeft
 } from "lucide-react";
 import styles from "./page.module.css";
 
 export default function SettingsPage() {
   const { user, loading, logout, updateProfile, updateProfileImage } = useAuth();
   const router = useRouter();
-
-  const [activeModal, setActiveModal] = useState<"editProfile" | "changePassword" | "cropProfileImage" | null>(null);
+  const [activeModal, setActiveModal] = useState<"editProfile" | "changePassword" | "cropProfileImage" | "profilePhotoOptions" | null>(null);
+  const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
 
   // Profile Image Cropping State
   const [imageSrc, setImageSrc] = useState<string | null>(null);
@@ -218,6 +218,9 @@ export default function SettingsPage() {
     <div className={styles.container}>
       {/* Top Profile Card */}
       <div className={styles.profileCard}>
+        <button onClick={() => router.back()} className={styles.backBtn} aria-label="Go Back">
+          <ArrowLeft size={24} />
+        </button>
         <div className={styles.avatarContainer}>
           {user.profileImage ? (
             <img src={user.profileImage} alt={user.name} className={styles.avatarImage} />
@@ -235,7 +238,7 @@ export default function SettingsPage() {
           />
           <div 
             className={styles.editIcon} 
-            onClick={() => document.getElementById("profilePhotoInput")?.click()}
+            onClick={() => setActiveModal("profilePhotoOptions")}
           >
             <Edit2 size={16} />
           </div>
@@ -534,6 +537,76 @@ export default function SettingsPage() {
             <button onClick={handleCropSave} className={styles.submitBtn} disabled={isCropping}>
               {isCropping ? "Saving..." : "Save Profile Photo"}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* PROFILE PHOTO OPTIONS MODAL */}
+      {activeModal === "profilePhotoOptions" && (
+        <div className={styles.modalOverlay} onClick={() => { setActiveModal(null); setShowRemoveConfirm(false); }}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h3 className={styles.modalTitle}>{showRemoveConfirm ? "Remove Photo" : "Profile Photo Options"}</h3>
+              <button className={styles.closeBtn} onClick={() => { setActiveModal(null); setShowRemoveConfirm(false); }}><X size={20} /></button>
+            </div>
+            
+            {!showRemoveConfirm ? (
+              <div className={styles.profilePhotoModalContainer}>
+                {user.profileImage ? (
+                  <img src={user.profileImage} alt={user.name} className={styles.profilePhotoPreview} />
+                ) : (
+                  <div className={styles.profilePhotoPlaceholder}>
+                    {user.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                
+                <div className={styles.profilePhotoBtnContainer}>
+                  <button 
+                    className={`${styles.submitBtn} ${styles.profilePhotoBtn} ${styles.profilePhotoBtnPrimary}`} 
+                    onClick={() => {
+                      document.getElementById("profilePhotoInput")?.click();
+                      setActiveModal(null);
+                    }}
+                  >
+                    Select New Photo
+                  </button>
+                  {user.profileImage && (
+                    <button 
+                      className={`${styles.submitBtn} ${styles.profilePhotoBtn} ${styles.profilePhotoBtnDanger}`} 
+                      onClick={() => setShowRemoveConfirm(true)}
+                    >
+                      Remove Photo
+                    </button>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', padding: '1.5rem 0', textAlign: 'center' }}>
+                <p style={{ fontSize: '1.1rem', color: 'var(--color-dark)', marginBottom: '1rem' }}>Are you sure you want to remove your profile photo?</p>
+                <div style={{ display: 'flex', gap: '1rem', width: '100%', justifyContent: 'center' }}>
+                  <button 
+                    className={styles.submitBtn}
+                    style={{ flex: 1, maxWidth: '140px', margin: 0, padding: '0.6rem', fontSize: '0.9rem', backgroundColor: '#e2e8f0', color: 'var(--color-dark)' }}
+                    onClick={() => setShowRemoveConfirm(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    className={styles.submitBtn}
+                    style={{ flex: 1, maxWidth: '140px', margin: 0, padding: '0.6rem', fontSize: '0.9rem', backgroundColor: '#e53935', color: 'white' }}
+                    onClick={async () => {
+                      const success = await updateProfile({ profileImage: "" });
+                      if(success) {
+                        setActiveModal(null);
+                        setShowRemoveConfirm(false);
+                      }
+                    }}
+                  >
+                    Yes, Remove
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

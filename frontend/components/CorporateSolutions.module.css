@@ -137,8 +137,8 @@
     border-radius: 50%;
     margin-bottom: 0;
     flex-shrink: 0;
-    background-color: rgba(212, 175, 55, 0.1);
-    color: #D4AF37; /* Use gold icon color */
+    background-color: rgba(76, 131, 161, 0.1);
+    color: var(--color-primary-dark);
   }
 
   .iconWrapper svg {

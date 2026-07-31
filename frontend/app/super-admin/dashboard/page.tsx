@@ -1659,7 +1659,7 @@ export default function SuperAdminDashboardPage() {
                     className={styles.select}
                     style={{ border: "1px solid var(--color-border)", padding: "0.8rem 1rem", fontSize: "0.9rem" }}
                   >
-                    <option value="Sell">Sell</option>
+                    <option value="Sell">Buy</option>
                     <option value="Rent">Rent</option>
                   </select>
                 </div>

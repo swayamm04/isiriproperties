@@ -22,6 +22,27 @@
   text-align: center;
 }
 
+.backBtn {
+  position: absolute;
+  top: 1.5rem;
+  left: 1.5rem;
+  background: transparent;
+  border: none;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.backBtn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+
 .avatarContainer {
   position: relative;
   display: inline-block;
@@ -205,8 +226,22 @@
   margin: 0;
 }
 
+.closeBtn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.4rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-dark-muted);
+  transition: background 0.2s, color 0.2s;
+}
+
 .closeBtn:hover {
-  background: #e2e8f0;
+  background: #f1f5f9;
+  color: var(--color-dark);
 }
 
 /* Crop Container */
@@ -225,6 +260,60 @@
   flex-direction: column;
   gap: 0.5rem;
   margin-bottom: 1rem;
+}
+
+.profilePhotoModalContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 0;
+}
+
+.profilePhotoPreview, .profilePhotoPlaceholder {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+}
+
+.profilePhotoPreview {
+  object-fit: cover;
+  border: 2px solid var(--color-primary);
+}
+
+.profilePhotoPlaceholder {
+  background-color: var(--color-primary);
+  color: var(--color-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 2rem;
+}
+
+
+@media (min-width: 900px) {
+  .profilePhotoModalContainer {
+    gap: 1.5rem;
+    padding: 1rem 0;
+  }
+  .profilePhotoPreview, .profilePhotoPlaceholder {
+    width: 160px;
+    height: 160px;
+    border-width: 4px;
+  }
+  .profilePhotoPlaceholder {
+    font-size: 3.5rem;
+  }
+  .profilePhotoBtnContainer {
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+  }
+  .profilePhotoBtn {
+    max-width: 180px;
+    padding: 0.7rem 1rem;
+    font-size: 1rem;
+  }
 }
 
 .zoomSlider {
@@ -298,3 +387,89 @@
   margin-bottom: 1rem;
   font-size: 0.9rem;
 }
+
+/* Profile Photo Buttons (must be after submitBtn) */
+.profilePhotoBtnContainer {
+  display: flex;
+  width: 100%;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  justify-content: center;
+}
+
+.profilePhotoBtn {
+  flex: 1;
+  max-width: 160px;
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+}
+
+.profilePhotoBtnPrimary {
+  background-color: var(--color-primary);
+  color: var(--color-dark);
+}
+
+.profilePhotoBtnDanger {
+  background-color: #ffebee;
+  color: #e53935;
+}
+
+/* Desktop layout for profile card */
+@media (min-width: 900px) {
+  .container {
+    max-width: 800px;
+    padding-top: 2rem;
+  }
+
+  .profileCard {
+    background-color: white;
+    border-radius: 16px;
+    padding: 0;
+    display: block;
+    text-align: left;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    border: 1px solid #f0f0f0;
+  }
+
+  .profileCard::before {
+    content: '';
+    display: block;
+    height: 140px;
+    width: 100%;
+    background-color: var(--color-primary);
+    border-radius: 16px 16px 0 0;
+  }
+
+  .avatarContainer {
+    margin-top: -50px;
+    margin-left: 2rem;
+  }
+
+  .avatarImage {
+    width: 100px;
+    height: 100px;
+    border: 4px solid white;
+  }
+
+  .profileInfo {
+    align-items: flex-start;
+    padding: 0.5rem 2rem 2rem 2rem;
+  }
+
+  .profileName {
+    font-size: 1.6rem;
+    margin-bottom: 0.1rem;
+  }
+
+  .profilePhone {
+    font-size: 0.95rem;
+  }
+
+  .backBtn {
+    top: 1rem;
+    left: 1rem;
+    background: rgba(0, 0, 0, 0.15);
+  }
+}
+

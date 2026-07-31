@@ -150,7 +150,7 @@ export default function HeroBanner() {
             <div className={styles.circleIconWrapper}>
               <Handshake size={20} strokeWidth={1.5} />
             </div>
-            <span>Sell</span>
+            <span>Buy</span>
           </button>
           <button 
             className={`${styles.circleBtn} ${selectedType === 'Rent' ? styles.circleBtnActive : ''}`} 
@@ -201,12 +201,6 @@ export default function HeroBanner() {
           </div>
         </div>
 
-        {/* Mobile Dots */}
-        <div className={styles.mobileDots}>
-          {SLIDES.map((_, idx) => (
-            <span key={idx} className={`${styles.dot} ${idx === currentSlide ? styles.dotActive : ""}`}></span>
-          ))}
-        </div>
       </div>
     </section>
   );

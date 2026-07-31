@@ -48,22 +48,28 @@ router.post("/send-otp", async (req, res) => {
     await newOtp.save();
     
     if (process.env.FAST2SMS_API_KEY) {
-      await axios.get("https://www.fast2sms.com/dev/bulkV2", {
-        params: {
-          authorization: process.env.FAST2SMS_API_KEY,
-          variables_values: otp,
-          route: "otp",
-          numbers: phone,
-        }
-      });
+      try {
+        await axios.get("https://www.fast2sms.com/dev/bulkV2", {
+          params: {
+            authorization: process.env.FAST2SMS_API_KEY,
+            variables_values: otp,
+            route: "otp",
+            numbers: phone,
+          }
+        });
+        console.log(`[FAST2SMS] Successfully sent OTP to ${phone}`);
+      } catch (smsError) {
+        console.warn(`[FAST2SMS WARNING] Failed to send SMS via API. Falling back to mock. Error: ${smsError.message}`);
+        console.log(`[MOCK FAST2SMS FALLBACK] Sending OTP ${otp} to phone ${phone}`);
+      }
     } else {
       console.log(`[MOCK FAST2SMS] Sending OTP ${otp} to phone ${phone}`);
     }
     
     res.json({ message: "OTP sent successfully" });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Failed to send OTP" });
+    console.error("Critical error in send-otp:", error);
+    res.status(500).json({ error: "Failed to send OTP", details: error.message });
   }
 });
 
@@ -232,7 +238,7 @@ router.put("/update-password", auth, async (req, res) => {
 // @desc    Update current user's profile (name, phone, city)
 // @access  Private
 router.put("/update-profile", auth, async (req, res) => {
-  const { name, phone, city } = req.body;
+  const { name, phone, city, profileImage } = req.body;
 
   try {
     const user = await User.findById(req.user.id);
@@ -243,6 +249,7 @@ router.put("/update-profile", auth, async (req, res) => {
     if (name) user.name = name;
     if (phone) user.phone = phone;
     if (city !== undefined) user.city = city;
+    if (profileImage !== undefined) user.profileImage = profileImage;
 
     await user.save();
     res.json({ message: "Profile updated successfully", user });
