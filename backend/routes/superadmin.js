@@ -3,6 +3,7 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 const cloudinary = require("cloudinary").v2;
+const { normalizePhone, isValidPhone } = require("../utils/phoneValidation");
 const User = require("../models/User");
 const Property = require("../models/Property");
 const InterestRequest = require("../models/InterestRequest");
@@ -83,16 +84,29 @@ router.get("/stats", async (req, res) => {
 // @desc    Add a new admin
 // @access  Private (Super Admin)
 router.post("/admins", upload.single("profileImage"), async (req, res) => {
-  const { name, email, phone, password } = req.body;
+  const { name, email, password } = req.body;
+  let { phone } = req.body;
 
   try {
-    if (!name || !email || !password || !phone) {
+    if (!name || !password || !phone) {
       return res.status(400).json({ error: "Please enter all required fields" });
     }
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ error: "Email or username is already registered" });
+    phone = normalizePhone(phone);
+    if (!isValidPhone(phone)) {
+      return res.status(400).json({ error: "Invalid Indian mobile number" });
+    }
+
+    if (email) {
+      const existingUserEmail = await User.findOne({ email });
+      if (existingUserEmail) {
+        return res.status(400).json({ error: "Email or username is already registered" });
+      }
+    }
+
+    const existingUserPhone = await User.findOne({ phone });
+    if (existingUserPhone) {
+      return res.status(400).json({ error: "Phone number is already registered to another user" });
     }
 
     let profileImageUrl = "";
@@ -150,7 +164,8 @@ router.get("/admins", async (req, res) => {
 // @desc    Edit admin details
 // @access  Private (Super Admin)
 router.put("/admins/:id", upload.single("profileImage"), async (req, res) => {
-  const { name, email, phone, password } = req.body;
+  const { name, email, password } = req.body;
+  let { phone } = req.body;
 
   try {
     const admin = await User.findOne({ _id: req.params.id, role: "admin" });
@@ -159,7 +174,20 @@ router.put("/admins/:id", upload.single("profileImage"), async (req, res) => {
     }
 
     if (name) admin.name = name;
-    if (phone) admin.phone = phone;
+    
+    if (phone) {
+      phone = normalizePhone(phone);
+      if (!isValidPhone(phone)) {
+        return res.status(400).json({ error: "Invalid Indian mobile number" });
+      }
+      
+      const existingPhone = await User.findOne({ phone, _id: { $ne: req.params.id } });
+      if (existingPhone) {
+        return res.status(400).json({ error: "Phone number is already used by another user" });
+      }
+      admin.phone = phone;
+    }
+
     if (email) {
       if (email !== admin.email) {
         const existing = await User.findOne({ email });

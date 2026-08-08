@@ -9,7 +9,7 @@ import Cropper from "react-easy-crop";
 import getCroppedImg from "@/utils/cropImage";
 import { 
   User, MapPin, Lock, Info, LogOut, 
-  ChevronRight, Edit2, Shield, X, Eye, EyeOff, LayoutDashboard, ArrowLeft
+  ChevronRight, Edit2, Shield, X, Eye, EyeOff, LayoutDashboard, ArrowLeft, Trash2
 } from "lucide-react";
 import styles from "./page.module.css";
 
@@ -47,6 +47,7 @@ export default function SettingsPage() {
   const [passLoading, setPassLoading] = useState(false);
   const [passError, setPassError] = useState("");
   const [passSuccess, setPassSuccess] = useState("");
+  const OTP_ENABLED = false;
 
   useEffect(() => {
     if (!loading && !user) {
@@ -157,12 +158,14 @@ export default function SettingsPage() {
     }
 
     try {
-      await apiRequest("/auth/send-otp", {
-        method: "POST",
-        body: JSON.stringify({ phone: user?.phone }),
-      });
+      if (OTP_ENABLED) {
+        await apiRequest("/auth/send-otp", {
+          method: "POST",
+          body: JSON.stringify({ phone: user?.phone }),
+        });
+      }
       setOtpSent(true);
-      setPassSuccess("OTP sent to your registered phone number.");
+      setPassSuccess(OTP_ENABLED ? "OTP sent to your registered phone number." : "Ready to update.");
     } catch (err: any) {
       setPassError(err.message || "Failed to send OTP.");
     } finally {
@@ -176,12 +179,13 @@ export default function SettingsPage() {
     setPassError("");
     setPassSuccess("");
 
-    const otpString = otp.join("");
-    if (otpString.length !== 6) {
+    let otpString = otp.join("");
+    if (OTP_ENABLED && otpString.length !== 6) {
       setPassError("Please enter the complete 6-digit OTP.");
       setPassLoading(false);
       return;
     }
+    if (!OTP_ENABLED) otpString = "000000";
 
     try {
       await apiRequest("/auth/update-password", {
@@ -373,11 +377,11 @@ export default function SettingsPage() {
               <button className={styles.closeBtn} onClick={() => setActiveModal(null)}><X size={20} /></button>
             </div>
             
-            <form onSubmit={otpSent ? handleUpdatePassword : handleSendPasswordOtp}>
+            <form onSubmit={(!OTP_ENABLED || otpSent) ? handleUpdatePassword : handleSendPasswordOtp}>
               {passError && <div className={styles.errorMsg}>{passError}</div>}
               {passSuccess && <div className={styles.successMsg}>{passSuccess}</div>}
 
-              <div className={styles.formGroup} style={{ display: otpSent ? "none" : "block" }}>
+              <div className={styles.formGroup} style={{ display: (OTP_ENABLED && otpSent) ? "none" : "block" }}>
                 <label className={styles.label}>Current Password</label>
                 <div style={{ position: "relative" }}>
                   <input
@@ -385,7 +389,7 @@ export default function SettingsPage() {
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
                     className={styles.input}
-                    required={!otpSent}
+                    required={!OTP_ENABLED || !otpSent}
                   />
                   <button
                     type="button"
@@ -397,7 +401,7 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              <div className={styles.formGroup} style={{ display: otpSent ? "none" : "block" }}>
+              <div className={styles.formGroup} style={{ display: (OTP_ENABLED && otpSent) ? "none" : "block" }}>
                 <label className={styles.label}>New Password</label>
                 <div style={{ position: "relative" }}>
                   <input
@@ -405,7 +409,7 @@ export default function SettingsPage() {
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     className={styles.input}
-                    required={!otpSent}
+                    required={!OTP_ENABLED || !otpSent}
                     minLength={6}
                   />
                   <button
@@ -418,7 +422,7 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              <div className={styles.formGroup} style={{ display: otpSent ? "none" : "block" }}>
+              <div className={styles.formGroup} style={{ display: (OTP_ENABLED && otpSent) ? "none" : "block" }}>
                 <label className={styles.label}>Confirm New Password</label>
                 <div style={{ position: "relative" }}>
                   <input
@@ -426,7 +430,7 @@ export default function SettingsPage() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     className={styles.input}
-                    required={!otpSent}
+                    required={!OTP_ENABLED || !otpSent}
                     minLength={6}
                   />
                   <button
@@ -439,7 +443,7 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              {otpSent && (
+              {(OTP_ENABLED && otpSent) && (
                 <div className={styles.formGroup}>
                   <label className={styles.label}>Enter OTP (sent to {user?.phone})</label>
                   <div style={{ display: "flex", gap: "0.5rem", justifyContent: "space-between", maxWidth: "350px", margin: "0 auto" }}>
@@ -492,7 +496,7 @@ export default function SettingsPage() {
               )}
 
               <button type="submit" className={styles.submitBtn} disabled={passLoading}>
-                {passLoading ? "Processing..." : otpSent ? "Verify & Update Password" : "Send OTP"}
+                {passLoading ? "Processing..." : (!OTP_ENABLED || otpSent) ? "Verify & Update Password" : "Send OTP"}
               </button>
             </form>
           </div>
@@ -551,34 +555,39 @@ export default function SettingsPage() {
             </div>
             
             {!showRemoveConfirm ? (
-              <div className={styles.profilePhotoModalContainer}>
-                {user.profileImage ? (
-                  <img src={user.profileImage} alt={user.name} className={styles.profilePhotoPreview} />
-                ) : (
-                  <div className={styles.profilePhotoPlaceholder}>
-                    {user.name.charAt(0).toUpperCase()}
-                  </div>
-                )}
-                
-                <div className={styles.profilePhotoBtnContainer}>
-                  <button 
-                    className={`${styles.submitBtn} ${styles.profilePhotoBtn} ${styles.profilePhotoBtnPrimary}`} 
-                    onClick={() => {
-                      document.getElementById("profilePhotoInput")?.click();
-                      setActiveModal(null);
-                    }}
-                  >
-                    Select New Photo
-                  </button>
-                  {user.profileImage && (
-                    <button 
-                      className={`${styles.submitBtn} ${styles.profilePhotoBtn} ${styles.profilePhotoBtnDanger}`} 
-                      onClick={() => setShowRemoveConfirm(true)}
-                    >
-                      Remove Photo
-                    </button>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2rem', padding: '1.5rem 0' }}>
+                <button 
+                  onClick={() => {
+                    document.getElementById("profilePhotoInput")?.click();
+                    setActiveModal(null);
+                  }}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.4rem', borderRadius: '50%', backgroundColor: 'rgba(76, 131, 161, 0.1)' }}
+                  title="Select New Photo"
+                >
+                  <Edit2 size={18} />
+                </button>
+
+                <div>
+                  {user.profileImage ? (
+                    <img src={user.profileImage} alt={user.name} className={styles.profilePhotoPreview} />
+                  ) : (
+                    <div className={styles.profilePhotoPlaceholder}>
+                      {user.name.charAt(0).toUpperCase()}
+                    </div>
                   )}
                 </div>
+                
+                {user.profileImage ? (
+                  <button 
+                    onClick={() => setShowRemoveConfirm(true)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#e53935', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.4rem', borderRadius: '50%', backgroundColor: 'rgba(229, 57, 53, 0.1)' }}
+                    title="Remove Photo"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                ) : (
+                  <div style={{ width: '32px', height: '32px' }}></div>
+                )}
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', padding: '1.5rem 0', textAlign: 'center' }}>

@@ -7,6 +7,8 @@ const OTP = require("../models/OTP");
 const axios = require("axios");
 const { auth } = require("../middleware/auth");
 const upload = require("../utils/upload");
+const { normalizePhone, isValidPhone } = require("../utils/phoneValidation");
+
 
 // Configure Cloudinary if credentials exist in .env
 let isCloudinaryConfigured = false;
@@ -35,35 +37,82 @@ const generateToken = (user) => {
 // @desc    Send OTP to phone
 // @access  Public
 router.post("/send-otp", async (req, res) => {
-  const { phone } = req.body;
+  let { phone, mode } = req.body;
   try {
     if (!phone) {
       return res.status(400).json({ error: "Phone number is required" });
     }
+    
+    phone = normalizePhone(phone);
+    if (!isValidPhone(phone)) {
+      return res.status(400).json({ error: "Invalid Indian mobile number" });
+    }
+
+    // Check if user exists based on mode to prevent OTP abuse and confusion
+    if (mode === "signup") {
+      const existingUser = await User.findOne({ phone });
+      if (existingUser) {
+        return res.status(400).json({ error: "Phone number already registered. Please login instead." });
+      }
+    } else if (mode === "login" || mode === "forgot_password") {
+      const existingUser = await User.findOne({ phone });
+      if (!existingUser) {
+        return res.status(400).json({ error: "Phone number not found. Please register first." });
+      }
+    }
+
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     
-    await OTP.deleteMany({ phone });
+    // Check for existing active OTP session
+    let otpSession = await OTP.findOne({ phone });
     
-    const newOtp = new OTP({ phone, otp });
-    await newOtp.save();
+    if (otpSession) {
+      // 1. Check Cooldown (60 seconds)
+      const timeSinceLastRequest = Date.now() - otpSession.lastRequestedAt.getTime();
+      if (timeSinceLastRequest < 60000) {
+        return res.status(429).json({ error: `Please wait ${Math.ceil((60000 - timeSinceLastRequest) / 1000)} seconds before requesting a new OTP` });
+      }
+      
+      // 2. Check Resend Limits
+      if (otpSession.resendCount >= 3) {
+        return res.status(429).json({ error: "Maximum OTP resend limit reached. Please try again after 5 minutes." });
+      }
+      
+      // Update existing session
+      otpSession.otp = otp;
+      otpSession.resendCount += 1;
+      otpSession.lastRequestedAt = Date.now();
+      otpSession.createdAt = Date.now(); // Reset the 5-minute TTL
+      await otpSession.save();
+    } else {
+      // Create new session
+      otpSession = new OTP({ phone, otp });
+      await otpSession.save();
+    }
     
-    if (process.env.FAST2SMS_API_KEY) {
+    let otpSentSuccessfully = false;
+
+    // 1. Try MSG91 WhatsApp OTP API
+    if (process.env.MSG91_AUTH_KEY && process.env.MSG91_TEMPLATE_ID) {
       try {
-        await axios.get("https://www.fast2sms.com/dev/bulkV2", {
+        await axios.get("https://control.msg91.com/api/v5/otp", {
           params: {
-            authorization: process.env.FAST2SMS_API_KEY,
-            variables_values: otp,
-            route: "otp",
-            numbers: phone,
+            authkey: process.env.MSG91_AUTH_KEY,
+            template_id: process.env.MSG91_TEMPLATE_ID,
+            mobile: `91${phone}`,
+            otp: otp
           }
         });
-        console.log(`[FAST2SMS] Successfully sent OTP to ${phone}`);
-      } catch (smsError) {
-        console.warn(`[FAST2SMS WARNING] Failed to send SMS via API. Falling back to mock. Error: ${smsError.message}`);
-        console.log(`[MOCK FAST2SMS FALLBACK] Sending OTP ${otp} to phone ${phone}`);
+        console.log(`[MSG91] Successfully sent OTP to ${phone} via WhatsApp`);
+        otpSentSuccessfully = true;
+      } catch (msgError) {
+        console.warn(`[MSG91 WARNING] Failed. Error: ${msgError.response?.data?.message || msgError.message}`);
       }
-    } else {
-      console.log(`[MOCK FAST2SMS] Sending OTP ${otp} to phone ${phone}`);
+    }
+    
+    // 2. Fallback to Console Mock if MSG91 fails (or no keys are set)
+    if (!otpSentSuccessfully) {
+      console.log(`[MOCK OTP FALLBACK] Sending OTP ${otp} to phone ${phone}`);
     }
     
     res.json({ message: "OTP sent successfully" });
@@ -77,18 +126,34 @@ router.post("/send-otp", async (req, res) => {
 // @desc    Register a new user
 // @access  Public
 router.post("/signup", async (req, res) => {
-  const { name, phone, password, otp } = req.body;
+  let { name, phone, password, otp } = req.body;
 
   try {
-    if (!name || !password || !phone || !otp) {
-      return res.status(400).json({ error: "Please enter all required fields including OTP" });
+    if (!name || !password || !phone) { // Temporarily disabled OTP check
+      return res.status(400).json({ error: "Please enter all required fields" });
     }
 
-    // Verify OTP
-    const validOtp = await OTP.findOne({ phone, otp });
-    if (!validOtp) {
-      return res.status(400).json({ error: "Invalid or expired OTP" });
+    phone = normalizePhone(phone);
+    if (!isValidPhone(phone)) {
+      return res.status(400).json({ error: "Invalid Indian mobile number" });
     }
+
+    /* --- OTP VERIFICATION TEMPORARILY DISABLED ---
+    // Verify OTP
+    const validOtp = await OTP.findOne({ phone });
+    if (!validOtp) {
+      return res.status(400).json({ error: "OTP expired or not found. Please request a new one." });
+    }
+    if (validOtp.otp !== otp) {
+      validOtp.verificationAttempts = (validOtp.verificationAttempts || 0) + 1;
+      if (validOtp.verificationAttempts >= 5) {
+        await OTP.deleteOne({ _id: validOtp._id });
+        return res.status(400).json({ error: "Too many failed attempts. OTP invalidated. Please request a new one." });
+      }
+      await validOtp.save();
+      return res.status(400).json({ error: "Invalid OTP" });
+    }
+    ------------------------------------------------ */
 
     // Check if user already exists
     const existingUser = await User.findOne({ phone });
@@ -106,8 +171,10 @@ router.post("/signup", async (req, res) => {
 
     await user.save();
     
+    /* --- OTP VERIFICATION TEMPORARILY DISABLED ---
     // Delete OTP after successful signup
-    await OTP.deleteOne({ _id: validOtp._id });
+    if (validOtp) await OTP.deleteOne({ _id: validOtp._id });
+    ------------------------------------------------ */
 
     const token = generateToken(user);
     res.status(201).json({
@@ -124,7 +191,11 @@ router.post("/signup", async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Server registration error" });
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyValue)[0];
+      return res.status(400).json({ error: `An account with this ${field} already exists` });
+    }
+    res.status(500).json({ error: "Server registration error", details: error.message });
   }
 });
 
@@ -132,12 +203,16 @@ router.post("/signup", async (req, res) => {
 // @desc    Authenticate user & get token
 // @access  Public
 router.post("/login", async (req, res) => {
-  const { phone, password } = req.body;
+  let { phone, password } = req.body;
 
   try {
     if (!phone || !password) {
       return res.status(400).json({ error: "Please enter phone number and password" });
     }
+
+    phone = normalizePhone(phone);
+    // Not validating explicitly for login, but normalizing is enough to match the database
+
 
     // Find user
     const user = await User.findOne({ phone });
@@ -195,8 +270,8 @@ router.put("/update-password", auth, async (req, res) => {
   const { currentPassword, newPassword, otp } = req.body;
 
   try {
-    if (!currentPassword || !newPassword || !otp) {
-      return res.status(400).json({ error: "Please provide current password, new password, and OTP" });
+    if (!currentPassword || !newPassword) { // Temporarily disabled OTP check
+      return res.status(400).json({ error: "Please provide current password and new password" });
     }
 
     const user = await User.findById(req.user.id);
@@ -210,22 +285,35 @@ router.put("/update-password", auth, async (req, res) => {
       return res.status(400).json({ error: "Incorrect current password" });
     }
 
+    /* --- OTP VERIFICATION TEMPORARILY DISABLED ---
     // Verify OTP
     if (!user.phone) {
       return res.status(400).json({ error: "No phone number associated with this account to verify OTP" });
     }
 
-    const validOtp = await OTP.findOne({ phone: user.phone, otp });
+    const validOtp = await OTP.findOne({ phone: user.phone });
     if (!validOtp) {
-      return res.status(400).json({ error: "Invalid or expired OTP" });
+      return res.status(400).json({ error: "OTP expired or not found. Please request a new one." });
     }
+    if (validOtp.otp !== otp) {
+      validOtp.verificationAttempts = (validOtp.verificationAttempts || 0) + 1;
+      if (validOtp.verificationAttempts >= 5) {
+        await OTP.deleteOne({ _id: validOtp._id });
+        return res.status(400).json({ error: "Too many failed attempts. OTP invalidated. Please request a new one." });
+      }
+      await validOtp.save();
+      return res.status(400).json({ error: "Invalid OTP" });
+    }
+    ------------------------------------------------ */
 
     // Update password
     user.password = newPassword;
     await user.save(); // The pre('save') hook will handle hashing automatically
 
+    /* --- OTP VERIFICATION TEMPORARILY DISABLED ---
     // Delete OTP after successful password change
-    await OTP.deleteOne({ _id: validOtp._id });
+    if (typeof validOtp !== 'undefined' && validOtp) await OTP.deleteOne({ _id: validOtp._id });
+    ------------------------------------------------ */
 
     res.json({ message: "Password updated successfully" });
   } catch (error) {
@@ -247,7 +335,13 @@ router.put("/update-profile", auth, async (req, res) => {
     }
 
     if (name) user.name = name;
-    if (phone) user.phone = phone;
+    if (phone) {
+      phone = normalizePhone(phone);
+      if (!isValidPhone(phone)) {
+        return res.status(400).json({ error: "Invalid Indian mobile number" });
+      }
+      user.phone = phone;
+    }
     if (city !== undefined) user.city = city;
     if (profileImage !== undefined) user.profileImage = profileImage;
 
@@ -263,11 +357,16 @@ router.put("/update-profile", auth, async (req, res) => {
 // @desc    Update current user's phone number
 // @access  Private
 router.put("/update-phone", auth, async (req, res) => {
-  const { currentPassword, newPhone } = req.body;
+  let { currentPassword, newPhone } = req.body;
 
   try {
     if (!currentPassword || !newPhone) {
       return res.status(400).json({ error: "Please provide both current password and new phone number" });
+    }
+    
+    newPhone = normalizePhone(newPhone);
+    if (!isValidPhone(newPhone)) {
+      return res.status(400).json({ error: "Invalid Indian mobile number" });
     }
 
     const user = await User.findById(req.user.id);
@@ -326,18 +425,31 @@ router.put("/update-profile-image", auth, upload.single("profileImage"), async (
 // @desc    Reset password using OTP
 // @access  Public
 router.post("/forgot-password", async (req, res) => {
-  const { phone, otp, newPassword } = req.body;
+  let { phone, otp, newPassword } = req.body;
   
   try {
-    if (!phone || !otp || !newPassword) {
-      return res.status(400).json({ error: "Please provide phone, OTP and new password" });
+    if (!phone || !newPassword) { // Temporarily disabled OTP check
+      return res.status(400).json({ error: "Please provide phone and new password" });
     }
     
+    phone = normalizePhone(phone);
+    
+    /* --- OTP VERIFICATION TEMPORARILY DISABLED ---
     // Verify OTP
-    const validOtp = await OTP.findOne({ phone, otp });
+    const validOtp = await OTP.findOne({ phone });
     if (!validOtp) {
-      return res.status(400).json({ error: "Invalid or expired OTP" });
+      return res.status(400).json({ error: "OTP expired or not found. Please request a new one." });
     }
+    if (validOtp.otp !== otp) {
+      validOtp.verificationAttempts = (validOtp.verificationAttempts || 0) + 1;
+      if (validOtp.verificationAttempts >= 5) {
+        await OTP.deleteOne({ _id: validOtp._id });
+        return res.status(400).json({ error: "Too many failed attempts. OTP invalidated. Please request a new one." });
+      }
+      await validOtp.save();
+      return res.status(400).json({ error: "Invalid OTP" });
+    }
+    ------------------------------------------------ */
     
     const user = await User.findOne({ phone });
     if (!user) {
@@ -347,7 +459,9 @@ router.post("/forgot-password", async (req, res) => {
     user.password = newPassword;
     await user.save();
     
-    await OTP.deleteOne({ _id: validOtp._id });
+    /* --- OTP VERIFICATION TEMPORARILY DISABLED ---
+    if (typeof validOtp !== 'undefined' && validOtp) await OTP.deleteOne({ _id: validOtp._id });
+    ------------------------------------------------ */
     
     res.json({ message: "Password updated successfully" });
   } catch (error) {

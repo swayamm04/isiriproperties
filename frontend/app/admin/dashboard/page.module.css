@@ -561,3 +561,52 @@
   border-bottom-color: var(--color-primary);
   color: var(--color-primary-dark);
 }
+
+@media (max-width: 600px) {
+  .modalContent {
+    padding: 1rem 0.8rem !important;
+    width: 96% !important;
+  }
+  
+  .modalContent h2 {
+    font-size: 1.1rem !important;
+    margin-bottom: 0.75rem !important;
+    padding-right: 1.5rem !important;
+  }
+  
+  .modalContent h3 {
+    font-size: 0.9rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+  
+  .input, .select, .textarea {
+    padding: 0.5rem 0.6rem !important;
+    font-size: 0.8rem !important;
+  }
+  
+  .label {
+    font-size: 0.65rem !important;
+    margin-bottom: 0.2rem !important;
+  }
+  
+  .submitBtn {
+    width: 100% !important;
+    justify-content: center;
+    padding: 0.6rem 1rem !important;
+    font-size: 0.75rem !important;
+  }
+  
+  .formGroup {
+    margin-bottom: 0.75rem !important;
+  }
+
+  .modalContent button[type="button"] {
+    padding: 0.5rem !important;
+    font-size: 0.75rem !important;
+  }
+
+  .modalCloseBtn {
+    top: 0.8rem !important;
+    right: 0.8rem !important;
+  }
+}

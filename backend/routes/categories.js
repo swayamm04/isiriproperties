@@ -6,7 +6,11 @@ const { auth, authorize } = require("../middleware/auth");
 // GET all categories
 router.get("/", async (req, res) => {
   try {
-    const categories = await Category.find().sort({ createdAt: -1 });
+    let query = {};
+    if (req.query.listingType) {
+      query.listingType = req.query.listingType;
+    }
+    const categories = await Category.find(query).sort({ createdAt: -1 });
     res.json(categories);
   } catch (error) {
     res.status(500).json({ message: "Server error fetching categories", error: error.message });
@@ -16,18 +20,20 @@ router.get("/", async (req, res) => {
 // POST a new category (Super Admin only)
 router.post("/", auth, authorize("super_admin"), async (req, res) => {
   try {
-    const { name, fields } = req.body;
+    const { name, fields, listingType } = req.body;
     
     if (!name) {
       return res.status(400).json({ message: "Category name is required" });
     }
 
-    const categoryExists = await Category.findOne({ name: { $regex: new RegExp(`^${name}$`, "i") } });
+    const typeToUse = listingType || "Sell";
+
+    const categoryExists = await Category.findOne({ name: { $regex: new RegExp(`^${name}$`, "i") }, listingType: typeToUse });
     if (categoryExists) {
-      return res.status(400).json({ message: "Category already exists" });
+      return res.status(400).json({ message: "Category already exists for this listing type" });
     }
 
-    const category = new Category({ name, fields });
+    const category = new Category({ name, fields, listingType: typeToUse });
     await category.save();
 
     res.status(201).json(category);
@@ -39,22 +45,26 @@ router.post("/", auth, authorize("super_admin"), async (req, res) => {
 // PUT update a category (Super Admin only)
 router.put("/:id", auth, authorize("super_admin"), async (req, res) => {
   try {
-    const { name, fields } = req.body;
+    const { name, fields, listingType } = req.body;
     const category = await Category.findById(req.params.id);
 
     if (!category) {
       return res.status(404).json({ message: "Category not found" });
     }
 
-    if (name) {
+    if (name || listingType) {
+        const newName = name || category.name;
+        const newListingType = listingType || category.listingType || "Sell";
+        
         // Check name uniqueness if changed
-        if (name.toLowerCase() !== category.name.toLowerCase()) {
-            const exists = await Category.findOne({ name: { $regex: new RegExp(`^${name}$`, "i") } });
+        if (newName.toLowerCase() !== category.name.toLowerCase() || newListingType !== category.listingType) {
+            const exists = await Category.findOne({ name: { $regex: new RegExp(`^${newName}$`, "i") }, listingType: newListingType });
             if (exists) {
-                return res.status(400).json({ message: "Category with this name already exists" });
+                return res.status(400).json({ message: "Category with this name already exists for this listing type" });
             }
         }
-        category.name = name;
+        if (name) category.name = name;
+        if (listingType) category.listingType = listingType;
     }
     
     if (fields) category.fields = fields;

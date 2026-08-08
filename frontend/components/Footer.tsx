@@ -53,8 +53,7 @@ export default function Footer() {
             </li>
             <li>
               <strong style={{ color: 'var(--color-primary)' }}>Email:</strong><br />
-              advisory@isiriproperties.com<br />
-              concierge@isiriproperties.com
+              propertiesisiri@gmail.com
             </li>
           </ul>
         </div>

@@ -15,6 +15,11 @@ const fieldSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
+  icon: {
+    type: String,
+    default: "Square",
+    trim: true,
+  },
 });
 
 const categorySchema = new mongoose.Schema(
@@ -22,8 +27,12 @@ const categorySchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
+    },
+    listingType: {
+      type: String,
+      enum: ["Sell", "Rent"],
+      default: "Sell",
     },
     fields: [fieldSchema],
   },

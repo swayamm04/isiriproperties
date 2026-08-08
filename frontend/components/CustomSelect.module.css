@@ -1,0 +1,125 @@
+.selectContainer {
+  position: relative;
+  width: 100%;
+  font-family: inherit;
+  user-select: none;
+}
+
+.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.selectHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid var(--color-border);
+  padding: 0.8rem 1rem;
+  font-size: 0.9rem;
+  background-color: #FFFFFF;
+  color: var(--color-dark);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-height: 44px;
+}
+
+.selectHeader:hover, .selectHeader:focus {
+  border-color: var(--color-primary);
+  outline: none;
+}
+
+.open {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(76, 131, 161, 0.15);
+}
+
+.selectedText {
+  color: var(--color-dark);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.placeholderText {
+  color: var(--color-dark-muted);
+}
+
+.icon {
+  color: var(--color-dark-muted);
+  transition: transform 0.3s ease;
+  flex-shrink: 0;
+}
+
+.iconOpen {
+  transform: rotate(180deg);
+}
+
+.optionsContainer {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  width: 100%;
+  max-height: 0;
+  overflow: hidden;
+  background-color: #FFFFFF;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  z-index: 50;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 0;
+}
+
+.optionsOpen {
+  max-height: 300px;
+  border-color: var(--color-border);
+  opacity: 1;
+}
+
+.optionsList {
+  list-style: none;
+  margin: 0;
+  padding: 0.5rem 0;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.optionItem {
+  padding: 0.8rem 1rem;
+  font-size: 0.9rem;
+  color: var(--color-dark);
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.optionItem:hover {
+  background-color: rgba(76, 131, 161, 0.08);
+  color: var(--color-primary-dark);
+}
+
+.selectedOption {
+  background-color: rgba(76, 131, 161, 0.12);
+  color: var(--color-primary-dark);
+  font-weight: 600;
+}
+
+.noOptions {
+  padding: 1rem;
+  text-align: center;
+  color: var(--color-dark-muted);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 600px) {
+  .selectHeader {
+    padding: 0.6rem 0.8rem;
+    font-size: 0.85rem;
+    min-height: 38px;
+  }
+  .optionItem {
+    padding: 0.6rem 0.8rem;
+    font-size: 0.85rem;
+  }
+}

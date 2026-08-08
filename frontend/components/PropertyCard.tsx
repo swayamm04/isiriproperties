@@ -7,6 +7,7 @@ import { Property } from "@/data/properties";
 import { getImageUrl } from "@/utils/api";
 import { useAuth } from "@/context/authContext";
 import { formatIndianPrice } from "@/utils/formatPrice";
+import { getIconForField } from "@/utils/iconMap";
 import styles from "./PropertyCard.module.css";
 
 interface PropertyCardProps {
@@ -76,12 +77,15 @@ export default function PropertyCard({ property }: PropertyCardProps) {
         {/* Specifications */}
         <div className={styles.specs}>
           {property.customFields && Object.keys(property.customFields).length > 0 ? (
-            Object.entries(property.customFields).slice(0, 3).map(([key, value]) => (
-              <div key={key} className={styles.specItem}>
-                <Square size={16} className={styles.specIcon} />
-                <span>{String(value)} {key}</span>
-              </div>
-            ))
+            Object.entries(property.customFields).slice(0, 3).map(([key, value]) => {
+              const IconComponent = getIconForField(key);
+              return (
+                <div key={key} className={styles.specItem}>
+                  <IconComponent size={16} className={styles.specIcon} />
+                  <span>{String(value)} {key}</span>
+                </div>
+              );
+            })
           ) : (
             <>
               {property.beds ? (

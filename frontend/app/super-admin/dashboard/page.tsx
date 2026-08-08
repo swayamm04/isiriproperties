@@ -29,7 +29,9 @@ import {
   MoreVertical
 } from "lucide-react";
 import Link from "next/link";
-import Loader from "@/components/Loader";
+import Loader from '@/components/Loader';
+import CustomSelect from '@/components/CustomSelect';
+import { getIconForField } from '@/utils/iconMap';
 import { formatIndianPrice } from "@/utils/formatPrice";
 import styles from "./page.module.css";
 
@@ -173,6 +175,7 @@ export default function SuperAdminDashboardPage() {
 
   // Category form state
   const [catName, setCatName] = useState("");
+  const [catListingType, setCatListingType] = useState("Sell");
   const [catFields, setCatFields] = useState<CategoryField[]>([]);
   const [catAddLoading, setCatAddLoading] = useState(false);
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
@@ -322,8 +325,7 @@ export default function SuperAdminDashboardPage() {
         setSuccessMsg(`Admin details updated successfully.`);
         setEditingAdminId(null);
       } else {
-        // POST /superadmin/admins
-        if (!adminName || !adminEmail || !adminPassword) {
+        if (!adminName || !adminPassword) {
           setErrorMsg("Please enter all required fields to register.");
           setAddAdminLoading(false);
           return;
@@ -371,14 +373,14 @@ export default function SuperAdminDashboardPage() {
       if (editingCategoryId) {
         await apiRequest(`/categories/${editingCategoryId}`, {
           method: "PUT",
-          body: JSON.stringify({ name: catName, fields: catFields }),
+          body: JSON.stringify({ name: catName, fields: catFields, listingType: catListingType }),
         });
         setSuccessMsg("Property Type updated successfully!");
         setEditingCategoryId(null);
       } else {
         await apiRequest("/categories", {
           method: "POST",
-          body: JSON.stringify({ name: catName, fields: catFields }),
+          body: JSON.stringify({ name: catName, fields: catFields, listingType: catListingType }),
         });
         setSuccessMsg("Property Type added successfully!");
       }
@@ -1114,19 +1116,17 @@ export default function SuperAdminDashboardPage() {
                     <div style={{ display: "flex", alignItems: "center", gap: "1.5rem", flexWrap: "wrap" }}>
                       <div className={styles.filterGroup}>
                         <label className={styles.filterLabel}>Filter by Vendor Admin:</label>
-                        <select
+                        <CustomSelect
+                          options={[
+                            { value: "", label: "All Vendors" },
+                            { value: "super_admin", label: "Super Admin" },
+                            ...admins.map(admin => ({ value: admin._id, label: admin.name }))
+                          ]}
                           value={selectedAdminId}
-                          onChange={(e) => setSelectedAdminId(e.target.value)}
+                          onChange={(val) => setSelectedAdminId(val)}
                           className={styles.select}
-                        >
-                          <option value="">All Vendors</option>
-                          <option value="super_admin">Super Admin</option>
-                          {admins.map((adm) => (
-                            <option key={adm._id} value={adm._id}>
-                              {adm.name}
-                            </option>
-                          ))}
-                        </select>
+                          style={{ minWidth: "220px", padding: 0, border: 'none' }}
+                        />
                       </div>
 
                       <button
@@ -1342,14 +1342,13 @@ export default function SuperAdminDashboardPage() {
               </div>
 
               <div className={styles.formGroup}>
-                <label className={styles.label}>Email ID</label>
+                <label className={styles.label}>Email ID (Optional)</label>
                 <input
                   type="email"
                   placeholder="e.g. rachel@isiri.com"
                   value={adminEmail}
                   onChange={(e) => setAdminEmail(e.target.value)}
                   className={styles.input}
-                  required
                 />
               </div>
 
@@ -1357,10 +1356,13 @@ export default function SuperAdminDashboardPage() {
                 <label className={styles.label}>Phone Number</label>
                 <input
                   type="tel"
-                  placeholder="e.g. +91 99000 99000"
+                  placeholder="e.g. 9900099000"
                   value={adminPhone}
-                  onChange={(e) => setAdminPhone(e.target.value)}
+                  onChange={(e) => setAdminPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
                   className={styles.input}
+                  pattern="[6-9][0-9]{9}"
+                  title="Phone number must be exactly 10 digits starting with 6-9"
+                  maxLength={10}
                   required
                 />
               </div>
@@ -1410,9 +1412,48 @@ export default function SuperAdminDashboardPage() {
             >
               <X size={20} />
             </button>
-            <h2 className={styles.modalTitle} style={{ fontFamily: "var(--font-serif)", fontSize: "1.6rem", fontWeight: 400, marginBottom: "2rem" }}>
+            <h2 className={styles.modalTitle} style={{ fontFamily: "var(--font-serif)", fontSize: "1.6rem", fontWeight: 400, marginBottom: "1rem" }}>
               Property Type Management
             </h2>
+
+            {/* Listing Type Toggle at the Top */}
+            <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+              <button
+                type="button"
+                onClick={() => setCatListingType("Sell")}
+                style={{
+                  flex: 1,
+                  padding: '0.8rem',
+                  borderRadius: '4px',
+                  border: '1px solid var(--color-border)',
+                  background: catListingType === "Sell" ? 'var(--color-primary)' : 'transparent',
+                  color: catListingType === "Sell" ? 'white' : 'var(--color-dark)',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                Sell Types
+              </button>
+              <button
+                type="button"
+                onClick={() => setCatListingType("Rent")}
+                style={{
+                  flex: 1,
+                  padding: '0.8rem',
+                  borderRadius: '4px',
+                  border: '1px solid var(--color-border)',
+                  background: catListingType === "Rent" ? 'var(--color-primary)' : 'transparent',
+                  color: catListingType === "Rent" ? 'white' : 'var(--color-dark)',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                Rent Types
+              </button>
+            </div>
+
             <div style={{ display: "flex", gap: "2rem", flexWrap: "wrap" }}>
               {/* New Category Form */}
               <div style={{ flex: "1 1 300px" }}>
@@ -1449,21 +1490,26 @@ export default function SuperAdminDashboardPage() {
                     </div>
                   ) : (
                     <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginBottom: "1.5rem", maxHeight: "250px", overflowY: "auto", paddingRight: "0.5rem" }}>
-                      {catFields.map((field, index) => (
-                        <div key={index} style={{ display: "flex", gap: "0.5rem", alignItems: "center", backgroundColor: "var(--color-bg-light)", padding: "0.5rem", borderRadius: "4px", border: "1px solid var(--color-border)" }}>
-                          <input 
-                            type="text" 
-                            placeholder="Field Name" 
-                            value={field.name}
-                            onChange={(e) => {
-                              const newFields = [...catFields];
-                              newFields[index].name = e.target.value;
-                              setCatFields(newFields);
-                            }}
-                            className={styles.input}
-                            style={{ flex: 2, padding: "0.4rem" }}
-                            required
-                          />
+                      {catFields.map((field, index) => {
+                        const SuggestedIcon = getIconForField(field.name);
+                        return (
+                          <div key={index} style={{ display: "flex", gap: "0.5rem", alignItems: "center", backgroundColor: "var(--color-bg-light)", padding: "0.5rem", borderRadius: "4px", border: "1px solid var(--color-border)" }}>
+                            <div style={{ padding: "0.4rem", color: "var(--color-primary-dark)", display: "flex", alignItems: "center", justifyContent: "center" }} title={`Suggested Icon for "${field.name}"`}>
+                              <SuggestedIcon size={18} />
+                            </div>
+                            <input 
+                              type="text" 
+                              placeholder="Field Name" 
+                              value={field.name}
+                              onChange={(e) => {
+                                const newFields = [...catFields];
+                                newFields[index].name = e.target.value;
+                                setCatFields(newFields);
+                              }}
+                              className={styles.input}
+                              style={{ flex: 2, padding: "0.4rem" }}
+                              required
+                            />
 
                           <button 
                             type="button" 
@@ -1477,7 +1523,8 @@ export default function SuperAdminDashboardPage() {
                             <Trash2 size={16} />
                           </button>
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
 
@@ -1505,10 +1552,10 @@ export default function SuperAdminDashboardPage() {
 
               {/* Existing Categories List */}
               <div style={{ flex: "1 1 300px" }}>
-                <h3 style={{ fontSize: "1.1rem", marginBottom: "1rem", color: "var(--color-primary-dark)" }}>EXISTING PROPERTY TYPES</h3>
+                <h3 style={{ fontSize: "1.1rem", marginBottom: "1rem", color: "var(--color-primary-dark)" }}>EXISTING PROPERTY TYPES ({catListingType.toUpperCase()})</h3>
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", maxHeight: "350px", overflowY: "auto", paddingRight: "0.5rem" }}>
-                  {categories.length > 0 ? (
-                    categories.map(cat => (
+                  {categories.filter((c: any) => (c.listingType || "Sell") === catListingType).length > 0 ? (
+                    categories.filter((c: any) => (c.listingType || "Sell") === catListingType).map(cat => (
                       <div key={cat._id} style={{ border: "1px solid var(--color-border)", borderRadius: "6px", padding: "0.6rem 0.8rem", backgroundColor: "#fff" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.2rem" }}>
                           <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: 500 }}>{cat.name}</h4>
@@ -1577,6 +1624,44 @@ export default function SuperAdminDashboardPage() {
               {errorMsg && <div className={styles.errorBox}>{errorMsg}</div>}
               {successMsg && <div className={styles.successBox}>{successMsg}</div>}
 
+              {/* Listing Type Toggle at the Top */}
+              <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setPropListingType("Sell")}
+                  style={{
+                    flex: 1,
+                    padding: '0.8rem',
+                    borderRadius: '4px',
+                    border: '1px solid var(--color-border)',
+                    background: propListingType === "Sell" ? 'var(--color-primary)' : 'transparent',
+                    color: propListingType === "Sell" ? 'white' : 'var(--color-dark)',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  Sell
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPropListingType("Rent")}
+                  style={{
+                    flex: 1,
+                    padding: '0.8rem',
+                    borderRadius: '4px',
+                    border: '1px solid var(--color-border)',
+                    background: propListingType === "Rent" ? 'var(--color-primary)' : 'transparent',
+                    color: propListingType === "Rent" ? 'white' : 'var(--color-dark)',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  Rent
+                </button>
+              </div>
+
               <div className={styles.formGrid}>
                 <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
                   <label className={styles.label}>Property Title *</label>
@@ -1629,52 +1714,40 @@ export default function SuperAdminDashboardPage() {
                     className={styles.input}
                     required
                   />
+                  {propPrice && (
+                    <span className={styles.helperText} style={{ marginTop: '0.4rem', display: 'block', color: 'var(--color-primary-dark)', fontWeight: 500 }}>
+                      {formatIndianPrice(Number(propPrice))}
+                    </span>
+                  )}
                 </div>
 
                 <div className={styles.formGroup}>
                   <label className={styles.label}>Property Type *</label>
-                  <select
+                  <CustomSelect
+                    options={
+                      categories.filter((c: any) => (c.listingType || "Sell") === propListingType).length > 0 
+                        ? categories.filter((c: any) => (c.listingType || "Sell") === propListingType).map(c => ({ value: c.name, label: c.name }))
+                        : []
+                    }
                     value={propType}
-                    onChange={(e) => {
-                      setPropType(e.target.value);
+                    onChange={(val) => {
+                      setPropType(val);
                       setPropCustomFields({});
                     }}
-                    className={styles.select}
-                    style={{ border: "1px solid var(--color-border)", padding: "0.8rem 1rem", fontSize: "0.9rem" }}
-                  >
-                    <option value="" disabled>Select Property Type</option>
-                    {categories.length > 0 ? (
-                      categories.map(c => <option key={c._id} value={c.name}>{c.name}</option>)
-                    ) : (
-                      <option value="" disabled>No results found</option>
-                    )}
-                  </select>
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>Listing Type *</label>
-                  <select
-                    value={propListingType}
-                    onChange={(e) => setPropListingType(e.target.value)}
-                    className={styles.select}
-                    style={{ border: "1px solid var(--color-border)", padding: "0.8rem 1rem", fontSize: "0.9rem" }}
-                  >
-                    <option value="Sell">Buy</option>
-                    <option value="Rent">Rent</option>
-                  </select>
-                </div>
-
-                <div className={styles.formGroup} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '1.5rem' }}>
-                  <input
-                    type="checkbox"
-                    id="premiumPropertySuper"
-                    checked={propIsPremium}
-                    onChange={(e) => setPropIsPremium(e.target.checked)}
-                    style={{ width: "18px", height: "18px", cursor: "pointer" }}
+                    placeholder="Select Property Type"
                   />
-                  <label htmlFor="premiumPropertySuper" className={styles.label} style={{ margin: 0, cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                    Premium Property 
-                    <span style={{ fontSize: "0.75rem", color: "var(--color-primary)", fontWeight: "normal" }}>(Shows in Best Properties)</span>
+                </div>
+
+                <div className={styles.formGroup} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                  <label className={styles.label}>Premium Property</label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', marginTop: '0.5rem' }}>
+                    <input
+                      type="checkbox"
+                      checked={propIsPremium}
+                      onChange={(e) => setPropIsPremium(e.target.checked)}
+                      style={{ width: '18px', height: '18px' }}
+                    />
+                    <span style={{ fontSize: '0.9rem', color: 'var(--color-primary)' }}>(SHOWS IN BEST PROPERTIES)</span>
                   </label>
                 </div>
 

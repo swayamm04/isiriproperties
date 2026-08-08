@@ -26,6 +26,7 @@ function LoginContent() {
   const [authMode, setAuthMode] = useState<"login" | "signup" | "forgot_password">("login");
   const [authLoading, setAuthLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const OTP_ENABLED = false; // Toggle this to enable/disable OTP verification
 
   // Form states
   const [password, setPassword] = useState("");
@@ -47,6 +48,20 @@ function LoginContent() {
       setAuthMode(modeParam);
     }
   }, [modeParam]);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (validationError || successMessage || error) {
+      timer = setTimeout(() => {
+        setValidationError("");
+        setSuccessMessage("");
+        clearError();
+      }, 4000);
+    }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [validationError, successMessage, error, clearError]);
 
   const switchMode = (mode: "login" | "signup" | "forgot_password") => {
     setAuthMode(mode);
@@ -70,7 +85,7 @@ function LoginContent() {
     }
     setAuthLoading(true);
     try {
-      await sendOtp(phone);
+      await sendOtp(phone, authMode);
       setOtpSent(true);
       setSuccessMessage("OTP sent successfully!");
     } catch {
@@ -96,20 +111,28 @@ function LoginContent() {
         await login(phone, password);
         router.push("/");
       } else if (authMode === "signup") {
-        if (!name || !phone || !password || !otp) {
+        if (OTP_ENABLED && (!name || !phone || !password || !otp)) {
           setValidationError("All fields and OTP are required.");
           setAuthLoading(false);
           return;
-        }
-        await signup({ name, phone, password, otp });
-        router.push("/");
-      } else if (authMode === "forgot_password") {
-        if (!phone || !otp || !password) {
-          setValidationError("Phone, OTP, and New Password are required.");
+        } else if (!OTP_ENABLED && (!name || !phone || !password)) {
+          setValidationError("All fields are required.");
           setAuthLoading(false);
           return;
         }
-        await forgotPassword(phone, otp, password);
+        await signup({ name, phone, password, otp: OTP_ENABLED ? otp : "000000" });
+        router.push("/");
+      } else if (authMode === "forgot_password") {
+        if (OTP_ENABLED && (!phone || !otp || !password)) {
+          setValidationError("Phone, OTP, and New Password are required.");
+          setAuthLoading(false);
+          return;
+        } else if (!OTP_ENABLED && (!phone || !password)) {
+          setValidationError("Phone and New Password are required.");
+          setAuthLoading(false);
+          return;
+        }
+        await forgotPassword(phone, OTP_ENABLED ? otp : "000000", password);
         switchMode("login");
         setPassword("");
         setSuccessMessage("Password updated successfully. Please login.");
@@ -185,7 +208,7 @@ function LoginContent() {
                 <label className={styles.formLabel}>Phone Number</label>
                 <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
                   <Phone size={18} className={styles.inputIcon} />
-                  <input type="tel" placeholder="Phone Number" value={phone} onChange={(e) => setPhone(e.target.value)} className={styles.inputField} required disabled={otpSent} />
+                  <input type="tel" pattern="[6-9][0-9]{9}" title="10-digit mobile number starting with 6-9" maxLength={10} placeholder="Phone Number" value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))} className={styles.inputField} required disabled={OTP_ENABLED && otpSent} />
                 </div>
               </div>
               <div className={styles.formGroup} style={{ marginBottom: "1.5rem" }}>
@@ -199,7 +222,7 @@ function LoginContent() {
                 </div>
               </div>
 
-              {otpSent && (
+              {OTP_ENABLED && otpSent && (
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel} style={{ textAlign: "center", display: "block" }}>Enter OTP</label>
                   {renderOtpInputs()}
@@ -210,21 +233,24 @@ function LoginContent() {
 
           {authMode === "forgot_password" && (
             <>
-              {!otpSent ? (
+              {(!OTP_ENABLED || !otpSent) ? (
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>Registered Phone Number</label>
                   <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
                     <Phone size={18} className={styles.inputIcon} />
-                    <input type="tel" placeholder="Phone Number" value={phone} onChange={(e) => setPhone(e.target.value)} className={styles.inputField} required />
+                    <input type="tel" pattern="[6-9][0-9]{9}" title="10-digit mobile number starting with 6-9" maxLength={10} placeholder="Phone Number" value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))} className={styles.inputField} required />
                   </div>
                 </div>
-              ) : (
-                <>
+              ) : null}
+              
+              {(OTP_ENABLED && otpSent) && (
                   <div className={styles.formGroup}>
                     <label className={styles.formLabel} style={{ textAlign: "center", display: "block" }}>Enter OTP</label>
                     {renderOtpInputs()}
                   </div>
+              )}
 
+              {(!OTP_ENABLED || otpSent) && (
                   <div className={styles.formGroup}>
                     <label className={styles.formLabel}>New Password</label>
                     <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
@@ -235,7 +261,6 @@ function LoginContent() {
                       </button>
                     </div>
                   </div>
-                </>
               )}
             </>
           )}
@@ -246,7 +271,7 @@ function LoginContent() {
                 <label className={styles.formLabel}>Phone Number</label>
                 <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
                   <Phone size={18} className={styles.inputIcon} />
-                  <input type="tel" placeholder="Phone Number" value={phone} onChange={(e) => setPhone(e.target.value)} className={styles.inputField} required />
+                  <input type="tel" pattern="[6-9][0-9]{9}" title="10-digit mobile number starting with 6-9" maxLength={10} placeholder="Phone Number" value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))} className={styles.inputField} required />
                 </div>
               </div>
               <div className={styles.formGroup} style={{ marginBottom: "0.5rem" }}>
@@ -268,20 +293,20 @@ function LoginContent() {
           )}
 
           <button
-            type={authMode === "login" || (authMode === "signup" && otpSent) || (authMode === "forgot_password" && otpSent) ? "submit" : "button"}
+            type={authMode === "login" || (authMode === "signup" && (!OTP_ENABLED || otpSent)) || (authMode === "forgot_password" && (!OTP_ENABLED || otpSent)) ? "submit" : "button"}
             className={styles.submitBtn}
             disabled={authLoading}
             onClick={
-              authMode === "signup" && !otpSent ? handleSendOtp :
-                authMode === "forgot_password" && !otpSent ? handleSendOtp :
+              authMode === "signup" && OTP_ENABLED && !otpSent ? handleSendOtp :
+                authMode === "forgot_password" && OTP_ENABLED && !otpSent ? handleSendOtp :
                     undefined
             }
           >
             {authLoading ? "Please wait..." :
               authMode === "login" ? "Login" :
-                authMode === "signup" && !otpSent ? "Send OTP" :
+                authMode === "signup" && OTP_ENABLED && !otpSent ? "Send OTP" :
                   authMode === "signup" ? "Create Account" :
-                      authMode === "forgot_password" && !otpSent ? "Send OTP" :
+                      authMode === "forgot_password" && OTP_ENABLED && !otpSent ? "Send OTP" :
                         "Reset Password"}
           </button>
         </form>

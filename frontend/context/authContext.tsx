@@ -24,7 +24,7 @@ interface AuthContextType {
   toggleWishlist: (propertyId: string) => Promise<boolean>;
   refreshProfile: () => Promise<void>;
   clearError: () => void;
-  sendOtp: (phone: string) => Promise<boolean>;
+  sendOtp: (phone: string, mode?: string) => Promise<boolean>;
   forgotPassword: (phone: string, otp: string, newPassword: string) => Promise<boolean>;
   updatePhone: (newPhone: string, currentPassword: string) => Promise<boolean>;
   updateProfileImage: (file: File) => Promise<boolean>;
@@ -179,12 +179,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const clearError = () => setError(null);
 
-  const sendOtp = async (phone: string): Promise<boolean> => {
+  const sendOtp = async (phone: string, mode?: string): Promise<boolean> => {
     setError(null);
     try {
       await apiRequest("/auth/send-otp", {
         method: "POST",
-        body: JSON.stringify({ phone }),
+        body: JSON.stringify({ phone, mode }),
       });
       return true;
     } catch (err: any) {

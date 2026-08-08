@@ -24,6 +24,7 @@ import { Loader2, Plus, Edit, Trash2, LayoutGrid, CheckCircle2, Copy } from "luc
 import Link from "next/link";
 import Image from "next/image";
 import Loader from "@/components/Loader";
+import CustomSelect from "@/components/CustomSelect";
 import { formatIndianPrice } from "@/utils/formatPrice";
 import styles from "./page.module.css";
 
@@ -81,7 +82,7 @@ export default function AdminDashboardPage() {
   const [city, setCity] = useState("");
   const [location, setLocation] = useState("");
   const [price, setPrice] = useState("");
-  const [type, setType] = useState("");
+  const [propType, setPropType] = useState("");
   const [propListingType, setPropListingType] = useState("Sell");
   const [propIsPremium, setPropIsPremium] = useState(false);
   const [description, setDescription] = useState("");
@@ -169,7 +170,7 @@ export default function AdminDashboardPage() {
     setAddError("");
     setAddSuccess("");
 
-    if (!title || !city || !location || !price || !type || !description) {
+    if (!title || !city || !location || !price || !propType || !description) {
       setAddError("Please fill out all required fields.");
       setAddLoading(false);
       return;
@@ -181,7 +182,7 @@ export default function AdminDashboardPage() {
       formData.append("city", city);
       formData.append("location", location);
       formData.append("price", price);
-      formData.append("type", type);
+      formData.append("type", propType);
       formData.append("listingType", propListingType);
       formData.append("isPremium", String(propIsPremium));
       formData.append("description", description);
@@ -215,7 +216,7 @@ export default function AdminDashboardPage() {
       setCity("");
       setLocation("");
       setPrice("");
-      setType("");
+      setPropType("");
       setPropListingType("Sell");
       setPropIsPremium(false);
       setPropCustomFields({});
@@ -270,7 +271,7 @@ export default function AdminDashboardPage() {
       setCity(fullProp.city || "");
       setLocation(fullProp.location || "");
       setPrice(fullProp.price?.toString() || "");
-      setType(fullProp.type || "");
+      setPropType(fullProp.type || "");
       setPropListingType(fullProp.listingType || "Sell");
       setPropIsPremium(fullProp.isPremium || false);
       setDescription(fullProp.description || "");
@@ -474,7 +475,7 @@ export default function AdminDashboardPage() {
                     setCity("");
                     setLocation("");
                     setPrice("");
-                    setType("");
+                    setPropType("");
                     setPropListingType("Sell");
                     setPropIsPremium(false);
                     setDescription("");
@@ -671,6 +672,44 @@ export default function AdminDashboardPage() {
               {addError && <div className={styles.errorBox}>{addError}</div>}
               {addSuccess && <div className={styles.successBox}>{addSuccess}</div>}
 
+              {/* Listing Type Toggle at the Top */}
+              <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setPropListingType("Sell")}
+                  style={{
+                    flex: 1,
+                    padding: '0.8rem',
+                    borderRadius: '4px',
+                    border: '1px solid var(--color-border)',
+                    background: propListingType === "Sell" ? 'var(--color-primary)' : 'transparent',
+                    color: propListingType === "Sell" ? 'white' : 'var(--color-dark)',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  Sell
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPropListingType("Rent")}
+                  style={{
+                    flex: 1,
+                    padding: '0.8rem',
+                    borderRadius: '4px',
+                    border: '1px solid var(--color-border)',
+                    background: propListingType === "Rent" ? 'var(--color-primary)' : 'transparent',
+                    color: propListingType === "Rent" ? 'white' : 'var(--color-dark)',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  Rent
+                </button>
+              </div>
+
               <div className={styles.formGrid}>
                 <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
                   <label className={styles.label}>Property Title *</label>
@@ -723,44 +762,34 @@ export default function AdminDashboardPage() {
                     className={styles.input}
                     required
                   />
+                  {price && (
+                    <span className={styles.helperText} style={{ marginTop: '0.4rem', display: 'block', color: 'var(--color-primary-dark)', fontWeight: 500 }}>
+                      {formatIndianPrice(Number(price))}
+                    </span>
+                  )}
                 </div>
 
                 <div className={styles.formGroup}>
                   <label className={styles.label}>Property Type *</label>
-                  <select
-                    value={type}
-                    onChange={(e) => {
-                      setType(e.target.value);
+                  <CustomSelect
+                    options={
+                      categories.filter((c: any) => (c.listingType || "Sell") === propListingType).length > 0 
+                        ? categories.filter((c: any) => (c.listingType || "Sell") === propListingType).map(c => ({ value: c.name, label: c.name }))
+                        : []
+                    }
+                    value={propType}
+                    onChange={(val) => {
+                      setPropType(val);
                       setPropCustomFields({});
                     }}
-                    className={styles.select}
-                    style={{ border: "1px solid var(--color-border)", padding: "0.8rem 1rem", fontSize: "0.9rem" }}
-                  >
-                    <option value="" disabled>Select Property Type</option>
-                    {categories.length > 0 ? (
-                      categories.map(c => <option key={c._id} value={c.name}>{c.name}</option>)
-                    ) : (
-                      <option value="" disabled>No results found</option>
-                    )}
-                  </select>
+                    placeholder="Select Property Type"
+                  />
                 </div>
 
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>Listing Type *</label>
-                  <select
-                    value={propListingType}
-                    onChange={(e) => setPropListingType(e.target.value)}
-                    className={styles.select}
-                    style={{ border: "1px solid var(--color-border)", padding: "0.8rem 1rem", fontSize: "0.9rem" }}
-                  >
-                    <option value="Sell">Buy</option>
-                    <option value="Rent">Rent</option>
-                  </select>
-                </div>
 
 
                 {/* Custom Fields Rendering */}
-                {categories.find(c => c.name === type)?.fields.map(field => (
+                {categories.find(c => c.name === propType)?.fields.map(field => (
                   <div key={field.name} className={styles.formGroup}>
                     <label className={styles.label}>{field.name} {field.unit ? `(${field.unit})` : ""}</label>
                     <input
