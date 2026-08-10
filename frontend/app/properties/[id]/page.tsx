@@ -3,13 +3,20 @@
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowLeft, Heart, MapPin, Bed, Bath, Compass, Calendar, User, Eye, CheckCircle, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ArrowLeft, Heart, MapPin, Bed, Bath, Compass, Calendar, User, Eye, CheckCircle, ChevronLeft, ChevronRight, X, Phone, MessageSquare, Maximize, Car, MessageCircle } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Loader from "@/components/Loader";
+import PropertySlider from "@/components/PropertySlider";
 import { useAuth } from "@/context/authContext";
 import { apiRequest, getImageUrl } from "@/utils/api";
 import styles from "./page.module.css";
+
+const WhatsAppIcon = ({ size = 18 }: { size?: number }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.82 9.82 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.81 11.81 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.88 11.88 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.82 11.82 0 0 0-3.48-8.413Z"/>
+  </svg>
+);
 
 interface PropertyDetail {
   _id: string;
@@ -142,20 +149,36 @@ export default function PropertyDetailPage() {
     setActiveImageIdx((prev) => (prev - 1 + property.images.length) % property.images.length);
   };
 
-  const formattedPrice = new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(property.price);
+  const formatPriceLakhCrore = (value: number) => {
+    if (!value) return "Rs 0";
+    if (value >= 10000000) {
+      return `Rs ${(value / 10000000).toFixed(2).replace(/\.00$/, "")} Cr`;
+    }
+    if (value >= 100000) {
+      return `Rs ${(value / 100000).toFixed(2).replace(/\.00$/, "")} Lakh`;
+    }
+    return `Rs ${value.toLocaleString("en-IN")}`;
+  };
+
+  const formattedPrice = formatPriceLakhCrore(property.price);
+
+  const getIconForField = (key: string) => {
+    const k = key.toLowerCase();
+    if (k.includes('car') || k.includes('park') || k.includes('garage')) return <Car size={18} className={styles.featureIcon} />;
+    if (k.includes('face') || k.includes('direction')) return <Compass size={18} className={styles.featureIcon} />;
+    if (k.includes('year') || k.includes('built')) return <Calendar size={18} className={styles.featureIcon} />;
+    if (k.includes('size') || k.includes('area')) return <Maximize size={18} className={styles.featureIcon} />;
+    if (k.includes('room') || k.includes('bed')) return <Bed size={18} className={styles.featureIcon} />;
+    if (k.includes('bath')) return <Bath size={18} className={styles.featureIcon} />;
+    return <CheckCircle size={18} className={styles.featureIcon} />;
+  };
 
   return (
     <>
-      <Navbar />
+      <div className={styles.desktopNavbar}>
+        <Navbar />
+      </div>
       <main className={styles.container}>
-        <button onClick={() => router.back()} className={styles.backLink} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit' }}>
-          <ArrowLeft size={14} /> Back
-        </button>
-
         <div className={styles.grid}>
           {/* Left Column: Image Slider */}
           <div>
@@ -169,7 +192,17 @@ export default function PropertyDetailPage() {
                 />
               ))}
 
-              <div className={styles.badge}>{property.type}</div>
+              <button 
+                onClick={(e) => {
+                  e.preventDefault();
+                  router.back();
+                }} 
+                className={styles.floatingBackBtn} 
+                aria-label="Go back"
+                style={{ zIndex: 100 }}
+              >
+                <ArrowLeft size={18} color="#000" />
+              </button>
               
               {property.status === "sold" && (
                 <div className={styles.soldBadge}>Sold Out</div>
@@ -184,6 +217,19 @@ export default function PropertyDetailPage() {
                   <button onClick={nextImage} className={`${styles.carouselControl} ${styles.nextBtn}`} aria-label="Next image">
                     <ChevronRight size={20} />
                   </button>
+                  {/* Dot Indicators */}
+                  <div className={styles.dotsContainer}>
+                    {property.images.map((_, idx) => (
+                      <div
+                        key={idx}
+                        className={`${styles.dot} ${idx === activeImageIdx ? styles.activeDot : ""}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActiveImageIdx(idx);
+                        }}
+                      />
+                    ))}
+                  </div>
                 </>
               )}
             </div>
@@ -213,8 +259,8 @@ export default function PropertyDetailPage() {
             <div className={styles.headerSection}>
               <span className={styles.refNumber}>Ref ID: #{property.propertyId}</span>
               <div className={styles.titleRow}>
-                <h1 className={styles.title}>{property.title}</h1>
                 <span className={styles.price}>{formattedPrice}</span>
+                <h1 className={styles.title}>{property.title}</h1>
               </div>
               {user && (
                 <span className={styles.location}>
@@ -224,34 +270,63 @@ export default function PropertyDetailPage() {
               )}
             </div>
 
-            {/* Specifications Table */}
-            <div className={styles.specsTable}>
-              {property.customFields && Object.keys(property.customFields).length > 0 ? (
-                Object.entries(property.customFields).map(([key, value]) => (
-                  <div key={key} className={styles.specRow}>
-                    <span className={styles.specLabel}>
-                      <CheckCircle size={14} style={{ display: "inline", marginRight: "4px", verticalAlign: "middle" }} /> {key}
-                    </span>
-                    <span className={styles.specVal}>{String(value)}</span>
+            {/* Features Grid (Mobile UI style) */}
+            <div className={styles.featuresGrid}>
+              {property.beds > 0 && (
+                <div className={styles.featureCard}>
+                  <Bed size={18} className={styles.featureIcon} />
+                  <div className={styles.featureData}>
+                    <span className={styles.featureVal}>{property.beds}</span>
+                    <span className={styles.featureLabel}>Bedrooms</span>
                   </div>
-                ))
-              ) : (
-                <div className={styles.specRow}>
-                  <span className={styles.specLabel}>
-                    <CheckCircle size={14} style={{ display: "inline", marginRight: "4px", verticalAlign: "middle" }} /> Details
-                  </span>
-                  <span className={styles.specVal}>Available upon inquiry</span>
                 </div>
               )}
+              {property.baths > 0 && (
+                <div className={styles.featureCard}>
+                  <Bath size={18} className={styles.featureIcon} />
+                  <div className={styles.featureData}>
+                    <span className={styles.featureVal}>{property.baths}</span>
+                    <span className={styles.featureLabel}>Bathrooms</span>
+                  </div>
+                </div>
+              )}
+              {property.area && (
+                <div className={styles.featureCard}>
+                  <Maximize size={18} className={styles.featureIcon} />
+                  <div className={styles.featureData}>
+                    <span className={styles.featureVal}>{property.area}</span>
+                    <span className={styles.featureLabel}>Area</span>
+                  </div>
+                </div>
+              )}
+              {property.customFields && Object.entries(property.customFields).slice(0, 3).map(([key, value]) => (
+                <div key={key} className={styles.featureCard}>
+                  {getIconForField(key)}
+                  <div className={styles.featureData}>
+                    <span className={styles.featureVal}>{String(value)}</span>
+                    <span className={styles.featureLabel}>{key}</span>
+                  </div>
+                </div>
+              ))}
             </div>
 
             <div className={styles.descriptionSection}>
-              <h3 className={styles.descriptionTitle}>Architectural Review</h3>
+              <h3 className={styles.descriptionTitle}>Overview</h3>
               <p className={styles.description}>{property.description}</p>
             </div>
 
             {/* Action buttons */}
             <div className={styles.actionGroup}>
+              <a
+                href={`https://wa.me/919999999999?text=Hi, I am interested in property ${property.title}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`${styles.actionBtn} ${styles.whatsappBtn}`}
+              >
+                <WhatsAppIcon size={20} />
+                <span>WhatsApp</span>
+              </a>
+
               <button
                 onClick={() => {
                   if (user) {
@@ -260,25 +335,26 @@ export default function PropertyDetailPage() {
                     router.push("/login");
                   }
                 }}
-                className={styles.interestBtn}
+                className={`${styles.actionBtn} ${styles.chatBtn}`}
                 disabled={property.status === "sold"}
-                style={property.status === "sold" ? { backgroundColor: "#888", borderColor: "#888", cursor: "not-allowed" } : {}}
               >
-                {property.status === "sold" ? "Sold Out" : "I am Interested"}
+                <MessageSquare size={18} />
+                <span>Chat</span>
               </button>
-              
-              {(!user || user.role === "user") && (
-                <button
-                  onClick={handleWishlistToggle}
-                  className={`${styles.wishlistBtn} ${isWishlisted ? styles.wishlistedActive : ""}`}
-                  title={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
-                  aria-label="Wishlist"
-                >
-                  <Heart size={20} fill={isWishlisted ? "#e05e5e" : "transparent"} />
-                </button>
-              )}
+
+              <a href="tel:+919999999999" className={`${styles.actionBtn} ${styles.callBtn}`}>
+                <Phone size={18} />
+                <span>Call</span>
+              </a>
+
+
             </div>
           </div>
+        </div>
+
+        {/* Similar Properties / Property Slider */}
+        <div style={{ marginTop: "4rem" }}>
+          <PropertySlider showAll={true} excludeId={property._id} />
         </div>
       </main>
       <Footer />

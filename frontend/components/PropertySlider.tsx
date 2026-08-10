@@ -21,33 +21,49 @@ interface Property {
   description: string;
 }
 
-export default function PropertySlider() {
+interface PropertySliderProps {
+  excludeId?: string;
+  showAll?: boolean;
+}
+
+export default function PropertySlider({ excludeId, showAll }: PropertySliderProps = {}) {
   const sliderRef = useRef<HTMLDivElement>(null);
 
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadFeaturedProperties = async () => {
+    const loadProperties = async () => {
       try {
         setLoading(true);
         const listingType = sessionStorage.getItem("homeListingType") || "Sell";
-        const data = await apiRequest(`/properties?status=available&isPremium=true&listingType=${listingType}`);
-        setProperties(data.slice(0, 4)); // Get first 4 properties
+        
+        let url = `/properties?status=available`;
+        if (!showAll) {
+          url += `&isPremium=true&listingType=${listingType}`;
+        }
+        
+        let data = await apiRequest(url);
+        
+        if (excludeId) {
+          data = data.filter((p: any) => p._id !== excludeId);
+        }
+        
+        setProperties(showAll ? data : data.slice(0, 4));
       } catch (err) {
-        console.error("Failed to load featured properties for slider:", err);
+        console.error("Failed to load properties for slider:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    loadFeaturedProperties();
+    loadProperties();
     
-    window.addEventListener("homeListingTypeChanged", loadFeaturedProperties);
+    window.addEventListener("homeListingTypeChanged", loadProperties);
     return () => {
-      window.removeEventListener("homeListingTypeChanged", loadFeaturedProperties);
+      window.removeEventListener("homeListingTypeChanged", loadProperties);
     };
-  }, []);
+  }, [excludeId, showAll]);
 
   const scrollLeft = () => {
     if (sliderRef.current) {
@@ -79,8 +95,8 @@ export default function PropertySlider() {
         {/* Header Block */}
         <div className={styles.header}>
           <div className={styles.titleBlock}>
-            <span className={styles.subtitle}>FEATURED PROPERTIES</span>
-            <h2 className={styles.title}>Explore Our Best Properties</h2>
+            <span className={styles.subtitle}>{showAll ? "OTHER PROPERTIES" : "FEATURED PROPERTIES"}</span>
+            <h2 className={styles.title}>{showAll ? "Explore Similar Properties" : "Explore Our Best Properties"}</h2>
           </div>
           <div className={styles.headerControls}>
             <div className={styles.navArrows}>
@@ -91,9 +107,11 @@ export default function PropertySlider() {
                 <ArrowRight size={20} />
               </button>
             </div>
-            <Link href="/properties" className={styles.viewAllBtn}>
-              All <ArrowRight size={16} />
-            </Link>
+            {!showAll && (
+              <Link href="/properties" className={styles.viewAllBtn}>
+                All <ArrowRight size={16} />
+              </Link>
+            )}
           </div>
         </div>
 
