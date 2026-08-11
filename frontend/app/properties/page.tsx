@@ -231,7 +231,6 @@ function PropertiesList() {
                 isPremium: property.isPremium,
                 description: property.description,
                 customFields: (property as any).customFields,
-                listingType: property.listingType,
               };
 
               return <PropertyCard key={mappedProp.id} property={mappedProp} />;
