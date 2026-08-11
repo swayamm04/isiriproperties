@@ -19,6 +19,8 @@ interface Property {
   area: string;
   type: "Villa" | "Chalet" | "Penthouse" | "Site";
   description: string;
+  listingType?: "Sell" | "Rent";
+  isPremium?: boolean;
 }
 
 export default function NormalProperties() {
