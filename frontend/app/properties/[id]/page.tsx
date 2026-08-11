@@ -57,6 +57,43 @@ export default function PropertyDetailPage() {
   const [interestLoading, setInterestLoading] = useState(false);
   const [interestSuccess, setInterestSuccess] = useState("");
   const [interestError, setInterestError] = useState("");
+
+  const openFullscreen = () => {
+    window.history.pushState({ isModalOpen: true }, '');
+    setIsFullscreen(true);
+  };
+
+  const closeFullscreen = () => {
+    setIsFullscreen(false);
+    if (window.history.state?.isModalOpen) {
+      window.history.back();
+    }
+  };
+
+  const openInterestModal = () => {
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+    window.history.pushState({ isModalOpen: true }, '');
+    setIsInterestModalOpen(true);
+  };
+
+  const closeInterestModal = () => {
+    setIsInterestModalOpen(false);
+    if (window.history.state?.isModalOpen) {
+      window.history.back();
+    }
+  };
+
+  useEffect(() => {
+    const handlePopState = () => {
+      if (isFullscreen) setIsFullscreen(false);
+      if (isInterestModalOpen) setIsInterestModalOpen(false);
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [isFullscreen, isInterestModalOpen]);
   
   // Custom Alert Modal state removed
 
@@ -134,7 +171,7 @@ export default function PropertyDetailPage() {
       });
       setInterestSuccess("Your request has been successfully submitted to the Super Admin. Our office will reach out shortly.");
       setTimeout(() => {
-        setIsInterestModalOpen(false);
+        closeInterestModal();
         setInterestSuccess("");
       }, 3000);
     } catch (err: any) {
@@ -225,7 +262,7 @@ export default function PropertyDetailPage() {
                   src={getImageUrl(img)}
                   alt={`${property.title} - View ${idx + 1}`}
                   className={`${styles.carouselImage} ${idx === activeImageIdx ? styles.activeImage : ""}`}
-                  onClick={() => setIsFullscreen(true)}
+                  onClick={openFullscreen}
                   style={{ cursor: "pointer" }}
                 />
               ))}
@@ -366,13 +403,7 @@ export default function PropertyDetailPage() {
               </a>
 
               <button
-                onClick={() => {
-                  if (user) {
-                    setIsInterestModalOpen(true);
-                  } else {
-                    router.push("/login");
-                  }
-                }}
+                onClick={openInterestModal}
                 className={`${styles.actionBtn} ${styles.chatBtn}`}
                 disabled={property.status === "sold"}
               >
@@ -399,9 +430,9 @@ export default function PropertyDetailPage() {
 
       {/* Interest Submission Modal */}
       {isInterestModalOpen && (
-        <div className={styles.modalOverlay} onClick={() => setIsInterestModalOpen(false)}>
+        <div className={styles.modalOverlay} onClick={closeInterestModal}>
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <button className={styles.closeBtn} onClick={() => setIsInterestModalOpen(false)}>
+            <button className={styles.closeBtn} onClick={closeInterestModal}>
               <X size={20} />
             </button>
 
@@ -449,8 +480,8 @@ export default function PropertyDetailPage() {
 
       {/* Fullscreen Image Modal */}
       {isFullscreen && (
-        <div className={styles.fullscreenOverlay} onClick={() => setIsFullscreen(false)}>
-          <button className={styles.closeFullscreenBtn} onClick={() => setIsFullscreen(false)}>
+        <div className={styles.fullscreenOverlay} onClick={closeFullscreen}>
+          <button className={styles.closeFullscreenBtn} onClick={closeFullscreen}>
             <X size={32} />
           </button>
           
