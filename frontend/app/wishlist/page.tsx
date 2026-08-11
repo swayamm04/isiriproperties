@@ -23,6 +23,7 @@ interface Property {
   type: "Villa" | "Chalet" | "Penthouse" | "Site";
   description: string;
   status: "available" | "sold";
+  listingType?: "Sell" | "Rent";
 }
 
 export default function WishlistPage() {
@@ -88,7 +89,7 @@ export default function WishlistPage() {
             {wishlistedProps.map((prop) => {
               // Map backend schema to what PropertyCard expects
               const mappedProp = {
-                id: prop._id,
+                id: prop.propertyId || prop._id,
                 title: prop.title,
                 location: prop.location,
                 price: prop.price,
