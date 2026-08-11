@@ -465,7 +465,7 @@
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
-  z-index: 1000;
+  z-index: 1010;
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -559,6 +559,9 @@
   justify-content: space-between;
   align-items: center;
   padding: 0 2.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 }
 
 .menuToggle {
@@ -747,6 +750,10 @@
   gap: 1rem;
 }
 
+.sidebarCloseBtn {
+  display: none;
+}
+
 /* Responsive Sidebar overrides */
 @media (max-width: 900px) {
   .sidebar {
@@ -780,13 +787,36 @@
     display: none !important;
   }
   
+  .sidebarCloseBtn {
+    display: none;
+    position: absolute;
+    right: -24px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 48px;
+    background-color: #1A262E;
+    border-radius: 0 8px 8px 0;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-primary);
+    cursor: pointer;
+    border: 1px solid rgba(76, 131, 161, 0.2);
+    border-left: none;
+    z-index: 1001;
+  }
+
+  .sidebarOpen .sidebarCloseBtn {
+    display: flex;
+  }
+  
   .tableContainer {
     overflow-x: auto;
-    min-height: 300px;
   }
   
   .contentBody {
     padding: 1.5rem;
+    padding-bottom: 100px;
   }
 }
 
@@ -815,6 +845,7 @@
 
   .contentBody {
     padding: 1rem;
+    padding-bottom: 120px; /* Prevent bottom nav from overlapping */
   }
 
   .title {
@@ -882,8 +913,10 @@
   }
 
   .modalContent {
-    padding: 1rem 0.8rem !important;
-    width: 96% !important;
+    padding: 1.25rem 1rem !important;
+    width: 90% !important;
+    max-height: 85vh !important;
+    border-radius: 8px;
   }
   
   .modalContent h2 {

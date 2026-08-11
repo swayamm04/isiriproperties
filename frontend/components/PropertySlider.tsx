@@ -36,7 +36,7 @@ export default function PropertySlider({ excludeId, showAll }: PropertySliderPro
     const loadProperties = async () => {
       try {
         setLoading(true);
-        const listingType = sessionStorage.getItem("homeListingType") || "Sell";
+        const listingType = sessionStorage.getItem("homeListingType") || "All";
         
         let url = `/properties?status=available`;
         if (!showAll) {
@@ -130,6 +130,7 @@ export default function PropertySlider({ excludeId, showAll }: PropertySliderPro
               type: property.type,
               description: property.description,
               customFields: (property as any).customFields,
+              listingType: property.listingType,
             };
 
             return (

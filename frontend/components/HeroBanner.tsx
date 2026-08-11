@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Search, Handshake, Key } from "lucide-react";
+import { ArrowRight, Search, Handshake, Key, LayoutGrid } from "lucide-react";
 import Loader from "@/components/Loader";
 import { apiRequest } from "@/utils/api";
 import styles from "./HeroBanner.module.css";
@@ -40,7 +40,7 @@ export default function HeroBanner() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      setSelectedType(sessionStorage.getItem("homeListingType") || "Sell");
+      setSelectedType(sessionStorage.getItem("homeListingType") || "All");
     }
   }, []);
 
@@ -55,7 +55,11 @@ export default function HeroBanner() {
     const delayDebounceFn = setTimeout(() => {
       if (searchQuery.length >= 2) {
         setIsSearching(true);
-        apiRequest(`/properties?status=available&search=${searchQuery}`)
+        let url = `/properties?status=available&search=${searchQuery}`;
+        if (selectedType !== "All") {
+          url += `&listingType=${selectedType}`;
+        }
+        apiRequest(url)
           .then((data) => {
             setSuggestions(data);
             setIsDropdownOpen(true);
@@ -143,6 +147,15 @@ export default function HeroBanner() {
         </div>
         
         <div className={styles.mobileActionButtons}>
+          <button 
+            className={`${styles.circleBtn} ${selectedType === 'All' ? styles.circleBtnActive : ''}`} 
+            onClick={() => handleSelection('All')}
+          >
+            <div className={styles.circleIconWrapper}>
+              <LayoutGrid size={20} strokeWidth={1.5} />
+            </div>
+            <span>All</span>
+          </button>
           <button 
             className={`${styles.circleBtn} ${selectedType === 'Sell' ? styles.circleBtnActive : ''}`} 
             onClick={() => handleSelection('Sell')}

@@ -51,7 +51,7 @@ function PropertiesList() {
     const type = searchParams.get("type") || "";
     const city = searchParams.get("city") || "";
     const storedListingType = typeof window !== "undefined" ? sessionStorage.getItem("homeListingType") : "";
-    const listingType = searchParams.get("listingType") || storedListingType || "";
+    const listingType = searchParams.get("listingType") || storedListingType || "All";
 
     if (loc) setSearchQuery(loc);
     if (type) setSelectedType(type);
@@ -231,6 +231,7 @@ function PropertiesList() {
                 isPremium: property.isPremium,
                 description: property.description,
                 customFields: (property as any).customFields,
+                listingType: property.listingType,
               };
 
               return <PropertyCard key={mappedProp.id} property={mappedProp} />;

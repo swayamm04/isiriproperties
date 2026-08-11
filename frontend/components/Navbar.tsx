@@ -12,7 +12,7 @@ import styles from "./Navbar.module.css";
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [selectedType, setSelectedType] = useState("Sell");
+  const [selectedType, setSelectedType] = useState("All");
   const [isDesktopSearchOpen, setIsDesktopSearchOpen] = useState(false);
   const [desktopSearchQuery, setDesktopSearchQuery] = useState("");
   const [suggestions, setSuggestions] = useState<any[]>([]);
@@ -24,10 +24,10 @@ export default function Navbar() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      setSelectedType(sessionStorage.getItem("homeListingType") || "Sell");
+      setSelectedType(sessionStorage.getItem("homeListingType") || "All");
       
       const handleTypeChange = () => {
-        setSelectedType(sessionStorage.getItem("homeListingType") || "Sell");
+        setSelectedType(sessionStorage.getItem("homeListingType") || "All");
       };
       
       window.addEventListener("homeListingTypeChanged", handleTypeChange);
@@ -54,7 +54,11 @@ export default function Navbar() {
     const delayDebounceFn = setTimeout(() => {
       if (desktopSearchQuery.trim().length >= 2) {
         setIsSearching(true);
-        apiRequest(`/properties?status=available&search=${desktopSearchQuery.trim()}`)
+        let url = `/properties?status=available&search=${desktopSearchQuery.trim()}`;
+        if (selectedType !== "All") {
+          url += `&listingType=${selectedType}`;
+        }
+        apiRequest(url)
           .then((data) => {
             setSuggestions(data);
           })
@@ -92,7 +96,11 @@ export default function Navbar() {
   const handleDesktopSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (desktopSearchQuery.trim()) {
-      router.push(`/properties?search=${encodeURIComponent(desktopSearchQuery.trim())}`);
+      let url = `/properties?search=${encodeURIComponent(desktopSearchQuery.trim())}`;
+      if (selectedType !== "All") {
+        url += `&listingType=${selectedType}`;
+      }
+      router.push(url);
       setIsDesktopSearchOpen(false);
       setDesktopSearchQuery("");
     }
@@ -232,6 +240,7 @@ export default function Navbar() {
                   Logout
                 </button>
                 <div className={styles.desktopToggle}>
+                  <button className={`${styles.toggleBtn} ${selectedType === 'All' ? styles.toggleBtnActive : ''}`} onClick={() => handleSelection('All')}>All</button>
                   <button className={`${styles.toggleBtn} ${selectedType === 'Sell' ? styles.toggleBtnActive : ''}`} onClick={() => handleSelection('Sell')}>Buy</button>
                   <button className={`${styles.toggleBtn} ${selectedType === 'Rent' ? styles.toggleBtnActive : ''}`} onClick={() => handleSelection('Rent')}>Rent</button>
                 </div>
@@ -245,6 +254,7 @@ export default function Navbar() {
                   Login Free
                 </Link>
                 <div className={styles.desktopToggle}>
+                  <button className={`${styles.toggleBtn} ${selectedType === 'All' ? styles.toggleBtnActive : ''}`} onClick={() => handleSelection('All')}>All</button>
                   <button className={`${styles.toggleBtn} ${selectedType === 'Sell' ? styles.toggleBtnActive : ''}`} onClick={() => handleSelection('Sell')}>Buy</button>
                   <button className={`${styles.toggleBtn} ${selectedType === 'Rent' ? styles.toggleBtnActive : ''}`} onClick={() => handleSelection('Rent')}>Rent</button>
                 </div>

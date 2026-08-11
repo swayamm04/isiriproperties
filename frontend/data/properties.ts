@@ -10,6 +10,7 @@ export interface Property {
   type: "Villa" | "Chalet" | "Penthouse" | "Site";
   description: string;
   customFields?: any;
+  listingType?: string;
 }
 
 export const PROPERTIES: Property[] = [

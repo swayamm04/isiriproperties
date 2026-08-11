@@ -47,6 +47,9 @@ export default function PropertyDetailPage() {
 
   // Carousel state
   const [activeImageIdx, setActiveImageIdx] = useState(0);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [touchStart, setTouchStart] = useState(0);
+  const [touchEnd, setTouchEnd] = useState(0);
 
   // Interest Modal state
   const [isInterestModalOpen, setIsInterestModalOpen] = useState(false);
@@ -141,6 +144,30 @@ export default function PropertyDetailPage() {
     }
   };
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe) {
+      nextImage();
+    } else if (isRightSwipe) {
+      prevImage();
+    }
+
+    setTouchStart(0);
+    setTouchEnd(0);
+  };
+
   const nextImage = () => {
     setActiveImageIdx((prev) => (prev + 1) % property.images.length);
   };
@@ -173,6 +200,10 @@ export default function PropertyDetailPage() {
     return <CheckCircle size={18} className={styles.featureIcon} />;
   };
 
+  const whatsappHref = property 
+    ? `https://wa.me/919964496644?text=${encodeURIComponent(`Hi, I am interested in this property:\n\n*${property.title}*\nRef ID: #${property.propertyId}\n\nProperty Link:\n${typeof window !== 'undefined' ? window.location.href : ''}\n\nPlease share more details.`)}`
+    : "#";
+
   return (
     <>
       <div className={styles.desktopNavbar}>
@@ -182,13 +213,20 @@ export default function PropertyDetailPage() {
         <div className={styles.grid}>
           {/* Left Column: Image Slider */}
           <div>
-            <div className={styles.carousel}>
+            <div 
+              className={styles.carousel}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
               {property.images.map((img, idx) => (
                 <img
                   key={idx}
                   src={getImageUrl(img)}
                   alt={`${property.title} - View ${idx + 1}`}
                   className={`${styles.carouselImage} ${idx === activeImageIdx ? styles.activeImage : ""}`}
+                  onClick={() => setIsFullscreen(true)}
+                  style={{ cursor: "pointer" }}
                 />
               ))}
 
@@ -318,7 +356,7 @@ export default function PropertyDetailPage() {
             {/* Action buttons */}
             <div className={styles.actionGroup}>
               <a
-                href={`https://wa.me/919999999999?text=Hi, I am interested in property ${property.title}`}
+                href={whatsappHref}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`${styles.actionBtn} ${styles.whatsappBtn}`}
@@ -342,7 +380,7 @@ export default function PropertyDetailPage() {
                 <span>Chat</span>
               </button>
 
-              <a href="tel:+919999999999" className={`${styles.actionBtn} ${styles.callBtn}`}>
+              <a href="tel:+919964496644" className={`${styles.actionBtn} ${styles.callBtn}`}>
                 <Phone size={18} />
                 <span>Call</span>
               </a>
@@ -406,6 +444,40 @@ export default function PropertyDetailPage() {
         </div>
       )}
 
+
+      {/* Fullscreen Image Modal */}
+      {isFullscreen && (
+        <div className={styles.fullscreenOverlay} onClick={() => setIsFullscreen(false)}>
+          <button className={styles.closeFullscreenBtn} onClick={() => setIsFullscreen(false)}>
+            <X size={32} />
+          </button>
+          
+          <div 
+            className={styles.fullscreenContent} 
+            onClick={(e) => e.stopPropagation()}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
+            <img
+              src={getImageUrl(property.images[activeImageIdx])}
+              alt="Fullscreen View"
+              className={styles.fullscreenImage}
+            />
+            
+            {property.images.length > 1 && (
+              <>
+                <button onClick={(e) => { e.stopPropagation(); prevImage(); }} className={`${styles.fullscreenControl} ${styles.fullscreenPrev}`}>
+                  <ChevronLeft size={36} />
+                </button>
+                <button onClick={(e) => { e.stopPropagation(); nextImage(); }} className={`${styles.fullscreenControl} ${styles.fullscreenNext}`}>
+                  <ChevronRight size={36} />
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
     </>
   );

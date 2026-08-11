@@ -98,6 +98,7 @@ export default function WishlistPage() {
                 area: prop.area,
                 type: prop.type,
                 description: prop.description,
+                listingType: prop.listingType,
               };
               return <PropertyCard key={mappedProp.id} property={mappedProp} />;
             })}

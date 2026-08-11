@@ -14,7 +14,7 @@
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
-  z-index: 1000;
+  z-index: 1010;
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -108,6 +108,9 @@
   justify-content: space-between;
   align-items: center;
   padding: 0 2.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 }
 
 .menuToggle {
@@ -522,11 +525,49 @@
 
   .tableContainer {
     overflow-x: auto;
-    min-height: 300px;
+    margin-bottom: 2rem;
   }
   
   .contentBody {
-    padding: 1.5rem;
+    padding: 1rem;
+    padding-bottom: 100px; /* Prevent bottom nav from overlapping */
+  }
+
+  .title {
+    font-size: 1.4rem;
+  }
+  
+  .subtitle {
+    font-size: 0.8rem;
+  }
+  
+  .tabsContainer {
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+  
+  .tabBtn {
+    font-size: 0.75rem;
+    padding: 0.5rem 0;
+  }
+
+  .table th {
+    padding: 0.6rem 0.5rem;
+    font-size: 0.75rem;
+    white-space: nowrap;
+  }
+
+  .table td {
+    padding: 0.6rem 0.5rem;
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+  
+  .propThumb {
+    width: 45px;
+    height: 30px;
   }
 }
 
@@ -564,8 +605,10 @@
 
 @media (max-width: 600px) {
   .modalContent {
-    padding: 1rem 0.8rem !important;
-    width: 96% !important;
+    padding: 1.25rem 1rem !important;
+    width: 90% !important;
+    max-height: 85vh !important;
+    border-radius: 8px;
   }
   
   .modalContent h2 {

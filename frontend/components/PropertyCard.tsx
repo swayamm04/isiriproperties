@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { MapPin, BedDouble, Bath, Square, Heart } from "lucide-react";
@@ -15,8 +16,23 @@ interface PropertyCardProps {
 }
 
 export default function PropertyCard({ property }: PropertyCardProps) {
+
   const { user, toggleWishlist } = useAuth();
+  const [currentFilter, setCurrentFilter] = useState("All");
   
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setCurrentFilter(sessionStorage.getItem("homeListingType") || "All");
+      
+      const handleTypeChange = () => {
+        setCurrentFilter(sessionStorage.getItem("homeListingType") || "All");
+      };
+      
+      window.addEventListener("homeListingTypeChanged", handleTypeChange);
+      return () => window.removeEventListener("homeListingTypeChanged", handleTypeChange);
+    }
+  }, []);
+
   const isWishlisted = user?.wishlist?.includes(property.id);
 
   const handleWishlistClick = async (e: React.MouseEvent) => {
@@ -42,7 +58,14 @@ export default function PropertyCard({ property }: PropertyCardProps) {
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           unoptimized
         />
-        <div className={styles.badge}>{property.type.toUpperCase()}</div>
+        <div className={styles.badgesWrapper}>
+          <div className={styles.badge}>{property.type.toUpperCase()}</div>
+          {currentFilter === "All" && property.listingType && (
+            <div className={styles.badge}>
+              {property.listingType.toLowerCase() === "sell" ? "BUY" : property.listingType.toUpperCase()}
+            </div>
+          )}
+        </div>
         <div 
           className={styles.favoriteBtn} 
           onClick={handleWishlistClick}

@@ -305,8 +305,7 @@
   position: sticky;
   bottom: 0;
   padding: 1rem;
-  background: white;
-  border-top: 1px solid var(--color-border);
+  background: transparent;
   z-index: 100;
   margin-left: -1rem;
   margin-right: -1rem;
@@ -491,6 +490,81 @@
   margin-bottom: 1.5rem;
 }
 
+/* Fullscreen Image Modal */
+.fullscreenOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.95);
+  z-index: 3000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.closeFullscreenBtn {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  z-index: 3010;
+  padding: 0.5rem;
+}
+
+.closeFullscreenBtn:hover {
+  color: var(--color-primary);
+}
+
+.fullscreenContent {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.fullscreenImage {
+  max-width: 95vw;
+  max-height: 95vh;
+  object-fit: contain;
+  user-select: none;
+}
+
+.fullscreenControl {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.5);
+  border: none;
+  color: white;
+  padding: 1rem;
+  cursor: pointer;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.fullscreenControl:hover {
+  background: rgba(0, 0, 0, 0.8);
+  color: var(--color-primary);
+}
+
+.fullscreenPrev {
+  left: 2rem;
+}
+
+.fullscreenNext {
+  right: 2rem;
+}
+
 /* Mobile Media Query Override - MUST BE AT THE BOTTOM */
 @media (max-width: 900px) {
   .desktopNavbar {
@@ -664,5 +738,9 @@
   
   .carouselControl {
     display: none;
+  }
+
+  .fullscreenPrev, .fullscreenNext {
+    display: none; /* Rely on swipe on mobile */
   }
 }

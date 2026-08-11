@@ -31,8 +31,8 @@ export default function NormalProperties() {
     const loadFeaturedProperties = async () => {
       try {
         setLoading(true);
-        const listingType = sessionStorage.getItem("homeListingType") || "Sell";
-        const data = await apiRequest(`/properties?status=available&listingType=${listingType}`);
+        const listingType = sessionStorage.getItem("homeListingType") || "All";
+        const data = await apiRequest(`/properties?status=available&listingType=${listingType}&sort=recent`);
         setProperties(data.slice(0, 4)); // Get first 4 properties
       } catch (err) {
         console.error("Failed to load featured properties for slider:", err);
@@ -112,6 +112,7 @@ export default function NormalProperties() {
               type: property.type,
               description: property.description,
               customFields: (property as any).customFields,
+              listingType: property.listingType,
             };
 
             return (

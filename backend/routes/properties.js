@@ -86,7 +86,7 @@ router.get("/", async (req, res) => {
       query.price = { $lte: Number(price) };
     }
 
-    if (listingType) {
+    if (listingType && listingType !== "All") {
       query.listingType = listingType;
     }
 
@@ -96,7 +96,12 @@ router.get("/", async (req, res) => {
       query.isPremium = false;
     }
 
-    const properties = await Property.find(query).sort({ isPremium: -1, createdAt: -1 });
+    let sortObj = { isPremium: -1, createdAt: -1 };
+    if (req.query.sort === 'recent') {
+      sortObj = { createdAt: -1 };
+    }
+
+    const properties = await Property.find(query).sort(sortObj);
     res.json(properties);
   } catch (error) {
     console.error(error);
