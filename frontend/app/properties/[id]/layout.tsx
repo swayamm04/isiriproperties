@@ -1,15 +1,16 @@
 import { Metadata } from "next";
 import { getImageUrl } from "@/utils/api";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:5000/api";
 
 export async function generateMetadata({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   try {
-    const res = await fetch(`${API_URL}/properties/${params.id}`, { cache: 'no-store' });
+    const { id } = await params;
+    const res = await fetch(`${API_URL}/properties/${id}`, { cache: 'no-store' });
     const property = await res.json();
 
     if (!property || property.error) {

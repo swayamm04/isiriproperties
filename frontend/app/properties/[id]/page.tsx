@@ -415,12 +415,11 @@ export default function PropertyDetailPage() {
                 <div className={styles.metaGrid}>
                   <div className={styles.metaItem}>Name: <strong>{user?.name}</strong></div>
                   <div className={styles.metaItem}>Phone: <strong>{user?.phone}</strong></div>
-                  <div className={styles.metaItem}>City: <strong>{user?.city}</strong></div>
                   <div className={styles.metaItem}>Mail ID: <strong>{user?.email}</strong></div>
                 </div>
 
                 <div style={{ display: "flex", flexDirection: "column", marginBottom: "1rem" }}>
-                  <label style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.15em", color: "rgba(252,251,250,0.6)", marginBottom: "0.5rem" }}>
+                  <label style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.15em", color: "var(--color-dark)", marginBottom: "0.5rem", fontWeight: "600" }}>
                     Your Inquiry / Query
                   </label>
                   <textarea
@@ -439,6 +438,9 @@ export default function PropertyDetailPage() {
                 >
                   {interestLoading ? "Submitting Inquiry..." : "Submit Inquiry"}
                 </button>
+                <p style={{ fontSize: "0.75rem", color: "var(--color-dark)", marginTop: "1rem", textAlign: "center", opacity: 0.8 }}>
+                  Note: Our team will contact you once they view your inquiry.
+                </p>
               </form>
           </div>
         </div>

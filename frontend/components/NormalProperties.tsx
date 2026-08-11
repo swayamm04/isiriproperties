@@ -101,7 +101,7 @@ export default function NormalProperties() {
         <div className={styles.sliderContainer} ref={sliderRef}>
           {properties.map((property) => {
             const mappedProp = {
-              id: property._id,
+              id: property.propertyId || property._id,
               title: property.title,
               location: property.location,
               price: property.price,

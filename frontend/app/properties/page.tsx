@@ -218,7 +218,7 @@ function PropertiesList() {
           <div className={styles.grid}>
             {filteredProperties.map((property) => {
               const mappedProp = {
-                id: property._id,
+                id: property.propertyId || property._id,
                 title: property.title,
                 location: property.location,
                 price: property.price,
