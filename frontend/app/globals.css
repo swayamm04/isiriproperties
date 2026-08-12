@@ -70,10 +70,10 @@ input[type="number"] {
   -moz-appearance: textfield;
 }
 
-/* Custom scrollbar for an editorial feel */
+/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
-  height: 8px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -81,11 +81,12 @@ input[type="number"] {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-primary);
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-primary-dark);
+  background: rgba(0, 0, 0, 0.3);
 }
 
 /* Smooth layout animations */

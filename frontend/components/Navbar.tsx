@@ -111,7 +111,7 @@ export default function Navbar() {
       <nav className={`${styles.navbar} ${scrolled ? styles.scrolled : ""}`}>
         <div className={styles.container}>
           <Link href="/" className={styles.logo} onClick={closeMenu}>
-            <Image src="/logo.png" alt="I Siri Properties" width={180} height={60} style={{ objectFit: "contain", height: "auto" }} />
+            <Image src="/logo.png" alt="Isiri Properties" width={180} height={60} style={{ objectFit: "contain", height: "auto" }} />
           </Link>
 
           {/* Desktop Nav Links */}

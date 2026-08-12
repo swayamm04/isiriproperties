@@ -46,10 +46,12 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
   return data;
 }
 
+const BACKEND_URL = API_URL.replace(/\/api$/, "");
+
 export function getImageUrl(path: string): string {
   if (!path) return "/prop-1.png";
   if (path.startsWith("/uploads/")) {
-    return `http://localhost:5000${path}`;
+    return `${BACKEND_URL}${path}`;
   }
   return path;
 }

@@ -10,9 +10,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "I Siri Properties | Premium Real Estate & Luxury Living",
-  description: "Discover luxury architectural properties, premium villas, and estates with I Siri Properties. Editorial designs, sharp structures, and sophisticated living spaces.",
-  keywords: "real estate, luxury villas, architectural homes, premium properties, I Siri Properties",
+  title: "Isiri Properties | Premium Real Estate & Luxury Living",
+  description: "Discover luxury architectural properties, premium villas, and estates with Isiri Properties. Editorial designs, sharp structures, and sophisticated living spaces.",
+  keywords: "real estate, luxury villas, architectural homes, premium properties, Isiri Properties",
 };
 
 import BottomNav from "@/components/BottomNav";

@@ -1,7 +1,7 @@
 {
   "name": "isiri-properties-backend",
   "version": "1.0.0",
-  "description": "Backend API for I Siri Properties web app",
+  "description": "Backend API for Isiri Properties web app",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

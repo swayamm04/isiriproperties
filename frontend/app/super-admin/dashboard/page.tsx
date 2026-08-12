@@ -31,6 +31,7 @@ import {
 import Link from "next/link";
 import Loader from '@/components/Loader';
 import CustomSelect from '@/components/CustomSelect';
+import AutocompleteInput from '@/components/AutocompleteInput';
 import { getIconForField } from '@/utils/iconMap';
 import { formatIndianPrice } from "@/utils/formatPrice";
 import styles from "./page.module.css";
@@ -158,9 +159,11 @@ export default function SuperAdminDashboardPage() {
   const [propListingType, setPropListingType] = useState("Sell");
   const [propIsPremium, setPropIsPremium] = useState(false);
   const [propDescription, setPropDescription] = useState("");
-  const [propSelectedFiles, setPropSelectedFiles] = useState<FileList | null>(null);
+  const [propSelectedFiles, setPropSelectedFiles] = useState<File[]>([]);
   const [propAddLoading, setPropAddLoading] = useState(false);
   const [propCustomFields, setPropCustomFields] = useState<Record<string, any>>({});
+  const [propRentFrequency, setPropRentFrequency] = useState("Month");
+  const [propCustomRentFrequency, setPropCustomRentFrequency] = useState("");
   const [propEditMode, setPropEditMode] = useState(false);
   const [editingPropId, setEditingPropId] = useState<string | null>(null);
   const [propExistingImages, setPropExistingImages] = useState<string[]>([]);
@@ -182,6 +185,7 @@ export default function SuperAdminDashboardPage() {
 
   // Property filtering state
   const [selectedAdminId, setSelectedAdminId] = useState("");
+  const [propertyListingFilter, setPropertyListingFilter] = useState("All");
 
   // Settings form state
   const [settingsCurrentPassword, setSettingsCurrentPassword] = useState("");
@@ -408,6 +412,18 @@ export default function SuperAdminDashboardPage() {
     setPropPrice(property.price.toString());
     setPropType(property.type);
     setPropListingType(property.listingType || "Sell");
+    if (property.listingType === "Rent" && property.rentFrequency) {
+      if (["Month", "6-months", "Year"].includes(property.rentFrequency)) {
+        setPropRentFrequency(property.rentFrequency);
+        setPropCustomRentFrequency("");
+      } else {
+        setPropRentFrequency("Other");
+        setPropCustomRentFrequency(property.rentFrequency);
+      }
+    } else {
+      setPropRentFrequency("Month");
+      setPropCustomRentFrequency("");
+    }
     setPropIsPremium(property.isPremium || false);
     setPropDescription(property.description || "");
     setPropCustomFields(property.customFields || {});
@@ -480,6 +496,11 @@ export default function SuperAdminDashboardPage() {
       formData.append("description", propDescription);
       formData.append("customFields", JSON.stringify(propCustomFields));
 
+      if (propListingType === "Rent") {
+        const finalFreq = propRentFrequency === "Other" ? propCustomRentFrequency : propRentFrequency;
+        if (finalFreq) formData.append("rentFrequency", finalFreq);
+      }
+
       if (propSelectedFiles && propSelectedFiles.length > 0) {
         for (let i = 0; i < propSelectedFiles.length; i++) {
           formData.append("imageFiles", propSelectedFiles[i]);
@@ -509,9 +530,11 @@ export default function SuperAdminDashboardPage() {
       setPropPrice("");
       setPropType("");
       setPropListingType("Sell");
+      setPropRentFrequency("Month");
+      setPropCustomRentFrequency("");
       setPropIsPremium(false);
       setPropDescription("");
-      setPropSelectedFiles(null);
+      setPropSelectedFiles([]);
       setPropCustomFields({});
       setPropEditMode(false);
       setEditingPropId(null);
@@ -707,7 +730,7 @@ export default function SuperAdminDashboardPage() {
       {/* Left Sidebar */}
       <aside className={`${styles.sidebar} ${isSidebarOpen ? styles.sidebarOpen : ""}`}>
         <div className={styles.sidebarBrand}>
-          <Image src="/logo.png" alt="I Siri Properties" width={160} height={50} style={{ objectFit: "contain", height: "auto" }} />
+          <Image src="/logo.png" alt="Isiri Properties" width={160} height={50} style={{ objectFit: "contain", height: "auto" }} />
         </div>
 
         <nav className={styles.sidebarMenu}>
@@ -791,7 +814,7 @@ export default function SuperAdminDashboardPage() {
         </nav>
 
         <div className={styles.sidebarFooter}>
-          © {new Date().getFullYear()} I Siri Properties
+          © {new Date().getFullYear()} Isiri Properties
         </div>
         <button 
           className={styles.sidebarCloseBtn}
@@ -1128,6 +1151,20 @@ export default function SuperAdminDashboardPage() {
                           style={{ minWidth: "220px", padding: 0, border: 'none' }}
                         />
                       </div>
+                      <div className={styles.filterGroup}>
+                        <label className={styles.filterLabel}>Listing Type:</label>
+                        <CustomSelect
+                          options={[
+                            { value: "All", label: "All" },
+                            { value: "Rent", label: "Rent" },
+                            { value: "Sell", label: "Sell" }
+                          ]}
+                          value={propertyListingFilter}
+                          onChange={(val) => setPropertyListingFilter(val)}
+                          className={styles.select}
+                          style={{ minWidth: "120px", padding: 0, border: 'none' }}
+                        />
+                      </div>
 
                       <button
                         onClick={() => setIsCategoryModalOpen(true)}
@@ -1140,7 +1177,8 @@ export default function SuperAdminDashboardPage() {
                           gap: "0.5rem",
                           backgroundColor: "transparent",
                           color: "var(--color-dark)",
-                          border: "1px solid var(--color-border)"
+                          border: "1px solid #a0a0a0",
+                          borderRadius: "4px"
                         }}
                       >
                         <Settings size={16} />
@@ -1180,7 +1218,9 @@ export default function SuperAdminDashboardPage() {
                           </tr>
                         </thead>
                         <tbody>
-                          {properties.map((prop) => {
+                          {properties
+                            .filter(prop => propertyListingFilter === "All" || (prop.listingType || "Sell").toLowerCase() === propertyListingFilter.toLowerCase())
+                            .map((prop) => {
                             return (
                               <tr key={prop._id}>
                                 <td style={{ fontWeight: 600 }}>#{prop.propertyId}</td>
@@ -1194,7 +1234,14 @@ export default function SuperAdminDashboardPage() {
                                 <td style={{ fontWeight: 500 }}>{prop.title}</td>
                                 <td>{prop.city || "N/A"}</td>
                                 <td>{prop.location}</td>
-                                <td style={{ color: "var(--color-primary-dark)", fontWeight: 600 }}>{formatIndianPrice(prop.price)}</td>
+                                <td style={{ color: "var(--color-primary-dark)", fontWeight: 600 }}>
+                                  {formatIndianPrice(prop.price)}
+                                  {prop.listingType === "Rent" && prop.rentFrequency && (
+                                    <span style={{ fontSize: "0.7em", marginLeft: "4px", color: "var(--color-dark-muted)", fontWeight: 500 }}>
+                                      / {prop.rentFrequency}
+                                    </span>
+                                  )}
+                                </td>
                                 <td style={{ fontWeight: 500 }}>{prop.addedByName}</td>
                                 <td>
                                   <span style={{ fontWeight: 600, color: prop.status === "available" ? "#4eb570" : "#888" }}>
@@ -1621,9 +1668,6 @@ export default function SuperAdminDashboardPage() {
               {propEditMode ? "Edit Property (Super Admin)" : "Register Residence Listing (Super Admin)"}
             </h2>
             <form onSubmit={handleAddPropertySubmit}>
-              {errorMsg && <div className={styles.errorBox}>{errorMsg}</div>}
-              {successMsg && <div className={styles.successBox}>{successMsg}</div>}
-
               {/* Listing Type Toggle at the Top */}
               <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
                 <button
@@ -1677,18 +1721,13 @@ export default function SuperAdminDashboardPage() {
 
                 <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
                   <label className={styles.label}>City *</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. New York"
+                  <AutocompleteInput
                     value={propCity}
-                    onChange={(e) => setPropCity(e.target.value)}
-                    className={styles.input}
-                    list="superAdminCitySuggestions"
-                    required
+                    onChange={(val) => setPropCity(val)}
+                    options={citySuggestions}
+                    placeholder="e.g. New York"
+                    required={true}
                   />
-                  <datalist id="superAdminCitySuggestions">
-                    {citySuggestions.map((c, i) => <option key={i} value={c} />)}
-                  </datalist>
                 </div>
 
                 <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
@@ -1705,15 +1744,42 @@ export default function SuperAdminDashboardPage() {
 
                 <div className={styles.formGroup}>
                   <label className={styles.label}>Advisory Price (INR) *</label>
-                  <input
-                    type="number"
-                    placeholder="e.g. 45000000"
-                    value={propPrice}
-                    onChange={(e) => setPropPrice(e.target.value)}
-                    onWheel={(e) => (e.target as HTMLInputElement).blur()}
-                    className={styles.input}
-                    required
-                  />
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
+                    <input
+                      type="number"
+                      placeholder="e.g. 45000000"
+                      value={propPrice}
+                      onChange={(e) => setPropPrice(e.target.value)}
+                      onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                      className={styles.input}
+                      required
+                      style={{ flex: 1 }}
+                    />
+                    {propListingType === "Rent" && (
+                      <select 
+                        value={propRentFrequency} 
+                        onChange={(e) => setPropRentFrequency(e.target.value)}
+                        className={styles.input}
+                        style={{ width: '120px', padding: '0.75rem' }}
+                      >
+                        <option value="Month">/ Month</option>
+                        <option value="6-months">/ 6-months</option>
+                        <option value="Year">/ Year</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    )}
+                  </div>
+                  {propListingType === "Rent" && propRentFrequency === "Other" && (
+                    <input
+                      type="text"
+                      placeholder="e.g. Week or 15 Days"
+                      value={propCustomRentFrequency}
+                      onChange={(e) => setPropCustomRentFrequency(e.target.value)}
+                      className={styles.input}
+                      style={{ marginTop: '0.5rem' }}
+                      required
+                    />
+                  )}
                   {propPrice && (
                     <span className={styles.helperText} style={{ marginTop: '0.4rem', display: 'block', color: 'var(--color-primary-dark)', fontWeight: 500 }}>
                       {formatIndianPrice(Number(propPrice))}
@@ -1777,25 +1843,31 @@ export default function SuperAdminDashboardPage() {
                     onChange={(e) => {
                       const files = e.target.files;
                       if (files) {
-                        const validFiles = Array.from(files).filter(file => file.size <= 3 * 1024 * 1024);
+                        let validFiles = Array.from(files).filter(file => file.size <= 3 * 1024 * 1024);
                         if (validFiles.length !== files.length) {
                           alert("Some files exceed the 3MB limit and were removed.");
                         }
-                        
-                        // We need to create a new FileList, which isn't directly possible, 
-                        // so we might just use the raw files if they are all valid, or clear the input if any are invalid.
-                        if (validFiles.length !== files.length) {
-                          e.target.value = "";
-                          setPropSelectedFiles(null);
-                        } else {
-                          setPropSelectedFiles(files);
-                        }
+                        setPropSelectedFiles(prev => {
+                          const currentTotal = propExistingImages.length + prev.length;
+                          if (currentTotal >= 6) {
+                            alert("You can only upload a maximum of 6 images.");
+                            return prev;
+                          }
+                          const allowedSpaces = 6 - currentTotal;
+                          if (validFiles.length > allowedSpaces) {
+                            alert(`You can only add ${allowedSpaces} more image(s). Extra images were discarded.`);
+                            validFiles = validFiles.slice(0, allowedSpaces);
+                          }
+                          return [...prev, ...validFiles];
+                        });
                       }
+                      e.target.value = "";
                     }}
+                    disabled={propExistingImages.length + propSelectedFiles.length >= 6}
                     className={styles.input}
                     style={{ padding: "0.6rem" }}
                   />
-                  <span className={styles.helperText}>Select multiple image files (Max 3MB per file).</span>
+                  <span className={styles.helperText} style={{ display: 'block', marginTop: '0.2rem' }}>Select multiple image files (Max 3MB per file).</span>
 
                   {(propExistingImages.length > 0 || propImagePreviews.length > 0) && (
                     <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap', marginTop: '1rem' }}>
@@ -1828,13 +1900,7 @@ export default function SuperAdminDashboardPage() {
                           <button 
                             type="button"
                             onClick={() => {
-                              if (propSelectedFiles) {
-                                // Since propSelectedFiles is a FileList, we can't easily mutate it.
-                                // In a real app, it's better to store files in an array state.
-                                // For now, we just clear all selected files if they want to remove one,
-                                // or we just clear the preview. We'll just alert them to re-upload.
-                                alert("To remove a newly selected file, please clear and re-select your files.");
-                              }
+                              setPropSelectedFiles(prev => prev.filter((_, i) => i !== index));
                             }}
                             style={{ position: 'absolute', top: '-8px', right: '-8px', background: '#e05e5e', color: 'white', borderRadius: '50%', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer', fontSize: '12px' }}
                           >
@@ -1860,6 +1926,8 @@ export default function SuperAdminDashboardPage() {
                 </div>
               </div>
 
+              {errorMsg && <div className={styles.errorBox} style={{ marginBottom: '1rem' }}>{errorMsg}</div>}
+              {successMsg && <div className={styles.successBox} style={{ marginBottom: '1rem' }}>{successMsg}</div>}
               <button type="submit" className={styles.submitBtn} disabled={propAddLoading}>
                 {propAddLoading ? "Saving Property..." : propEditMode ? "Update Property Listing" : "Submit Property Listing"}
               </button>

@@ -11,7 +11,7 @@ export default function Footer() {
         {/* Brand Column */}
         <div className={styles.brandCol}>
           <Link href="/" className={styles.logo}>
-            <Image src="/logo.png" alt="I Siri Properties" width={180} height={60} style={{ objectFit: "contain", height: "auto" }} />
+            <Image src="/logo.png" alt="Isiri Properties" width={180} height={60} style={{ objectFit: "contain", height: "auto" }} />
           </Link>
           <p className={styles.brandText}>
             Specialists in fine architectural properties, curate estates, and luxury penthouses. Committed to excellence, discretion, and architectural integrity.
@@ -63,7 +63,7 @@ export default function Footer() {
       {/* Bottom Legal Row */}
       <div className={styles.bottomRow}>
         <div className={styles.copyright}>
-          &copy; {currentYear} I Siri Properties. All rights reserved. Designed for elite spaces.
+          &copy; {currentYear} Isiri Properties. All rights reserved. Designed for elite spaces.
         </div>
       </div>
     </footer>

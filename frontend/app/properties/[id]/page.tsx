@@ -34,6 +34,8 @@ interface PropertyDetail {
   addedByName: string;
   status: "available" | "sold";
   customFields?: Record<string, any>;
+  listingType?: string;
+  rentFrequency?: string;
 }
 
 export default function PropertyDetailPage() {
@@ -334,7 +336,14 @@ export default function PropertyDetailPage() {
             <div className={styles.headerSection}>
               <span className={styles.refNumber}>Ref ID: #{property.propertyId}</span>
               <div className={styles.titleRow}>
-                <span className={styles.price}>{formattedPrice}</span>
+                <span className={styles.price}>
+                  {formattedPrice}
+                  {property.listingType === "Rent" && property.rentFrequency && (
+                    <span style={{ fontSize: "0.5em", fontWeight: 400, marginLeft: "6px", color: "var(--color-dark-muted)" }}>
+                      / {property.rentFrequency}
+                    </span>
+                  )}
+                </span>
                 <h1 className={styles.title}>{property.title}</h1>
               </div>
               {user && (

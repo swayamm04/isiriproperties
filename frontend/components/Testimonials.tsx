@@ -2,12 +2,12 @@ import styles from "./Testimonials.module.css";
 
 const TESTIMONIALS = [
   {
-    quote: "The level of professionalism and dedication shown by I Siri Properties is unmatched. They understood our architectural taste perfectly and found our dream beachfront home within weeks.",
+    quote: "The level of professionalism and dedication shown by Isiri Properties is unmatched. They understood our architectural taste perfectly and found our dream beachfront home within weeks.",
     author: "Dr. Sophia Bennett",
     role: "Ocean Breeze Villa Owner",
   },
   {
-    quote: "Working with I Siri Properties was a masterclass in luxury brokerage. They valued our time and privacy above all, presenting only highly curated properties that aligned with our investment goals.",
+    quote: "Working with Isiri Properties was a masterclass in luxury brokerage. They valued our time and privacy above all, presenting only highly curated properties that aligned with our investment goals.",
     author: "Rajan Malhotra",
     role: "Tech Entrepreneur",
   },
@@ -17,7 +17,7 @@ const TESTIMONIALS = [
     role: "Penthouse Residents",
   },
   {
-    quote: "Securing a quiet forest chalet was simple and stress-free. The advisers at I Siri Properties showed excellent knowledge of off-market land holdings and constructions.",
+    quote: "Securing a quiet forest chalet was simple and stress-free. The advisers at Isiri Properties showed excellent knowledge of off-market land holdings and constructions.",
     author: "Aditya Verma",
     role: "Chalet Resident & Artist",
   },

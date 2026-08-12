@@ -93,7 +93,14 @@ export default function PropertyCard({ property }: PropertyCardProps) {
             )}
           </div>
           <div className={styles.priceInfo}>
-            <span className={styles.price}>{formattedPrice}</span>
+            <span className={styles.price}>
+              {formattedPrice}
+              {property.listingType === "Rent" && property.rentFrequency && (
+                <span style={{ fontSize: "0.6em", fontWeight: 400, marginLeft: "4px", color: "var(--color-dark-muted)" }}>
+                  / {property.rentFrequency}
+                </span>
+              )}
+            </span>
           </div>
         </div>
 

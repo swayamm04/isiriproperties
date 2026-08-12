@@ -53,10 +53,10 @@ function PropertiesList() {
     const storedListingType = typeof window !== "undefined" ? sessionStorage.getItem("homeListingType") : "";
     const listingType = searchParams.get("listingType") || storedListingType || "All";
 
-    if (loc) setSearchQuery(loc);
-    if (type) setSelectedType(type);
-    if (city) setSelectedCity(city);
-    if (listingType) setSelectedListingType(listingType);
+    setSearchQuery(loc);
+    setSelectedType(type);
+    setSelectedCity(city);
+    setSelectedListingType(listingType === "All" ? "" : listingType);
     
     // Auto-focus search input if navigated via #search
     if (window.location.hash === "#search") {
@@ -74,7 +74,7 @@ function PropertiesList() {
         setLoading(true);
         // Load only available properties
         const [propData, catData] = await Promise.all([
-          apiRequest(`/properties?status=available`),
+          apiRequest(`/properties?status=available&sort=recent`),
           apiRequest("/categories")
         ]);
         setProperties(propData);
@@ -95,7 +95,8 @@ function PropertiesList() {
     const matchesSearch =
       property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       property.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      property.propertyId.toLowerCase().includes(searchQuery.toLowerCase());
+      property.propertyId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (property.city && property.city.toLowerCase().includes(searchQuery.toLowerCase()));
 
     const matchesType = selectedType ? property.type === selectedType : true;
     const matchesListingType = selectedListingType ? property.listingType === selectedListingType : true;
@@ -119,7 +120,7 @@ function PropertiesList() {
       <section className={styles.hero}>
         <div className={styles.heroContent}>
           <span className={styles.subtitle}>Our Portfolio</span>
-          <h1 className={styles.title}>Bespoke Residences</h1>
+          <h1 className={styles.title}>Explore Properties</h1>
           <p className={styles.description}>
             Explore our curated catalog of modern estates, concrete brutalist structures, and architectural landmarks.
           </p>
@@ -203,7 +204,7 @@ function PropertiesList() {
 
           {/* Reset Filters */}
           <button onClick={handleReset} className={styles.resetBtn}>
-            Reset Filters
+            Clear
           </button>
         </div>
 

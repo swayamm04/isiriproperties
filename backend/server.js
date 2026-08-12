@@ -67,7 +67,7 @@ app.use("/api/categories", require("./routes/categories"));
 
 // Root route for API verification
 app.get("/", (req, res) => {
-  res.json({ message: "Welcome to the I Siri Properties API" });
+  res.json({ message: "Welcome to the Isiri Properties API" });
 });
 
 // Global Error Handler

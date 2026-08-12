@@ -19,15 +19,27 @@ export async function generateMetadata({
       };
     }
 
-    const imgUrl = property.images && property.images.length > 0 ? getImageUrl(property.images[0]) : "";
+    let imgUrl = property.images && property.images.length > 0 ? getImageUrl(property.images[0]) : "";
+
+    // Optimize Cloudinary image specifically for WhatsApp link preview limits (<300KB)
+    if (imgUrl.includes("res.cloudinary.com") && imgUrl.includes("/image/upload/")) {
+      imgUrl = imgUrl.replace("/image/upload/", "/image/upload/w_800,h_600,c_fill,q_auto,f_auto/");
+    }
 
     return {
-      title: `${property.title} | I Siri Properties`,
+      title: `${property.title} | Isiri Properties`,
       description: property.description?.substring(0, 160) || "Property Details",
       openGraph: {
         title: property.title,
         description: property.description?.substring(0, 160) || "Property Details",
-        images: imgUrl ? [imgUrl] : [],
+        images: imgUrl ? [
+          {
+            url: imgUrl,
+            width: 800,
+            height: 600,
+            alt: property.title,
+          }
+        ] : [],
       },
     };
   } catch (error) {

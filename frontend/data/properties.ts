@@ -11,6 +11,7 @@ export interface Property {
   description: string;
   customFields?: any;
   listingType?: string;
+  rentFrequency?: string;
 }
 
 export const PROPERTIES: Property[] = [

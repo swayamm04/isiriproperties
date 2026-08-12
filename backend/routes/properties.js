@@ -68,11 +68,12 @@ router.get("/", async (req, res) => {
       query.status = "available";
     }
 
-    // Keyword Search (title, location)
+    // Keyword Search (title, location, city)
     if (search) {
       query.$or = [
         { title: { $regex: search, $options: "i" } },
         { location: { $regex: search, $options: "i" } },
+        { city: { $regex: search, $options: "i" } },
       ];
     }
 
@@ -186,7 +187,7 @@ router.get("/:id", async (req, res) => {
 // @access  Private (Admin & Super Admin)
 router.post("/", auth, authorize(["admin", "super_admin"]), upload.array("imageFiles", 6), async (req, res) => {
   try {
-    const { title, description, city, location, price, beds, baths, area, type, imageUrls, customFields, listingType, isPremium } = req.body;
+    const { title, description, city, location, price, beds, baths, area, type, imageUrls, customFields, listingType, isPremium, rentFrequency } = req.body;
 
     if (!title || !description || !city || !location || !price || !type) {
       return res.status(400).json({ error: "Please provide all required fields (title, description, city, location, price, type)" });
@@ -257,6 +258,7 @@ router.post("/", auth, authorize(["admin", "super_admin"]), upload.array("imageF
       type: type || "Villa",
       listingType: listingType || "Sell",
       isPremium: isPremium === "true" || isPremium === true,
+      rentFrequency: (listingType === "Rent" && rentFrequency) ? rentFrequency : undefined,
       customFields: parsedCustomFields,
       addedBy: req.user._id,
       addedByName: req.user.role === "super_admin" ? "Super Admin" : req.user.name,
@@ -309,7 +311,7 @@ router.post("/wishlist/:id", auth, authorize(["user", "admin", "super_admin"]), 
 // @access  Private (Admin & Super Admin)
 router.put("/:id", auth, authorize(["admin", "super_admin"]), upload.array("imageFiles", 6), async (req, res) => {
   try {
-    const { title, description, city, location, price, beds, baths, area, type, imageUrls, customFields, removedImages, listingType, isPremium } = req.body;
+    const { title, description, city, location, price, beds, baths, area, type, imageUrls, customFields, removedImages, listingType, isPremium, rentFrequency } = req.body;
 
     const property = await Property.findById(req.params.id);
     if (!property) return res.status(404).json({ error: "Property not found" });
@@ -373,6 +375,11 @@ router.put("/:id", auth, authorize(["admin", "super_admin"]), upload.array("imag
     property.type = type || property.type;
     if (listingType) property.listingType = listingType;
     if (isPremium !== undefined) property.isPremium = isPremium === "true" || isPremium === true;
+    if (property.listingType === "Rent" && rentFrequency !== undefined) {
+      property.rentFrequency = rentFrequency;
+    } else if (property.listingType !== "Rent") {
+      property.rentFrequency = undefined;
+    }
     property.images = currentImages;
     property.customFields = parsedCustomFields;
 

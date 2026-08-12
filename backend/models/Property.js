@@ -59,6 +59,9 @@ const propertySchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    rentFrequency: {
+      type: String,
+    },
     customFields: {
       type: mongoose.Schema.Types.Mixed,
       default: {},
