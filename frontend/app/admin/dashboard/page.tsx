@@ -52,6 +52,8 @@ interface Property {
   type: string;
   status: "available" | "sold";
   customFields?: Record<string, any>;
+  listingType?: string;
+  rentFrequency?: string;
   description?: string;
   beds?: number;
   baths?: number;

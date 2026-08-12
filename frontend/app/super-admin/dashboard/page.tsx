@@ -76,6 +76,7 @@ interface Property {
   addedByName: string;
   status: "available" | "sold";
   listingType?: string;
+  rentFrequency?: string;
   isPremium?: boolean;
   description?: string;
   customFields?: Record<string, any>;
