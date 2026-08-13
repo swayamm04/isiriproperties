@@ -346,23 +346,23 @@ router.put("/properties/reset-ids", async (req, res) => {
     // 1. Fetch all properties sorted by creation date
     const properties = await Property.find().sort({ createdAt: 1 });
     
-    // 2. Loop through and update IDs sequentially
+    // 2. Pass 1: Assign temporary IDs to avoid MongoDB E11000 duplicate key conflicts
+    for (let i = 0; i < properties.length; i++) {
+      properties[i].propertyId = `temp-${properties[i]._id}`;
+      await properties[i].save();
+    }
+    
+    // 3. Pass 2: Assign the final sequential IDs
     for (let i = 0; i < properties.length; i++) {
       const seqNum = i + 1; // Start from 1
       properties[i].propertyId = String(seqNum).padStart(4, "0");
       await properties[i].save();
     }
     
-    // 3. Update the Counter so new properties start from length + 2 (since seqNum in pre-save is seq - 1)
-    // Actually, in Property.js it does: const seqNum = counter.seq - 1;
-    // So if length is 5, next should be 6.
-    // If we want next to be 6, counter.seq should be 7.
-    // So counter.seq = properties.length + 2.
-    // But wait, the hook does: seq: {$inc: 1} and returns new doc.
-    // So if current seq is 6, it increments to 7, seqNum becomes 7-1 = 6. This is correct.
+    // 4. Update the Counter so new properties start from length + 2 (since seqNum in pre-save is seq - 1)
     await Counter.findOneAndUpdate(
       { id: "propertyId" },
-      { seq: properties.length + 1 }, // After this, next save will inc to length + 2, seqNum = length + 1
+      { seq: properties.length + 1 }, 
       { upsert: true }
     );
     
