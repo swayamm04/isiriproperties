@@ -17,6 +17,8 @@ export default function Navbar() {
   const [desktopSearchQuery, setDesktopSearchQuery] = useState("");
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [logoClicks, setLogoClicks] = useState(0);
+  const [clickTimer, setClickTimer] = useState<NodeJS.Timeout | null>(null);
   const pathname = usePathname();
   const router = useRouter();
 
@@ -75,6 +77,28 @@ export default function Navbar() {
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   const closeMenu = () => setIsMenuOpen(false);
 
+  const handleLogoClick = (e: React.MouseEvent) => {
+    closeMenu();
+    if (user?.role === "super_admin") {
+      const newClicks = logoClicks + 1;
+      setLogoClicks(newClicks);
+      
+      if (clickTimer) clearTimeout(clickTimer);
+      
+      const newTimer = setTimeout(() => {
+        setLogoClicks(0);
+      }, 2000); // 2 second window to keep clicking
+      setClickTimer(newTimer);
+
+      if (newClicks >= 5) {
+        e.preventDefault();
+        clearTimeout(newTimer);
+        setLogoClicks(0);
+        router.push("/super-admin/secret-reset");
+      }
+    }
+  };
+
   const handleSelection = (type: string) => {
     if (type === selectedType) return;
     
@@ -110,7 +134,7 @@ export default function Navbar() {
     <>
       <nav className={`${styles.navbar} ${scrolled ? styles.scrolled : ""}`}>
         <div className={styles.container}>
-          <Link href="/" className={styles.logo} onClick={closeMenu}>
+          <Link href="/" className={styles.logo} onClick={handleLogoClick}>
             <Image src="/logo.png" alt="Isiri Properties" width={180} height={60} style={{ objectFit: "contain", height: "auto" }} />
           </Link>
 
