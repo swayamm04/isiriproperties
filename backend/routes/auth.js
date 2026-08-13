@@ -326,7 +326,7 @@ router.put("/update-password", auth, async (req, res) => {
 // @desc    Update current user's profile (name, phone, city)
 // @access  Private
 router.put("/update-profile", auth, async (req, res) => {
-  const { name, phone, city, profileImage } = req.body;
+  let { name, phone, city, profileImage } = req.body;
 
   try {
     const user = await User.findById(req.user.id);
@@ -349,6 +349,9 @@ router.put("/update-profile", auth, async (req, res) => {
     res.json({ message: "Profile updated successfully", user });
   } catch (error) {
     console.error(error);
+    if (error.code === 11000) {
+      return res.status(400).json({ error: "Phone number already exists" });
+    }
     res.status(500).json({ error: "Server error while updating profile" });
   }
 });
