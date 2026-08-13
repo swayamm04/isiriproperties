@@ -891,8 +891,8 @@ export default function AdminDashboardPage() {
                         for (let file of validFiles) {
                           try {
                             const compressedFile = await imageCompression(file, {
-                              maxSizeMB: 0.8,
-                              maxWidthOrHeight: 1920,
+                              maxSizeMB: 0.15,
+                              maxWidthOrHeight: 1024,
                               useWebWorker: true,
                             });
                             // Reconstruct the file with the original name to preserve the extension for the backend
