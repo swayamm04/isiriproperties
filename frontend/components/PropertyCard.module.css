@@ -7,6 +7,8 @@
   box-shadow: var(--shadow-sm);
   transition: all 0.3s ease;
   height: 100%;
+  width: 100%;
+  flex: 1;
   border: 1px solid rgba(0, 0, 0, 0.15); /* Visible thin border line */
 }
 
@@ -104,11 +106,13 @@
   color: var(--color-dark);
   margin-bottom: 0.25rem; /* Reduced from 0.5rem */
   line-height: 1.3;
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
   width: 100%;
-  display: block;
+  min-height: 2.6em;
 }
 
 .location {
@@ -149,8 +153,7 @@
   margin-top: auto;
   min-width: 0;
   width: 100%;
-  flex-wrap: wrap;
-  row-gap: 0.5rem;
+  gap: 0.5rem;
 }
 
 .specItem {
@@ -164,6 +167,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
+  flex: 0 1 auto;
 }
 
 .specItem span {
