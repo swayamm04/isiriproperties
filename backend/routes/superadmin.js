@@ -348,15 +348,15 @@ router.put("/properties/reset-ids", async (req, res) => {
     
     // 2. Pass 1: Assign temporary IDs to avoid MongoDB E11000 duplicate key conflicts
     for (let i = 0; i < properties.length; i++) {
-      properties[i].propertyId = `temp-${properties[i]._id}`;
-      await properties[i].save();
+      const tempId = `temp-${properties[i]._id}`;
+      await Property.updateOne({ _id: properties[i]._id }, { $set: { propertyId: tempId } });
     }
     
     // 3. Pass 2: Assign the final sequential IDs
     for (let i = 0; i < properties.length; i++) {
       const seqNum = i + 1; // Start from 1
-      properties[i].propertyId = String(seqNum).padStart(4, "0");
-      await properties[i].save();
+      const finalId = String(seqNum).padStart(4, "0");
+      await Property.updateOne({ _id: properties[i]._id }, { $set: { propertyId: finalId } });
     }
     
     // 4. Update the Counter so new properties start from length + 2 (since seqNum in pre-save is seq - 1)
