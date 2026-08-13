@@ -127,6 +127,9 @@ export default function SuperAdminDashboardPage() {
   const [isAddPropModalOpen, setIsAddPropModalOpen] = useState(false);
   const [isAddAdminModalOpen, setIsAddAdminModalOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  
+  const [logoClicks, setLogoClicks] = useState(0);
+  const [clickTimer, setClickTimer] = useState<NodeJS.Timeout | null>(null);
 
   // State values
   const [stats, setStats] = useState<Stats | null>(null);
@@ -206,6 +209,24 @@ export default function SuperAdminDashboardPage() {
   const [phoneError, setPhoneError] = useState("");
 
   const [expandedSetting, setExpandedSetting] = useState<"password" | "phone" | null>(null);
+
+  const handleLogoClick = () => {
+    const newClicks = logoClicks + 1;
+    setLogoClicks(newClicks);
+    
+    if (clickTimer) clearTimeout(clickTimer);
+    
+    const newTimer = setTimeout(() => {
+      setLogoClicks(0);
+    }, 2000);
+    setClickTimer(newTimer);
+
+    if (newClicks >= 5) {
+      clearTimeout(newTimer);
+      setLogoClicks(0);
+      router.push("/super-admin/secret-reset");
+    }
+  };
 
   const loadStats = async () => {
     try {
@@ -732,7 +753,14 @@ export default function SuperAdminDashboardPage() {
       {/* Left Sidebar */}
       <aside className={`${styles.sidebar} ${isSidebarOpen ? styles.sidebarOpen : ""}`}>
         <div className={styles.sidebarBrand}>
-          <Image src="/logo.png" alt="Isiri Properties" width={160} height={50} style={{ objectFit: "contain", height: "auto" }} />
+          <Image 
+            src="/logo.png" 
+            alt="Isiri Properties" 
+            width={160} 
+            height={50} 
+            style={{ objectFit: "contain", height: "auto", cursor: "pointer" }} 
+            onClick={handleLogoClick}
+          />
         </div>
 
         <nav className={styles.sidebarMenu}>
