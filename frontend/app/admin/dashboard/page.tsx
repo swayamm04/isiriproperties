@@ -28,6 +28,7 @@ import CustomSelect from "@/components/CustomSelect";
 import AutocompleteInput from "@/components/AutocompleteInput";
 import { formatIndianPrice } from "@/utils/formatPrice";
 import styles from "./page.module.css";
+import imageCompression from "browser-image-compression";
 
 interface CategoryField {
   name: string;
@@ -762,7 +763,7 @@ export default function AdminDashboardPage() {
                   <label className={styles.label}>Property Title *</label>
                   <input
                     type="text"
-                    placeholder="e.g. Modern Brutalist Oasis"
+                    placeholder="Enter title"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     className={styles.input}
@@ -776,7 +777,7 @@ export default function AdminDashboardPage() {
                     value={city}
                     onChange={(val) => setCity(val)}
                     options={citySuggestions}
-                    placeholder="e.g. New York"
+                    placeholder="Enter city"
                     required={true}
                   />
                 </div>
@@ -785,7 +786,7 @@ export default function AdminDashboardPage() {
                   <label className={styles.label}>Location Address *</label>
                   <input
                     type="text"
-                    placeholder="e.g. 45 Pinecrest Lane, New York"
+                    placeholder="Enter location address"
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
                     className={styles.input}
@@ -878,12 +879,30 @@ export default function AdminDashboardPage() {
                     id="imageFiles"
                     multiple
                     accept="image/*"
-                    onChange={(e) => {
+                    onChange={async (e) => {
                       if (e.target.files) {
-                        let validFiles = Array.from(e.target.files).filter(file => file.size <= 3 * 1024 * 1024);
+                        let validFiles = Array.from(e.target.files).filter(file => file.size <= 20 * 1024 * 1024);
                         if (validFiles.length !== e.target.files.length) {
-                          alert("Some files exceed the 3MB limit and were removed.");
+                          alert("Some files exceed the 20MB limit and were removed.");
                         }
+
+                        setAddLoading(true);
+                        const compressedFiles = [];
+                        for (let file of validFiles) {
+                          try {
+                            const compressedFile = await imageCompression(file, {
+                              maxSizeMB: 0.8,
+                              maxWidthOrHeight: 1920,
+                              useWebWorker: true,
+                            });
+                            compressedFiles.push(compressedFile);
+                          } catch (err) {
+                            console.error("Image compression error:", err);
+                            compressedFiles.push(file);
+                          }
+                        }
+                        setAddLoading(false);
+
                         setSelectedFiles(prev => {
                           const currentTotal = existingImages.length + prev.length;
                           if (currentTotal >= 6) {
@@ -891,11 +910,12 @@ export default function AdminDashboardPage() {
                             return prev;
                           }
                           const allowedSpaces = 6 - currentTotal;
-                          if (validFiles.length > allowedSpaces) {
+                          let finalFiles = compressedFiles;
+                          if (finalFiles.length > allowedSpaces) {
                             alert(`You can only add ${allowedSpaces} more image(s). Extra images were discarded.`);
-                            validFiles = validFiles.slice(0, allowedSpaces);
+                            finalFiles = finalFiles.slice(0, allowedSpaces);
                           }
-                          return [...prev, ...validFiles];
+                          return [...prev, ...finalFiles];
                         });
                       }
                       e.target.value = "";
@@ -904,7 +924,7 @@ export default function AdminDashboardPage() {
                     className={styles.input}
                     style={{ padding: "0.6rem" }}
                   />
-                  <span className={styles.helperText} style={{ display: 'block', marginTop: '0.2rem' }}>Select multiple image files (Max 3MB per file).</span>
+                  <span className={styles.helperText} style={{ display: 'block', marginTop: '0.2rem' }}>Select multiple image files (Max 20MB per file, auto-compressed on upload).</span>
 
                   {(existingImages.length > 0 || imagePreviews.length > 0) && (
                     <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap', marginTop: '1rem' }}>

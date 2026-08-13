@@ -36,7 +36,13 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
   try {
     data = text ? JSON.parse(text) : {};
   } catch (e) {
-    data = { error: text || "Invalid JSON response from server" };
+    if (response.status === 413) {
+      data = { error: "File size too large. Please upload smaller images or contact support." };
+    } else if (text && text.trim().startsWith("<")) {
+      data = { error: `Server error (${response.status}). Please try again later.` };
+    } else {
+      data = { error: text || "Invalid JSON response from server" };
+    }
   }
 
   if (!response.ok) {
