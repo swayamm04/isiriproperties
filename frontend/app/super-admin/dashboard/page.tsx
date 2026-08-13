@@ -1118,7 +1118,6 @@ export default function SuperAdminDashboardPage() {
                           <tr>
                             <th>Name</th>
                             <th>Phone</th>
-                            <th>City</th>
                             <th>Email / Username</th>
                             <th>Status</th>
                             <th>Actions</th>
@@ -1129,7 +1128,6 @@ export default function SuperAdminDashboardPage() {
                             <tr key={u._id}>
                               <td style={{ fontWeight: 500 }}>{u.name}</td>
                               <td>{u.phone}</td>
-                              <td>{u.city}</td>
                               <td>{u.email}</td>
                               <td>
                                 <span style={{ fontWeight: 600, color: u.isBlocked ? "#e05e5e" : "#4eb570" }}>
