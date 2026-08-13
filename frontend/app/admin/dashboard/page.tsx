@@ -887,7 +887,7 @@ export default function AdminDashboardPage() {
                         }
 
                         setAddLoading(true);
-                        const compressedFiles = [];
+                        const compressedFiles: File[] = [];
                         for (let file of validFiles) {
                           try {
                             const compressedFile = await imageCompression(file, {

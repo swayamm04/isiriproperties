@@ -1851,7 +1851,7 @@ export default function SuperAdminDashboardPage() {
                         }
 
                         setPropAddLoading(true);
-                        const compressedFiles = [];
+                        const compressedFiles: File[] = [];
                         for (let file of validFiles) {
                           try {
                             const compressedFile = await imageCompression(file, {
