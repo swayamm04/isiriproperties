@@ -895,7 +895,12 @@ export default function AdminDashboardPage() {
                               maxWidthOrHeight: 1920,
                               useWebWorker: true,
                             });
-                            compressedFiles.push(compressedFile);
+                            // Reconstruct the file with the original name to preserve the extension for the backend
+                            const finalFile = new File([compressedFile], file.name, {
+                              type: compressedFile.type,
+                              lastModified: Date.now(),
+                            });
+                            compressedFiles.push(finalFile);
                           } catch (err) {
                             console.error("Image compression error:", err);
                             compressedFiles.push(file);
