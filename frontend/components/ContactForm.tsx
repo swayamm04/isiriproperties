@@ -65,7 +65,7 @@ export default function ContactForm() {
               <Mail className={styles.infoIcon} size={20} strokeWidth={1.5} />
               <div>
                 <h4 className={styles.infoTitle}>Electronic Mail</h4>
-                <p className={styles.infoText}>advisory@isiriproperties.com<br />concierge@isiriproperties.com</p>
+                <p className={styles.infoText}>advisory@plotandacre.com<br />concierge@plotandacre.com</p>
               </div>
             </div>
 
@@ -92,7 +92,7 @@ export default function ContactForm() {
           allowFullScreen
           loading="lazy"
           referrerPolicy="no-referrer-when-downgrade"
-          title="Isiri Properties Location Map"
+          title="Plot&Acre Location Map"
         />
       </div>
     </section>

@@ -81,6 +81,8 @@ interface Property {
   isPremium?: boolean;
   description?: string;
   customFields?: Record<string, any>;
+  keyPoints?: string[];
+  amenities?: string[];
 }
 
 interface CategoryField {
@@ -174,6 +176,14 @@ export default function SuperAdminDashboardPage() {
   const [propExistingImages, setPropExistingImages] = useState<string[]>([]);
   const [propRemovedImages, setPropRemovedImages] = useState<string[]>([]);
   const [propImagePreviews, setPropImagePreviews] = useState<string[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [existingImages, setExistingImages] = useState<string[]>([]);
+  const [removedImages, setRemovedImages] = useState<string[]>([]);
+  const [keyPoints, setKeyPoints] = useState<string[]>([]);
+  const [keyPointInput, setKeyPointInput] = useState("");
+  const [amenities, setAmenities] = useState<string[]>([]);
+  const [amenityInput, setAmenityInput] = useState("");
+  const [addLoading, setAddLoading] = useState(false);
   
   const [openPropertyMenuId, setOpenPropertyMenuId] = useState<string | null>(null);
   const [propConfirmStatusModal, setPropConfirmStatusModal] = useState<{isOpen: boolean, property: Property | null}>({ isOpen: false, property: null });
@@ -452,6 +462,11 @@ export default function SuperAdminDashboardPage() {
     setPropCustomFields(property.customFields || {});
     setPropExistingImages(property.images || []);
     setPropRemovedImages([]);
+    setPropSelectedFiles([]);
+    setKeyPoints(property.keyPoints || []);
+    setAmenities(property.amenities || []);
+    setKeyPointInput("");
+    setAmenityInput("");
     setPropEditMode(true);
     setEditingPropId(property._id);
     setIsAddPropModalOpen(true);
@@ -524,6 +539,9 @@ export default function SuperAdminDashboardPage() {
         if (finalFreq) formData.append("rentFrequency", finalFreq);
       }
 
+      formData.append("keyPoints", JSON.stringify(keyPoints));
+      formData.append("amenities", JSON.stringify(amenities));
+
       if (propSelectedFiles && propSelectedFiles.length > 0) {
         for (let i = 0; i < propSelectedFiles.length; i++) {
           formData.append("imageFiles", propSelectedFiles[i]);
@@ -561,8 +579,14 @@ export default function SuperAdminDashboardPage() {
       setPropCustomFields({});
       setPropEditMode(false);
       setEditingPropId(null);
-      setPropExistingImages([]);
-      setPropRemovedImages([]);
+      setSelectedFiles([]);
+      setExistingImages([]);
+      setRemovedImages([]);
+      setKeyPoints([]);
+      setAmenities([]);
+      setKeyPointInput("");
+      setAmenityInput("");
+      setPropEditMode(false);
 
       const fileInput = document.getElementById("superImageFiles") as HTMLInputElement;
       if (fileInput) fileInput.value = "";
@@ -753,14 +777,17 @@ export default function SuperAdminDashboardPage() {
       {/* Left Sidebar */}
       <aside className={`${styles.sidebar} ${isSidebarOpen ? styles.sidebarOpen : ""}`}>
         <div className={styles.sidebarBrand}>
-          <Image 
-            src="/logo.png" 
-            alt="Isiri Properties" 
-            width={160} 
-            height={50} 
-            style={{ objectFit: "contain", height: "auto", cursor: "pointer" }} 
-            onClick={handleLogoClick}
-          />
+          <div style={{ display: "flex", alignItems: "center", height: "50px", overflow: "visible" }}>
+            <Image 
+              src="/logo-updated.png" 
+              alt="Plot&Acre" 
+              width={280} 
+              height={140} 
+              className="brand-logo-image" 
+              style={{ cursor: "pointer" }}
+              onClick={handleLogoClick}
+            />
+          </div>
         </div>
 
         <nav className={styles.sidebarMenu}>
@@ -844,7 +871,7 @@ export default function SuperAdminDashboardPage() {
         </nav>
 
         <div className={styles.sidebarFooter}>
-          © {new Date().getFullYear()} Isiri Properties
+          © {new Date().getFullYear()} Plot&Acre
         </div>
         <button 
           className={styles.sidebarCloseBtn}
@@ -1420,7 +1447,7 @@ export default function SuperAdminDashboardPage() {
                 <label className={styles.label}>Email ID (Optional)</label>
                 <input
                   type="email"
-                  placeholder="e.g. rachel@isiri.com"
+                  placeholder="e.g. rachel@plotandacre.com"
                   value={adminEmail}
                   onChange={(e) => setAdminEmail(e.target.value)}
                   className={styles.input}
@@ -1549,26 +1576,26 @@ export default function SuperAdminDashboardPage() {
                   </div>
                   
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
-                    <label className={styles.label} style={{ margin: 0 }}>Fields (Max 3)</label>
+                    <label className={styles.label} style={{ margin: 0 }}>Fields (Max 2)</label>
                     <button 
                       type="button" 
                       onClick={() => {
-                        if (catFields.length < 3) {
+                        if (catFields.length < 2) {
                           setCatFields([...catFields, { name: "", type: "text", unit: "" }]);
                         }
                       }}
-                      disabled={catFields.length >= 3}
+                      disabled={catFields.length >= 2}
                       style={{ 
                         background: "none", 
                         border: "1px solid var(--color-border)", 
                         padding: "0.2rem 0.5rem", 
                         borderRadius: "4px", 
                         fontSize: "0.8rem", 
-                        cursor: catFields.length >= 3 ? "not-allowed" : "pointer", 
+                        cursor: catFields.length >= 2 ? "not-allowed" : "pointer", 
                         display: "flex", 
                         alignItems: "center", 
                         gap: "0.2rem",
-                        opacity: catFields.length >= 3 ? 0.5 : 1
+                        opacity: catFields.length >= 2 ? 0.5 : 1
                       }}
                     >
                       <PlusCircle size={14} /> Add
@@ -1981,6 +2008,96 @@ export default function SuperAdminDashboardPage() {
                 </div>
 
 
+
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>Features (Max 6)</label>
+                  <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem', alignItems: 'stretch' }}>
+                    <input
+                      type="text"
+                      placeholder="e.g. 5 Mins from Metro Station"
+                      value={keyPointInput}
+                      onChange={(e) => setKeyPointInput(e.target.value)}
+                      className={styles.input}
+                      style={{ flex: 1, height: '45px', margin: 0 }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          if (keyPointInput.trim() && keyPoints.length < 6) {
+                            setKeyPoints([...keyPoints, keyPointInput.trim()]);
+                            setKeyPointInput("");
+                          }
+                        }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (keyPointInput.trim() && keyPoints.length < 6) {
+                          setKeyPoints([...keyPoints, keyPointInput.trim()]);
+                          setKeyPointInput("");
+                        }
+                      }}
+                      className={styles.submitBtn}
+                      style={{ padding: '0 1.5rem', width: 'auto', height: '45px', margin: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      disabled={keyPoints.length >= 6 || !keyPointInput.trim()}
+                    >
+                      Add
+                    </button>
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    {keyPoints.map((kp, idx) => (
+                      <span key={idx} style={{ background: 'var(--color-bg-light)', border: '1px solid var(--color-border)', padding: '0.3rem 0.6rem', borderRadius: '4px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        {kp}
+                        <button type="button" onClick={() => setKeyPoints(keyPoints.filter((_, i) => i !== idx))} style={{ background: 'none', border: 'none', color: '#e05e5e', cursor: 'pointer', padding: 0 }}>✕</button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>Amenities (Max 6)</label>
+                  <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem', alignItems: 'stretch' }}>
+                    <input
+                      type="text"
+                      placeholder="e.g. Swimming Pool, Gym"
+                      value={amenityInput}
+                      onChange={(e) => setAmenityInput(e.target.value)}
+                      className={styles.input}
+                      style={{ flex: 1, height: '45px', margin: 0 }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          if (amenityInput.trim() && amenities.length < 6) {
+                            setAmenities([...amenities, amenityInput.trim()]);
+                            setAmenityInput("");
+                          }
+                        }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (amenityInput.trim() && amenities.length < 6) {
+                          setAmenities([...amenities, amenityInput.trim()]);
+                          setAmenityInput("");
+                        }
+                      }}
+                      className={styles.submitBtn}
+                      style={{ padding: '0 1.5rem', width: 'auto', height: '45px', margin: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      disabled={amenities.length >= 6 || !amenityInput.trim()}
+                    >
+                      Add
+                    </button>
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    {amenities.map((am, idx) => (
+                      <span key={idx} style={{ background: 'var(--color-bg-light)', border: '1px solid var(--color-border)', padding: '0.3rem 0.6rem', borderRadius: '4px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        {am}
+                        <button type="button" onClick={() => setAmenities(amenities.filter((_, i) => i !== idx))} style={{ background: 'none', border: 'none', color: '#e05e5e', cursor: 'pointer', padding: 0 }}>✕</button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
 
                 <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
                   <label className={styles.label}>Architectural Description *</label>

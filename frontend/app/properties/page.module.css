@@ -1,7 +1,8 @@
 .main {
   min-height: 100vh;
   background-color: var(--color-bg-light);
-  padding-top: 80px; /* Offset for sticky navbar */
+  padding-top: 80px;
+  /* Offset for sticky navbar */
 }
 
 .hero {
@@ -49,6 +50,10 @@
   padding: 4rem 2rem 8rem;
 }
 
+.mobileSearchWrapper {
+  display: none;
+}
+
 .searchContainer {
   background-color: var(--color-bg-white);
   border: 1px solid var(--color-border);
@@ -84,7 +89,8 @@
   font-weight: 600;
 }
 
-.input, .select {
+.input,
+.select {
   width: 100%;
   padding: 0.75rem 1rem;
   border: 1px solid var(--color-border);
@@ -94,7 +100,8 @@
   transition: all 0.3s ease;
 }
 
-.input:focus, .select:focus {
+.input:focus,
+.select:focus {
   border-color: var(--color-primary);
   background-color: var(--color-bg-white);
 }
@@ -110,7 +117,8 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  height: 42px; /* Align with select/inputs */
+  height: 42px;
+  /* Align with select/inputs */
 }
 
 .resetBtn:hover {
@@ -194,16 +202,16 @@
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-  
+
   .filterBar {
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .filterGroup {
     min-width: 100%;
   }
-  
+
   .resetBtn {
     width: 100%;
   }
@@ -223,7 +231,11 @@
   }
 
   .hero {
-    padding: 2.5rem 1rem 2rem;
+    display: none;
+  }
+
+  .section {
+    padding: 1rem 1rem 4rem;
   }
 
   .tabsContainer {
@@ -237,7 +249,122 @@
     padding: 0.5rem 0.25rem;
   }
 
-  .searchContainer, .filterBar {
+  .mobileSearchWrapper {
+    display: block;
+    margin-bottom: 1.5rem;
+  }
+
+  .desktopSearchFilters {
+    display: none;
+  }
+
+  .mobileSearchBar {
+    display: flex;
+    align-items: center;
+    background-color: #f3f4f6; /* Light gray pill */
+    border-radius: 30px;
+    padding: 0.5rem 1rem;
+    gap: 0.75rem;
+    margin-bottom: 0;
+  }
+
+  .mobileFiltersContainer {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: all 0.3s ease-in-out;
+    margin-top: 0;
+  }
+
+  .mobileFiltersContainer.open {
+    max-height: 500px;
+    opacity: 1;
+    margin-top: 1rem;
+  }
+
+  .mobileSearchIcon {
+    color: var(--color-dark-muted);
+  }
+
+  .mobileSearchInput {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 0.9rem;
+    color: var(--color-dark);
+    outline: none;
+    width: 100%;
+  }
+
+  .mobileSearchInput::placeholder {
+    color: #9ca3af;
+  }
+
+  .mobileFilterBtn {
+    background-color: #e5e7eb;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-dark);
+    cursor: pointer;
+  }
+
+  .cityFiltersSection {
+    margin-top: 0.25rem;
+  }
+
+  .cityFilterHeader {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    padding-left: 0.25rem;
+  }
+
+  .mobileFilterTitle {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--color-dark-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .mobilePillFilters {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+    scrollbar-width: none;
+  }
+
+  .mobilePillFilters::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mobilePill {
+    background-color: #f3f4f6;
+    color: var(--color-dark);
+    border: none;
+    padding: 0.5rem 1.25rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .mobilePillActive {
+    background-color: var(--color-primary-dark);
+    color: #FFFFFF;
+  }
+
+  .searchContainer,
+  .filterBar {
     padding: 0.75rem;
     gap: 0.75rem;
     border-radius: var(--radius-sm);
@@ -255,7 +382,8 @@
     font-size: 0.55rem;
   }
 
-  .input, .select {
+  .input,
+  .select {
     padding: 0.4rem 0.5rem;
     font-size: 0.65rem;
     height: 32px;

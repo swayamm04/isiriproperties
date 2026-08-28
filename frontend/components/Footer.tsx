@@ -11,7 +11,9 @@ export default function Footer() {
         {/* Brand Column */}
         <div className={styles.brandCol}>
           <Link href="/" className={styles.logo}>
-            <Image src="/logo.png" alt="Isiri Properties" width={180} height={60} style={{ objectFit: "contain", height: "auto" }} />
+            <div style={{ display: "flex", alignItems: "center", height: "50px" }}>
+              <Image src="/logo-updated.png" alt="Plot&Acre" width={280} height={140} className="brand-logo-image" />
+            </div>
           </Link>
           <p className={styles.brandText}>
             Specialists in fine architectural properties, curate estates, and luxury penthouses. Committed to excellence, discretion, and architectural integrity.
@@ -53,7 +55,7 @@ export default function Footer() {
             </li>
             <li>
               <strong style={{ color: 'var(--color-primary)' }}>Email:</strong><br />
-              propertiesisiri@gmail.com
+              contact@plotandacre.com
             </li>
           </ul>
         </div>
@@ -63,7 +65,7 @@ export default function Footer() {
       {/* Bottom Legal Row */}
       <div className={styles.bottomRow}>
         <div className={styles.copyright}>
-          &copy; {currentYear} Isiri Properties. All rights reserved. Designed for elite spaces.
+          &copy; {currentYear} Plot&Acre. All rights reserved. Designed for elite spaces.
         </div>
       </div>
     </footer>

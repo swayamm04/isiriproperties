@@ -186,7 +186,7 @@ function LoginContent() {
           {authMode === "login" ? "Welcome Back!" : authMode === "signup" ? "Create Account" : "Reset Password"}
         </h2>
         <p className={styles.subtitle}>
-          {authMode === "login" ? "Login to continue to Isiri Properties" : authMode === "signup" ? "Register to start your property wishlist" : "Enter your registered phone number to reset password"}
+          {authMode === "login" ? "Login to continue to Plot&Acre" : authMode === "signup" ? "Register to start your property wishlist" : "Enter your registered phone number to reset password"}
         </p>
 
         <form onSubmit={handleAuthSubmit}>

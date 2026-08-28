@@ -187,7 +187,7 @@ router.get("/:id", async (req, res) => {
 // @access  Private (Admin & Super Admin)
 router.post("/", auth, authorize(["admin", "super_admin"]), upload.array("imageFiles", 6), async (req, res) => {
   try {
-    const { title, description, city, location, price, beds, baths, area, type, imageUrls, customFields, listingType, isPremium, rentFrequency } = req.body;
+    const { title, description, city, location, price, beds, baths, area, type, imageUrls, customFields, keyPoints, amenities, listingType, isPremium, rentFrequency } = req.body;
 
     if (!title || !description || !city || !location || !price || !type) {
       return res.status(400).json({ error: "Please provide all required fields (title, description, city, location, price, type)" });
@@ -200,6 +200,18 @@ router.post("/", auth, authorize(["admin", "super_admin"]), upload.array("imageF
       } catch (e) {
         console.error("Error parsing customFields:", e);
       }
+    }
+
+    let parsedKeyPoints = [];
+    if (keyPoints) {
+      try { parsedKeyPoints = typeof keyPoints === 'string' ? JSON.parse(keyPoints) : keyPoints; }
+      catch (e) { console.error("Error parsing keyPoints:", e); }
+    }
+
+    let parsedAmenities = [];
+    if (amenities) {
+      try { parsedAmenities = typeof amenities === 'string' ? JSON.parse(amenities) : amenities; }
+      catch (e) { console.error("Error parsing amenities:", e); }
     }
 
     let images = [];
@@ -260,6 +272,8 @@ router.post("/", auth, authorize(["admin", "super_admin"]), upload.array("imageF
       isPremium: isPremium === "true" || isPremium === true,
       rentFrequency: (listingType === "Rent" && rentFrequency) ? rentFrequency : undefined,
       customFields: parsedCustomFields,
+      keyPoints: parsedKeyPoints,
+      amenities: parsedAmenities,
       addedBy: req.user._id,
       addedByName: req.user.role === "super_admin" ? "Super Admin" : req.user.name,
       status: "available",
@@ -311,7 +325,7 @@ router.post("/wishlist/:id", auth, authorize(["user", "admin", "super_admin"]), 
 // @access  Private (Admin & Super Admin)
 router.put("/:id", auth, authorize(["admin", "super_admin"]), upload.array("imageFiles", 6), async (req, res) => {
   try {
-    const { title, description, city, location, price, beds, baths, area, type, imageUrls, customFields, removedImages, listingType, isPremium, rentFrequency } = req.body;
+    const { title, description, city, location, price, beds, baths, area, type, imageUrls, customFields, keyPoints, amenities, removedImages, listingType, isPremium, rentFrequency } = req.body;
 
     const property = await Property.findById(req.params.id);
     if (!property) return res.status(404).json({ error: "Property not found" });
@@ -328,6 +342,18 @@ router.put("/:id", auth, authorize(["admin", "super_admin"]), upload.array("imag
       } catch (e) {
         console.error("Error parsing customFields:", e);
       }
+    }
+
+    let parsedKeyPoints = property.keyPoints || [];
+    if (keyPoints) {
+      try { parsedKeyPoints = typeof keyPoints === 'string' ? JSON.parse(keyPoints) : keyPoints; }
+      catch (e) { console.error("Error parsing keyPoints:", e); }
+    }
+
+    let parsedAmenities = property.amenities || [];
+    if (amenities) {
+      try { parsedAmenities = typeof amenities === 'string' ? JSON.parse(amenities) : amenities; }
+      catch (e) { console.error("Error parsing amenities:", e); }
     }
 
     let currentImages = [...property.images];
@@ -382,6 +408,8 @@ router.put("/:id", auth, authorize(["admin", "super_admin"]), upload.array("imag
     }
     property.images = currentImages;
     property.customFields = parsedCustomFields;
+    property.keyPoints = parsedKeyPoints;
+    property.amenities = parsedAmenities;
 
     await property.save();
     res.json(property);

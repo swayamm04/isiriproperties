@@ -3,7 +3,10 @@
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowLeft, Heart, MapPin, Bed, Bath, Compass, Calendar, User, Eye, CheckCircle, ChevronLeft, ChevronRight, X, Phone, MessageSquare, Maximize, Car, MessageCircle } from "lucide-react";
+import { 
+  ArrowLeft, Heart, MapPin, Bed, Bath, Compass, Calendar, User, Eye, CheckCircle, ChevronLeft, ChevronRight, X, Phone, MessageSquare, Maximize, Car, MessageCircle,
+  Waves, Dumbbell, Shield, Wifi, Coffee, TreePine, Tv, Wind, Lock, Zap, Droplet, Flame, Sun, Star, Building
+} from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Loader from "@/components/Loader";
@@ -36,6 +39,8 @@ interface PropertyDetail {
   customFields?: Record<string, any>;
   listingType?: string;
   rentFrequency?: string;
+  keyPoints?: string[];
+  amenities?: string[];
 }
 
 export default function PropertyDetailPage() {
@@ -239,6 +244,27 @@ export default function PropertyDetailPage() {
     return <CheckCircle size={18} className={styles.featureIcon} />;
   };
 
+  const getIconForText = (text: string, iconSize = 18) => {
+    const t = text.toLowerCase();
+    if (t.includes("pool") || t.includes("swim") || t.includes("water")) return <Waves size={iconSize} />;
+    if (t.includes("gym") || t.includes("fitness") || t.includes("workout")) return <Dumbbell size={iconSize} />;
+    if (t.includes("secur") || t.includes("guard") || t.includes("cctv") || t.includes("camera") || t.includes("safe")) return <Shield size={iconSize} />;
+    if (t.includes("wifi") || t.includes("internet") || t.includes("broadband") || t.includes("fiber")) return <Wifi size={iconSize} />;
+    if (t.includes("park") || t.includes("garden") || t.includes("tree") || t.includes("nature") || t.includes("green") || t.includes("lawn")) return <TreePine size={iconSize} />;
+    if (t.includes("ac") || t.includes("air condition") || t.includes("cool")) return <Wind size={iconSize} />;
+    if (t.includes("heat") || t.includes("fire") || t.includes("warm")) return <Flame size={iconSize} />;
+    if (t.includes("power") || t.includes("backup") || t.includes("electric") || t.includes("generator") || t.includes("invert")) return <Zap size={iconSize} />;
+    if (t.includes("tv") || t.includes("television") || t.includes("cable") || t.includes("dish") || t.includes("dth")) return <Tv size={iconSize} />;
+    if (t.includes("water") || t.includes("plumb") || t.includes("ro") || t.includes("purifier") || t.includes("bore")) return <Droplet size={iconSize} />;
+    if (t.includes("sun") || t.includes("light") || t.includes("bright") || t.includes("solar")) return <Sun size={iconSize} />;
+    if (t.includes("lock") || t.includes("smart") || t.includes("keyless")) return <Lock size={iconSize} />;
+    if (t.includes("star") || t.includes("premium") || t.includes("luxury") || t.includes("club")) return <Star size={iconSize} />;
+    if (t.includes("coffee") || t.includes("cafe") || t.includes("tea")) return <Coffee size={iconSize} />;
+    if (t.includes("car") || t.includes("garage") || t.includes("parking")) return <Car size={iconSize} />;
+    if (t.includes("face") || t.includes("direction") || t.includes("vastu") || t.includes("facing")) return <Compass size={iconSize} />;
+    return <CheckCircle size={iconSize} />;
+  };
+
   const whatsappHref = property 
     ? `https://wa.me/919964496644?text=${encodeURIComponent(`Hi, I am interested in this property:\n\n*${property.title}*\nRef ID: #${property.propertyId}\n\nProperty Link:\n${typeof window !== 'undefined' ? window.location.href : ''}\n\nPlease share more details.`)}`
     : "#";
@@ -356,6 +382,13 @@ export default function PropertyDetailPage() {
 
             {/* Features Grid (Mobile UI style) */}
             <div className={styles.featuresGrid}>
+              <div className={styles.featureCard}>
+                <Building size={18} className={styles.featureIcon} />
+                <div className={styles.featureData}>
+                  <span className={styles.featureVal}>{property.listingType === "Rent" ? "Rent" : "Buy"}</span>
+                  <span className={styles.featureLabel}>{property.type}</span>
+                </div>
+              </div>
               {property.beds > 0 && (
                 <div className={styles.featureCard}>
                   <Bed size={18} className={styles.featureIcon} />
@@ -398,6 +431,40 @@ export default function PropertyDetailPage() {
               <h3 className={styles.descriptionTitle}>Overview</h3>
               <p className={styles.description}>{property.description}</p>
             </div>
+
+            {/* Key Points Section */}
+            {property.keyPoints && property.keyPoints.length > 0 && (
+              <div className={styles.descriptionSection} style={{ marginTop: '2rem' }}>
+                <h3 className={styles.descriptionTitle}>Features</h3>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.6rem', marginTop: '0.8rem' }}>
+                  {property.keyPoints.map((kp, idx) => (
+                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 0.8rem', backgroundColor: '#f7f8fa', borderRadius: '8px', border: '1px solid rgba(0, 0, 0, 0.03)', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.02)' }}>
+                      <div style={{ color: '#7a7a7a', display: 'flex', alignItems: 'center' }}>
+                        {getIconForText(kp, 14)}
+                      </div>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#1a1a1a' }}>{kp}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Amenities Section */}
+            {property.amenities && property.amenities.length > 0 && (
+              <div className={styles.descriptionSection} style={{ marginTop: '2rem' }}>
+                <h3 className={styles.descriptionTitle}>Amenities</h3>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.6rem', marginTop: '0.8rem' }}>
+                  {property.amenities.map((am, idx) => (
+                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 0.8rem', backgroundColor: '#f7f8fa', borderRadius: '8px', border: '1px solid rgba(0, 0, 0, 0.03)', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.02)' }}>
+                      <div style={{ color: '#7a7a7a', display: 'flex', alignItems: 'center' }}>
+                        {getIconForText(am, 14)}
+                      </div>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#1a1a1a' }}>{am}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Action buttons */}
             <div className={styles.actionGroup}>

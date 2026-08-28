@@ -10,19 +10,19 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Isiri Properties | Premium Real Estate & Luxury Living",
-  description: "Discover luxury architectural properties, premium villas, and estates with Isiri Properties. Editorial designs, sharp structures, and sophisticated living spaces.",
-  keywords: "real estate, luxury villas, architectural homes, premium properties, Isiri Properties",
+  title: "Plot&Acre | Premium Real Estate & Luxury Living",
+  description: "Discover luxury architectural properties, premium villas, and estates with Plot&Acre. Editorial designs, sharp structures, and sophisticated living spaces.",
+  keywords: "real estate, luxury villas, architectural homes, premium properties, Plot&Acre",
   icons: {
-    icon: '/favicon.jpg',
+    icon: '/favicon-updated.jpg',
   },
   openGraph: {
     images: [
       {
-        url: '/favicon.jpg',
+        url: '/favicon-updated.jpg',
         width: 1200,
         height: 630,
-        alt: 'Isiri Properties',
+        alt: 'Plot&Acre',
       },
     ],
   },

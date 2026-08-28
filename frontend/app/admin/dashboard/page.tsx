@@ -59,6 +59,8 @@ interface Property {
   beds?: number;
   baths?: number;
   area?: string;
+  keyPoints?: string[];
+  amenities?: string[];
 }
 
 export default function AdminDashboardPage() {
@@ -97,6 +99,10 @@ export default function AdminDashboardPage() {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [existingImages, setExistingImages] = useState<string[]>([]);
   const [removedImages, setRemovedImages] = useState<string[]>([]);
+  const [keyPoints, setKeyPoints] = useState<string[]>([]);
+  const [keyPointInput, setKeyPointInput] = useState("");
+  const [amenities, setAmenities] = useState<string[]>([]);
+  const [amenityInput, setAmenityInput] = useState("");
   const [addLoading, setAddLoading] = useState(false);
   const [addSuccess, setAddSuccess] = useState("");
   const [addError, setAddError] = useState("");
@@ -200,6 +206,9 @@ export default function AdminDashboardPage() {
         if (finalFreq) formData.append("rentFrequency", finalFreq);
       }
 
+      formData.append("keyPoints", JSON.stringify(keyPoints));
+      formData.append("amenities", JSON.stringify(amenities));
+
       if (selectedFiles && selectedFiles.length > 0) {
         for (let i = 0; i < selectedFiles.length; i++) {
           formData.append("imageFiles", selectedFiles[i]);
@@ -238,6 +247,10 @@ export default function AdminDashboardPage() {
       setSelectedFiles([]);
       setExistingImages([]);
       setRemovedImages([]);
+      setKeyPoints([]);
+      setAmenities([]);
+      setKeyPointInput("");
+      setAmenityInput("");
       setEditMode(false);
       setEditingPropertyId(null);
       
@@ -305,6 +318,10 @@ export default function AdminDashboardPage() {
       setExistingImages(fullProp.images || []);
       setRemovedImages([]);
       setSelectedFiles([]);
+      setKeyPoints(fullProp.keyPoints || []);
+      setAmenities(fullProp.amenities || []);
+      setKeyPointInput("");
+      setAmenityInput("");
       setIsAddPropModalOpen(true);
     } catch (err) {
       console.error("Failed to fetch full property details for edit", err);
@@ -400,7 +417,9 @@ export default function AdminDashboardPage() {
       {/* Left Sidebar */}
       <aside className={`${styles.sidebar} ${isSidebarOpen ? styles.sidebarOpen : ""}`}>
         <div className={styles.sidebarBrand}>
-          <Image src="/logo.png" alt="Isiri Properties" width={160} height={50} style={{ objectFit: "contain", height: "auto" }} />
+          <div style={{ display: "flex", alignItems: "center", height: "50px", overflow: "visible" }}>
+            <Image src="/logo-updated.png" alt="Plot&Acre" width={280} height={140} className="brand-logo-image" />
+          </div>
         </div>
 
         <nav className={styles.sidebarMenu}>
@@ -436,7 +455,7 @@ export default function AdminDashboardPage() {
         </nav>
 
         <div className={styles.sidebarFooter}>
-          © {new Date().getFullYear()} Isiri Properties
+          © {new Date().getFullYear()} Plot&Acre
         </div>
         <button 
           className={styles.sidebarCloseBtn}
@@ -511,6 +530,10 @@ export default function AdminDashboardPage() {
                     setSelectedFiles([]);
                     setExistingImages([]);
                     setRemovedImages([]);
+                    setKeyPoints([]);
+                    setAmenities([]);
+                    setKeyPointInput("");
+                    setAmenityInput("");
                     setIsAddPropModalOpen(true);
                   }}
                   className={styles.submitBtn}
@@ -975,6 +998,96 @@ export default function AdminDashboardPage() {
                 </div>
 
 
+
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>Features (Max 6)</label>
+                  <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem', alignItems: 'stretch' }}>
+                    <input
+                      type="text"
+                      placeholder="e.g. 5 Mins from Metro Station"
+                      value={keyPointInput}
+                      onChange={(e) => setKeyPointInput(e.target.value)}
+                      className={styles.input}
+                      style={{ flex: 1, height: '45px', margin: 0 }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          if (keyPointInput.trim() && keyPoints.length < 6) {
+                            setKeyPoints([...keyPoints, keyPointInput.trim()]);
+                            setKeyPointInput("");
+                          }
+                        }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (keyPointInput.trim() && keyPoints.length < 6) {
+                          setKeyPoints([...keyPoints, keyPointInput.trim()]);
+                          setKeyPointInput("");
+                        }
+                      }}
+                      className={styles.submitBtn}
+                      style={{ padding: '0 1.5rem', width: 'auto', height: '45px', margin: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      disabled={keyPoints.length >= 6 || !keyPointInput.trim()}
+                    >
+                      Add
+                    </button>
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    {keyPoints.map((kp, idx) => (
+                      <span key={idx} style={{ background: 'var(--color-bg-light)', border: '1px solid var(--color-border)', padding: '0.3rem 0.6rem', borderRadius: '4px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        {kp}
+                        <button type="button" onClick={() => setKeyPoints(keyPoints.filter((_, i) => i !== idx))} style={{ background: 'none', border: 'none', color: '#e05e5e', cursor: 'pointer', padding: 0 }}>✕</button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>Amenities (Max 6)</label>
+                  <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem', alignItems: 'stretch' }}>
+                    <input
+                      type="text"
+                      placeholder="e.g. Swimming Pool, Gym"
+                      value={amenityInput}
+                      onChange={(e) => setAmenityInput(e.target.value)}
+                      className={styles.input}
+                      style={{ flex: 1, height: '45px', margin: 0 }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          if (amenityInput.trim() && amenities.length < 6) {
+                            setAmenities([...amenities, amenityInput.trim()]);
+                            setAmenityInput("");
+                          }
+                        }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (amenityInput.trim() && amenities.length < 6) {
+                          setAmenities([...amenities, amenityInput.trim()]);
+                          setAmenityInput("");
+                        }
+                      }}
+                      className={styles.submitBtn}
+                      style={{ padding: '0 1.5rem', width: 'auto', height: '45px', margin: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      disabled={amenities.length >= 6 || !amenityInput.trim()}
+                    >
+                      Add
+                    </button>
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    {amenities.map((am, idx) => (
+                      <span key={idx} style={{ background: 'var(--color-bg-light)', border: '1px solid var(--color-border)', padding: '0.3rem 0.6rem', borderRadius: '4px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        {am}
+                        <button type="button" onClick={() => setAmenities(amenities.filter((_, i) => i !== idx))} style={{ background: 'none', border: 'none', color: '#e05e5e', cursor: 'pointer', padding: 0 }}>✕</button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
 
                 <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
                   <label className={styles.label}>Architectural Description *</label>

@@ -7,7 +7,7 @@ import Footer from "@/components/Footer";
 import PropertyCard from "@/components/PropertyCard";
 import { apiRequest } from "@/utils/api";
 import { useAuth } from "@/context/authContext";
-import { Search, Compass } from "lucide-react";
+import { Search, Compass, SlidersHorizontal } from "lucide-react";
 import Loader from "@/components/Loader";
 import styles from "./page.module.css";
 
@@ -44,6 +44,7 @@ function PropertiesList() {
   const [selectedListingType, setSelectedListingType] = useState("");
   const [selectedType, setSelectedType] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   // Sync state with URL search params on mount
   useEffect(() => {
@@ -57,7 +58,7 @@ function PropertiesList() {
     setSelectedType(type);
     setSelectedCity(city);
     setSelectedListingType(listingType === "All" ? "" : listingType);
-    
+
     // Auto-focus search input if navigated via #search
     if (window.location.hash === "#search") {
       setTimeout(() => {
@@ -129,7 +130,79 @@ function PropertiesList() {
 
       {/* Grid and Filters */}
       <section className={styles.section} id="search">
-        <div className={styles.searchContainer}>
+        {/* Mobile Search and Filters (Visible only on mobile) */}
+        <div className={styles.mobileSearchWrapper}>
+          <div className={styles.mobileSearchBar}>
+            <Search size={20} className={styles.mobileSearchIcon} />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search city or locality"
+              className={styles.mobileSearchInput}
+            />
+            <div 
+              className={styles.mobileFilterBtn} 
+              onClick={() => setShowMobileFilters(!showMobileFilters)}
+            >
+              <SlidersHorizontal size={18} />
+            </div>
+          </div>
+          
+          <div className={`${styles.mobileFiltersContainer} ${showMobileFilters ? styles.open : ""}`}>
+            {/* Listing Type Pills */}
+          <div className={styles.mobilePillFilters}>
+            <button 
+              className={`${styles.mobilePill} ${!selectedListingType ? styles.mobilePillActive : ""}`}
+              onClick={() => setSelectedListingType("")}
+            >
+              All
+            </button>
+            <button 
+              className={`${styles.mobilePill} ${selectedListingType === "Sell" ? styles.mobilePillActive : ""}`}
+              onClick={() => setSelectedListingType("Sell")}
+            >
+              Buy
+            </button>
+            <button 
+              className={`${styles.mobilePill} ${selectedListingType === "Rent" ? styles.mobilePillActive : ""}`}
+              onClick={() => setSelectedListingType("Rent")}
+            >
+              Rent
+            </button>
+          </div>
+
+          {/* City Pills */}
+          {uniqueCities.length > 0 && (
+            <div className={styles.cityFiltersSection}>
+              <div className={styles.cityFilterHeader}>
+                <span className={styles.mobileFilterTitle}>Cities</span>
+              </div>
+              <div className={styles.mobilePillFilters}>
+                <button 
+                  className={`${styles.mobilePill} ${!selectedCity ? styles.mobilePillActive : ""}`}
+                  onClick={() => setSelectedCity("")}
+                >
+                  All
+                </button>
+                {uniqueCities.map(city => (
+                <button 
+                  key={city}
+                  className={`${styles.mobilePill} ${selectedCity === city ? styles.mobilePillActive : ""}`}
+                  onClick={() => setSelectedCity(city)}
+                >
+                  {city}
+                </button>
+              ))}
+            </div>
+            </div>
+          )}
+          </div>
+        </div>
+
+        {/* Desktop Search and Filters (Hidden on mobile) */}
+        <div className={styles.desktopSearchFilters}>
+          <div className={styles.searchContainer}>
           {/* Keyword Search */}
           <div className={styles.filterGroup}>
             <label className={styles.label}>Search Keywords</label>
@@ -143,15 +216,15 @@ function PropertiesList() {
                 className={styles.input}
                 style={{ paddingRight: "2.5rem" }}
               />
-              <Search 
-                size={16} 
-                style={{ 
-                  position: "absolute", 
-                  right: "1rem", 
-                  top: "50%", 
+              <Search
+                size={16}
+                style={{
+                  position: "absolute",
+                  right: "1rem",
+                  top: "50%",
                   transform: "translateY(-50%)",
-                  color: "var(--color-primary)" 
-                }} 
+                  color: "var(--color-primary)"
+                }}
               />
             </div>
           </div>
@@ -206,6 +279,7 @@ function PropertiesList() {
           <button onClick={handleReset} className={styles.resetBtn}>
             Clear
           </button>
+        </div>
         </div>
 
         {/* Listings Grid */}

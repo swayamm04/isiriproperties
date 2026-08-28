@@ -4,14 +4,16 @@
   left: 0;
   width: 100%;
   z-index: 1000;
-  background-color: var(--color-bg-light); /* Changed to gray */
+  background-color: var(--color-bg-light);
+  /* Changed to gray */
   border-bottom: 1px solid var(--color-border);
   backdrop-filter: blur(5px);
   transition: all 0.4s ease;
 }
 
 .scrolled {
-  background-color: var(--color-bg-light); /* Changed to gray */
+  background-color: var(--color-bg-light);
+  /* Changed to gray */
   box-shadow: var(--shadow-sm);
   border-bottom: 1px solid transparent;
 }
@@ -20,7 +22,8 @@
   width: 100%;
   position: relative;
   height: 24px;
-  background-color: var(--color-bg-light); /* Changed to gray */
+  background-color: var(--color-bg-light);
+  /* Changed to gray */
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -39,7 +42,8 @@
   width: 100%;
   text-align: center;
   color: var(--color-primary-dark);
-  font-size: 0.65rem; /* Made very small */
+  font-size: 0.65rem;
+  /* Made very small */
   font-weight: 600;
   opacity: 0;
   transition: opacity 0.5s ease;
@@ -87,7 +91,8 @@
   padding: 0.25rem 0;
 }
 
-.navLink:hover, .navLinkActive {
+.navLink:hover,
+.navLinkActive {
   color: var(--color-primary);
 }
 
@@ -102,7 +107,8 @@
   transition: width 0.3s ease;
 }
 
-.navLink:hover::after, .navLinkActive::after {
+.navLink:hover::after,
+.navLinkActive::after {
   width: 100%;
 }
 
@@ -182,7 +188,9 @@
 }
 
 @keyframes spin {
-  to { transform: translateY(-50%) rotate(360deg); }
+  to {
+    transform: translateY(-50%) rotate(360deg);
+  }
 }
 
 .suggestionsDropdown {
@@ -192,7 +200,7 @@
   width: 250px;
   background: #FFFFFF;
   border-radius: var(--radius-md);
-  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
   z-index: 100;
   max-height: 350px;
   overflow-y: auto;
@@ -425,7 +433,8 @@
 
 @media (max-width: 768px) {
   .navbar {
-    background: var(--color-bg-light); /* Changed to gray */
+    background: var(--color-bg-light);
+    /* Changed to gray */
     border-bottom: none;
     position: fixed;
     top: 0;
@@ -433,23 +442,24 @@
     width: 100%;
     z-index: 1000;
     backdrop-filter: none;
-    padding: 0; /* Remove extra padding since container has padding */
+    padding: 0;
+    /* Remove extra padding since container has padding */
   }
-  
+
   .scrolled {
-    background: var(--color-bg-light); /* Changed to gray */
+    background: var(--color-bg-light);
     box-shadow: var(--shadow-sm);
   }
 
   .logo {
     /* Kept empty or just remove the filter to use original logo colors */
   }
-  
+
   .logo img {
     max-width: 140px;
     height: auto;
   }
-  
+
   .logoGold {
     color: var(--color-primary) !important;
   }
@@ -457,18 +467,19 @@
   .navLinks {
     display: none;
   }
-  
+
   .desktopToggle {
     display: none;
   }
-  
+
   .mobileActions {
     display: flex;
     align-items: center;
-    gap: 0.75rem; /* reduce gap slightly */
+    gap: 0.75rem;
+    /* reduce gap slightly */
     color: var(--color-dark);
   }
-  
+
   .mobileLogin {
     font-size: 0.75rem;
     font-weight: 600;
@@ -484,11 +495,12 @@
     font-family: var(--font-sans);
     transform: translateY(2px);
   }
-  
+
   .mobileCart {
     background-color: rgba(0, 0, 0, 0.05);
     border-radius: 50%;
-    padding: 0.4rem; /* smaller padding */
+    padding: 0.4rem;
+    /* smaller padding */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -496,7 +508,7 @@
   }
 
   .container {
-    padding: 0.75rem 1rem; /* reduce padding */
+    padding: 0.4rem 1rem;
     align-items: center;
   }
 
@@ -574,10 +586,12 @@
 }
 
 .modalContent {
-  background-color: #FAFAFA; /* Changed to light background */
+  background-color: #FAFAFA;
+  /* Changed to light background */
   border-radius: 12px;
   width: 100%;
-  max-width: 420px; /* Made slightly narrower like the screenshot */
+  max-width: 420px;
+  /* Made slightly narrower like the screenshot */
   padding: 3rem 2.5rem 2rem 2.5rem;
   position: relative;
   animation: modalFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -589,6 +603,7 @@
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -633,7 +648,8 @@
 }
 
 .formLabel {
-  display: none; /* Hidden to match screenshot */
+  display: none;
+  /* Hidden to match screenshot */
 }
 
 .inputField {
@@ -641,7 +657,8 @@
   border: 1px solid var(--color-border);
   border-radius: 50px;
   color: var(--color-dark);
-  padding: 1rem 1.25rem 1rem 3rem; /* Left padding for icon */
+  padding: 1rem 1.25rem 1rem 3rem;
+  /* Left padding for icon */
   font-size: 0.95rem;
   width: 100%;
   transition: all 0.3s ease;

@@ -27,7 +27,7 @@ export async function generateMetadata({
     }
 
     return {
-      title: `${property.title} | Isiri Properties`,
+      title: `${property.title} | Plot&Acre`,
       description: property.description?.substring(0, 160) || "Property Details",
       openGraph: {
         title: property.title,

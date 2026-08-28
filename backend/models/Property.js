@@ -66,6 +66,26 @@ const propertySchema = new mongoose.Schema(
       type: mongoose.Schema.Types.Mixed,
       default: {},
     },
+    keyPoints: {
+      type: [String],
+      validate: [
+        function (val) {
+          return val.length <= 6;
+        },
+        "{PATH} exceeds the limit of 6 items",
+      ],
+      default: [],
+    },
+    amenities: {
+      type: [String],
+      validate: [
+        function (val) {
+          return val.length <= 6;
+        },
+        "{PATH} exceeds the limit of 6 items",
+      ],
+      default: [],
+    },
     addedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

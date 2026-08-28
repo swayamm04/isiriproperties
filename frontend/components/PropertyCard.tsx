@@ -19,15 +19,15 @@ export default function PropertyCard({ property }: PropertyCardProps) {
 
   const { user, toggleWishlist } = useAuth();
   const [currentFilter, setCurrentFilter] = useState("All");
-  
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       setCurrentFilter(sessionStorage.getItem("homeListingType") || "All");
-      
+
       const handleTypeChange = () => {
         setCurrentFilter(sessionStorage.getItem("homeListingType") || "All");
       };
-      
+
       window.addEventListener("homeListingTypeChanged", handleTypeChange);
       return () => window.removeEventListener("homeListingTypeChanged", handleTypeChange);
     }
@@ -66,16 +66,16 @@ export default function PropertyCard({ property }: PropertyCardProps) {
             </div>
           )}
         </div>
-        <div 
-          className={styles.favoriteBtn} 
+        <div
+          className={styles.favoriteBtn}
           onClick={handleWishlistClick}
           role="button"
           tabIndex={0}
         >
-          <Heart 
-            size={18} 
-            fill={isWishlisted ? "var(--color-primary)" : "none"} 
-            color={isWishlisted ? "var(--color-primary)" : "currentColor"} 
+          <Heart
+            size={18}
+            fill={isWishlisted ? "var(--color-primary)" : "none"}
+            color={isWishlisted ? "var(--color-primary)" : "currentColor"}
           />
         </div>
       </div>

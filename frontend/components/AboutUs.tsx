@@ -76,7 +76,7 @@ export default function AboutUs() {
             Building Better Futures
           </h2>
           <p className={styles.description}>
-            At Isiri Properties, we believe in more than just buildings – we believe in creating spaces that inspire, connect, and elevate lives. With years of experience in real estate, we are committed to providing exceptional service and trusted solutions.
+            At Plot&Acre, we believe in more than just buildings – we believe in creating spaces that inspire, connect, and elevate lives. With years of experience in real estate, we are committed to providing exceptional service and trusted solutions.
           </p>
           {renderCards(`${styles.featuresGrid} ${styles.desktopOnly}`)}
         </div>

@@ -111,7 +111,9 @@ export default function Navbar() {
       <nav className={`${styles.navbar} ${scrolled ? styles.scrolled : ""}`}>
         <div className={styles.container}>
           <Link href="/" className={styles.logo} onClick={closeMenu}>
-            <Image src="/logo.png" alt="Isiri Properties" width={180} height={60} style={{ objectFit: "contain", height: "auto" }} />
+            <div className="global-nav-logo-wrapper" style={{ display: "flex", alignItems: "center", height: "50px" }}>
+              <Image src="/logo-updated.png" alt="Plot&Acre" width={280} height={140} className="brand-logo-image" />
+            </div>
           </Link>
 
           {/* Desktop Nav Links */}

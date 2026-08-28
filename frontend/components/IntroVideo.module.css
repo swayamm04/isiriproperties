@@ -1,0 +1,49 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  /* Solid white background to hide website content */
+  background-color: #FFFFFF; 
+  z-index: 999; /* Below Navbar's z-index (1000) so Navbar is visible */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 1;
+  transition: opacity 0.8s ease-out;
+  cursor: pointer;
+}
+
+.fadeOut {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.video {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  /* Add a subtle fade-in for the video itself */
+  animation: fadeIn 1s ease-in-out;
+}
+
+@media (max-width: 768px) {
+  .video {
+    /* Scale down the intro video on mobile so it's not overwhelmingly large */
+    max-width: 280px;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
