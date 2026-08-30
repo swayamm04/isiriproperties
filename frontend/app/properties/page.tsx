@@ -106,7 +106,7 @@ function PropertiesList() {
     return matchesSearch && matchesType && matchesListingType && matchesCity;
   });
 
-  const uniqueCities = Array.from(new Set(properties.map(p => p.city).filter(Boolean)));
+  const uniqueCities = Array.from(new Set(properties.map(p => p.city).filter(Boolean))) as string[];
 
   const handleReset = () => {
     setSearchQuery("");

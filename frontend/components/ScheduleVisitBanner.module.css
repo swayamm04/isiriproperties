@@ -66,32 +66,28 @@
   .banner {
     flex-direction: row;
     text-align: left;
-    padding: 0.8rem 0.6rem;
-    gap: 0.5rem;
+    padding: 0.9rem 0.8rem;
+    gap: 0.6rem;
   }
 
-
-
-
-  
   .title {
-    font-size: 0.75rem;
+    font-size: 0.85rem;
     margin-bottom: 0.15rem;
   }
   
   .description {
-    font-size: 0.5rem;
-    line-height: 1.2;
+    font-size: 0.6rem;
+    line-height: 1.25;
   }
   
   .ctaBtn {
-    padding: 0.4rem 0.5rem;
-    font-size: 0.55rem;
-    gap: 0.2rem;
+    padding: 0.45rem 0.6rem;
+    font-size: 0.6rem;
+    gap: 0.25rem;
   }
 
   .ctaBtn svg {
-    width: 10px !important;
-    height: 10px !important;
+    width: 15px !important;
+    height: 15px !important;
   }
 }
