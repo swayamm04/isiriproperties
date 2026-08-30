@@ -9,14 +9,22 @@ const inter = Inter({
   variable: "--font-sans",
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.RENDER_EXTERNAL_URL || "http://localhost:3000";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: "Plot&Acre | Premium Real Estate & Luxury Living",
   description: "Discover luxury architectural properties, premium villas, and estates with Plot&Acre. Editorial designs, sharp structures, and sophisticated living spaces.",
   keywords: "real estate, luxury villas, architectural homes, premium properties, Plot&Acre",
   icons: {
     icon: '/favicon-updated.jpg',
+    apple: '/favicon-updated.jpg',
   },
   openGraph: {
+    title: "Plot&Acre | Premium Real Estate",
+    description: "Discover luxury architectural properties, premium villas, and estates.",
+    url: siteUrl,
+    siteName: "Plot&Acre",
     images: [
       {
         url: '/favicon-updated.jpg',
@@ -25,7 +33,14 @@ export const metadata: Metadata = {
         alt: 'Plot&Acre',
       },
     ],
+    type: "website",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "Plot&Acre | Premium Real Estate",
+    description: "Discover luxury architectural properties, premium villas, and estates.",
+    images: ['/favicon-updated.jpg'],
+  }
 };
 
 import BottomNav from "@/components/BottomNav";
