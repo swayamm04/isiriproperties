@@ -19,7 +19,13 @@ export async function generateMetadata({
       };
     }
 
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.RENDER_EXTERNAL_URL || "http://localhost:3000";
     let imgUrl = property.images && property.images.length > 0 ? getImageUrl(property.images[0]) : "";
+
+    // Ensure imgUrl is absolute
+    if (imgUrl && imgUrl.startsWith('/')) {
+      imgUrl = `${siteUrl}${imgUrl}`;
+    }
 
     // Optimize Cloudinary image specifically for WhatsApp link preview limits (<300KB)
     if (imgUrl.includes("res.cloudinary.com") && imgUrl.includes("/image/upload/")) {
@@ -32,6 +38,8 @@ export async function generateMetadata({
       openGraph: {
         title: property.title,
         description: property.description?.substring(0, 160) || "Property Details",
+        url: `${siteUrl}/properties/${id}`,
+        siteName: "Plot&Acre",
         images: imgUrl ? [
           {
             url: imgUrl,
@@ -40,7 +48,14 @@ export async function generateMetadata({
             alt: property.title,
           }
         ] : [],
+        type: "website",
       },
+      twitter: {
+        card: "summary_large_image",
+        title: property.title,
+        description: property.description?.substring(0, 160) || "Property Details",
+        images: imgUrl ? [imgUrl] : [],
+      }
     };
   } catch (error) {
     return {
