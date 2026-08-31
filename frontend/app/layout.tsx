@@ -9,7 +9,10 @@ const inter = Inter({
   variable: "--font-sans",
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.RENDER_EXTERNAL_URL || "http://localhost:3000";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 
+  process.env.RENDER_EXTERNAL_URL || 
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "") || 
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -27,7 +30,7 @@ export const metadata: Metadata = {
     siteName: "Plot&Acre",
     images: [
       {
-        url: `${siteUrl}/favicon-v2.jpeg`,
+        url: '/favicon-v2.jpeg',
         width: 1200,
         height: 630,
         alt: 'Plot&Acre',
@@ -39,7 +42,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Plot&Acre | Premium Real Estate",
     description: "Discover luxury architectural properties, premium villas, and estates.",
-    images: [`${siteUrl}/favicon-v2.jpeg`],
+    images: ['/favicon-v2.jpeg'],
   }
 };
 

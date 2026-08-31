@@ -19,10 +19,14 @@ export async function generateMetadata({
       };
     }
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.RENDER_EXTERNAL_URL || "http://localhost:3000";
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 
+      process.env.RENDER_EXTERNAL_URL || 
+      (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "") || 
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+
     let imgUrl = property.images && property.images.length > 0 ? getImageUrl(property.images[0]) : "";
 
-    // Ensure imgUrl is absolute
+    // Ensure imgUrl is absolute if it's a local static image
     if (imgUrl && imgUrl.startsWith('/')) {
       imgUrl = `${siteUrl}${imgUrl}`;
     }
@@ -40,21 +44,25 @@ export async function generateMetadata({
         description: property.description?.substring(0, 160) || "Property Details",
         url: `${siteUrl}/properties/${id}`,
         siteName: "Plot&Acre",
-        images: imgUrl ? [
-          {
-            url: imgUrl,
-            width: 800,
-            height: 600,
-            alt: property.title,
-          }
-        ] : [],
+        ...(imgUrl ? {
+          images: [
+            {
+              url: imgUrl,
+              width: 800,
+              height: 600,
+              alt: property.title,
+            }
+          ]
+        } : {}),
         type: "website",
       },
       twitter: {
         card: "summary_large_image",
         title: property.title,
         description: property.description?.substring(0, 160) || "Property Details",
-        images: imgUrl ? [imgUrl] : [],
+        ...(imgUrl ? {
+          images: [imgUrl]
+        } : {}),
       }
     };
   } catch (error) {
