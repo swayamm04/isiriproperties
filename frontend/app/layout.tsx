@@ -17,8 +17,8 @@ export const metadata: Metadata = {
   description: "Discover luxury architectural properties, premium villas, and estates with Plot&Acre. Editorial designs, sharp structures, and sophisticated living spaces.",
   keywords: "real estate, luxury villas, architectural homes, premium properties, Plot&Acre",
   icons: {
-    icon: '/favicon-updated.jpeg',
-    apple: '/favicon-updated.jpeg',
+    icon: '/favicon-v2.jpeg',
+    apple: '/favicon-v2.jpeg',
   },
   openGraph: {
     title: "Plot&Acre | Premium Real Estate",
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     siteName: "Plot&Acre",
     images: [
       {
-        url: `${siteUrl}/favicon-updated.jpeg`,
+        url: `${siteUrl}/favicon-v2.jpeg`,
         width: 1200,
         height: 630,
         alt: 'Plot&Acre',
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Plot&Acre | Premium Real Estate",
     description: "Discover luxury architectural properties, premium villas, and estates.",
-    images: [`${siteUrl}/favicon-updated.jpeg`],
+    images: [`${siteUrl}/favicon-v2.jpeg`],
   }
 };
 
