@@ -779,7 +779,7 @@ export default function SuperAdminDashboardPage() {
         <div className={styles.sidebarBrand}>
           <div style={{ display: "flex", alignItems: "center", height: "50px", overflow: "visible" }}>
             <Image 
-              src="/logo-updated.png" 
+              src="/logo-v2.png" 
               alt="Plot&Acre" 
               width={280} 
               height={140} 

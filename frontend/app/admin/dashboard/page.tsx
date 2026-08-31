@@ -418,7 +418,7 @@ export default function AdminDashboardPage() {
       <aside className={`${styles.sidebar} ${isSidebarOpen ? styles.sidebarOpen : ""}`}>
         <div className={styles.sidebarBrand}>
           <div style={{ display: "flex", alignItems: "center", height: "50px", overflow: "visible" }}>
-            <Image src="/logo-updated.png" alt="Plot&Acre" width={280} height={140} className="brand-logo-image" />
+            <Image src="/logo-v2.png" alt="Plot&Acre" width={280} height={140} className="brand-logo-image" />
           </div>
         </div>
 

@@ -112,7 +112,7 @@ export default function Navbar() {
         <div className={styles.container}>
           <Link href="/" className={styles.logo} onClick={closeMenu}>
             <div className="global-nav-logo-wrapper" style={{ display: "flex", alignItems: "center", height: "50px" }}>
-              <Image src="/logo-updated.png" alt="Plot&Acre" width={280} height={140} className="brand-logo-image" />
+              <Image src="/logo-v2.png" alt="Plot&Acre" width={280} height={140} className="brand-logo-image" />
             </div>
           </Link>
 

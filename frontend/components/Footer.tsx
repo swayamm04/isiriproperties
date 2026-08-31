@@ -12,7 +12,7 @@ export default function Footer() {
         <div className={styles.brandCol}>
           <Link href="/" className={styles.logo}>
             <div style={{ display: "flex", alignItems: "center", height: "50px" }}>
-              <Image src="/logo-updated.png" alt="Plot&Acre" width={280} height={140} className="brand-logo-image" />
+              <Image src="/logo-v2.png" alt="Plot&Acre" width={280} height={140} className="brand-logo-image" />
             </div>
           </Link>
           <p className={styles.brandText}>
