@@ -266,7 +266,7 @@ export default function PropertyDetailPage() {
   };
 
   const whatsappHref = property 
-    ? `https://wa.me/919964496644?text=${encodeURIComponent(`Hi, I am interested in this property:\n\n*${property.title}*\nRef ID: #${property.propertyId}\n\nProperty Link:\n${typeof window !== 'undefined' ? window.location.href : ''}\n\nProperty Image:\n${property.images && property.images.length > 0 ? getAbsoluteImageUrl(property.images[0]) : 'No image available'}\n\nPlease share more details.`)}`
+    ? `https://wa.me/919964496644?text=${encodeURIComponent(`Hi, I am interested in this property:\n\n*${property.title}*\nRef ID: #${property.propertyId}\n\nProperty Link:\n${typeof window !== 'undefined' ? window.location.href : ''}\n\nPlease share more details.`)}`
     : "#";
 
   return (
