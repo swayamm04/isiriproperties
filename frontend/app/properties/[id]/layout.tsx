@@ -11,19 +11,47 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   try {
     const { id } = await params;
-    const res = await fetch(`${API_URL}/properties/${id}`, { cache: 'no-store' });
-    const property = await res.json();
+    
+    const headersList = await headers();
+    const host = headersList.get('host') || 'localhost:3000';
+    const protocol = headersList.get('x-forwarded-proto') || (host.includes('localhost') ? 'http' : 'https');
+    const dynamicSiteUrl = `${protocol}://${host}`;
+
+    let fetchUrl = `${API_URL}/properties/${id}`;
+    if (fetchUrl.startsWith('/')) {
+      fetchUrl = `${dynamicSiteUrl}${fetchUrl}`;
+    }
+
+    let property = null;
+    try {
+      const res = await fetch(fetchUrl, { cache: 'no-store' });
+      if (res.ok) {
+        property = await res.json();
+      } else {
+        throw new Error(`Failed to fetch from ${fetchUrl}: ${res.statusText}`);
+      }
+    } catch (err) {
+      console.error("Primary fetch failed for metadata:", err);
+      // Fallback for NAT hairpinning issues on VPS
+      if (!fetchUrl.includes('127.0.0.1') && !fetchUrl.includes('localhost')) {
+        try {
+          const fallbackUrl = `http://127.0.0.1:5000/api/properties/${id}`;
+          console.log("Trying fallback URL:", fallbackUrl);
+          const fallbackRes = await fetch(fallbackUrl, { cache: 'no-store' });
+          if (fallbackRes.ok) {
+            property = await fallbackRes.json();
+          }
+        } catch (fallbackErr) {
+          console.error("Fallback fetch failed:", fallbackErr);
+        }
+      }
+    }
 
     if (!property || property.error) {
       return {
         title: "Property Not Found",
       };
     }
-
-    const headersList = await headers();
-    const host = headersList.get('host') || 'localhost:3000';
-    const protocol = headersList.get('x-forwarded-proto') || (host.includes('localhost') ? 'http' : 'https');
-    const dynamicSiteUrl = `${protocol}://${host}`;
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 
       process.env.RENDER_EXTERNAL_URL || 
