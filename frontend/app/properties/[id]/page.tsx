@@ -13,6 +13,7 @@ import Loader from "@/components/Loader";
 import PropertySlider from "@/components/PropertySlider";
 import { useAuth } from "@/context/authContext";
 import { apiRequest, getImageUrl } from "@/utils/api";
+import { getIconForField } from "@/utils/iconMap";
 import styles from "./page.module.css";
 
 const WhatsAppIcon = ({ size = 18 }: { size?: number }) => (
@@ -233,16 +234,7 @@ export default function PropertyDetailPage() {
 
   const formattedPrice = formatPriceLakhCrore(property.price);
 
-  const getIconForField = (key: string) => {
-    const k = key.toLowerCase();
-    if (k.includes('car') || k.includes('park') || k.includes('garage')) return <Car size={18} className={styles.featureIcon} />;
-    if (k.includes('face') || k.includes('direction')) return <Compass size={18} className={styles.featureIcon} />;
-    if (k.includes('year') || k.includes('built')) return <Calendar size={18} className={styles.featureIcon} />;
-    if (k.includes('size') || k.includes('area')) return <Maximize size={18} className={styles.featureIcon} />;
-    if (k.includes('room') || k.includes('bed')) return <Bed size={18} className={styles.featureIcon} />;
-    if (k.includes('bath')) return <Bath size={18} className={styles.featureIcon} />;
-    return <CheckCircle size={18} className={styles.featureIcon} />;
-  };
+
 
   const getIconForText = (text: string, iconSize = 18) => {
     const t = text.toLowerCase();
@@ -265,8 +257,16 @@ export default function PropertyDetailPage() {
     return <CheckCircle size={iconSize} />;
   };
 
+  const getAbsoluteImageUrl = (path: string) => {
+    const url = getImageUrl(path);
+    if (url.startsWith('/')) {
+      return typeof window !== 'undefined' ? `${window.location.origin}${url}` : url;
+    }
+    return url;
+  };
+
   const whatsappHref = property 
-    ? `https://wa.me/919964496644?text=${encodeURIComponent(`Hi, I am interested in this property:\n\n*${property.title}*\nRef ID: #${property.propertyId}\n\nProperty Link:\n${typeof window !== 'undefined' ? window.location.href : ''}\n\nPlease share more details.`)}`
+    ? `https://wa.me/919964496644?text=${encodeURIComponent(`Hi, I am interested in this property:\n\n*${property.title}*\nRef ID: #${property.propertyId}\n\nProperty Link:\n${typeof window !== 'undefined' ? window.location.href : ''}\n\nProperty Image:\n${property.images && property.images.length > 0 ? getAbsoluteImageUrl(property.images[0]) : 'No image available'}\n\nPlease share more details.`)}`
     : "#";
 
   return (
@@ -382,49 +382,18 @@ export default function PropertyDetailPage() {
 
             {/* Features Grid (Mobile UI style) */}
             <div className={styles.featuresGrid}>
-              <div className={styles.featureCard}>
-                <Building size={18} className={styles.featureIcon} />
-                <div className={styles.featureData}>
-                  <span className={styles.featureVal}>{property.listingType === "Rent" ? "Rent" : "Buy"}</span>
-                  <span className={styles.featureLabel}>{property.type}</span>
-                </div>
-              </div>
-              {property.beds > 0 && (
-                <div className={styles.featureCard}>
-                  <Bed size={18} className={styles.featureIcon} />
-                  <div className={styles.featureData}>
-                    <span className={styles.featureVal}>{property.beds}</span>
-                    <span className={styles.featureLabel}>Bedrooms</span>
+              {property.customFields && Object.entries(property.customFields).slice(0, 3).map(([key, value]) => {
+                const IconComponent = getIconForField(key);
+                return (
+                  <div key={key} className={styles.featureCard}>
+                    <IconComponent size={18} className={styles.featureIcon} />
+                    <div className={styles.featureData}>
+                      <span className={styles.featureVal}>{String(value)}</span>
+                      <span className={styles.featureLabel}>{key}</span>
+                    </div>
                   </div>
-                </div>
-              )}
-              {property.baths > 0 && (
-                <div className={styles.featureCard}>
-                  <Bath size={18} className={styles.featureIcon} />
-                  <div className={styles.featureData}>
-                    <span className={styles.featureVal}>{property.baths}</span>
-                    <span className={styles.featureLabel}>Bathrooms</span>
-                  </div>
-                </div>
-              )}
-              {property.area && (
-                <div className={styles.featureCard}>
-                  <Maximize size={18} className={styles.featureIcon} />
-                  <div className={styles.featureData}>
-                    <span className={styles.featureVal}>{property.area}</span>
-                    <span className={styles.featureLabel}>Area</span>
-                  </div>
-                </div>
-              )}
-              {property.customFields && Object.entries(property.customFields).slice(0, 3).map(([key, value]) => (
-                <div key={key} className={styles.featureCard}>
-                  {getIconForField(key)}
-                  <div className={styles.featureData}>
-                    <span className={styles.featureVal}>{String(value)}</span>
-                    <span className={styles.featureLabel}>{key}</span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className={styles.descriptionSection}>

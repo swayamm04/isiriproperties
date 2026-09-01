@@ -1576,26 +1576,25 @@ export default function SuperAdminDashboardPage() {
                   </div>
                   
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
-                    <label className={styles.label} style={{ margin: 0 }}>Fields (Max 2)</label>
+                    <label className={styles.label} style={{ margin: 0 }}>Fields (Max 3)</label>
                     <button 
                       type="button" 
                       onClick={() => {
-                        if (catFields.length < 2) {
+                        if (catFields.length < 3) {
                           setCatFields([...catFields, { name: "", type: "text", unit: "" }]);
                         }
                       }}
-                      disabled={catFields.length >= 2}
+                      className={styles.addBtn}
+                      disabled={catFields.length >= 3}
                       style={{ 
-                        background: "none", 
-                        border: "1px solid var(--color-border)", 
-                        padding: "0.2rem 0.5rem", 
-                        borderRadius: "4px", 
-                        fontSize: "0.8rem", 
-                        cursor: catFields.length >= 2 ? "not-allowed" : "pointer", 
-                        display: "flex", 
-                        alignItems: "center", 
-                        gap: "0.2rem",
-                        opacity: catFields.length >= 2 ? 0.5 : 1
+                        padding: "0.25rem 0.5rem", 
+                        fontSize: "0.75rem", 
+                        height: "auto",
+                        cursor: catFields.length >= 3 ? "not-allowed" : "pointer", 
+                        background: "transparent",
+                        color: "var(--color-dark-muted)",
+                        border: "1px solid var(--color-border)",
+                        opacity: catFields.length >= 3 ? 0.5 : 1
                       }}
                     >
                       <PlusCircle size={14} /> Add
