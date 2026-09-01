@@ -33,7 +33,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
     }
   }, []);
 
-  const isWishlisted = user?.wishlist?.includes(property.id);
+  const isWishlisted = user?.wishlist?.includes(property._id || property.id);
 
   const handleWishlistClick = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -42,7 +42,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
       window.location.href = "/login?mode=login";
       return;
     }
-    await toggleWishlist(property.id);
+    await toggleWishlist(property._id || property.id);
   };
   const formattedPrice = formatIndianPrice(property.price);
 

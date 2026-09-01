@@ -294,6 +294,7 @@ function PropertiesList() {
             {filteredProperties.map((property) => {
               const mappedProp = {
                 id: property.propertyId || property._id,
+                _id: property._id,
                 title: property.title,
                 location: property.location,
                 price: property.price,

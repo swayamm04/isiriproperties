@@ -90,6 +90,7 @@ export default function WishlistPage() {
               // Map backend schema to what PropertyCard expects
               const mappedProp = {
                 id: prop.propertyId || prop._id,
+                _id: prop._id,
                 title: prop.title,
                 location: prop.location,
                 price: prop.price,

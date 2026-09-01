@@ -292,15 +292,21 @@ router.post("/", auth, authorize(["admin", "super_admin"]), upload.array("imageF
 // @access  Private (All authenticated users)
 router.post("/wishlist/:id", auth, authorize(["user", "admin", "super_admin"]), async (req, res) => {
   try {
-    const propertyId = req.params.id;
-    const property = await Property.findById(propertyId);
+    const propertyIdParam = req.params.id;
+    let property;
+
+    if (propertyIdParam.match(/^[0-9a-fA-F]{24}$/)) {
+      property = await Property.findById(propertyIdParam);
+    } else {
+      property = await Property.findOne({ propertyId: propertyIdParam });
+    }
 
     if (!property) {
       return res.status(404).json({ error: "Property not found" });
     }
 
     const user = await User.findById(req.user.id);
-    const wishlistIndex = user.wishlist.indexOf(propertyId);
+    const wishlistIndex = user.wishlist.findIndex(id => id.toString() === property._id.toString());
 
     let isWishlisted = false;
     if (wishlistIndex > -1) {
@@ -308,7 +314,7 @@ router.post("/wishlist/:id", auth, authorize(["user", "admin", "super_admin"]), 
       user.wishlist.splice(wishlistIndex, 1);
     } else {
       // Add to wishlist
-      user.wishlist.push(propertyId);
+      user.wishlist.push(property._id);
       isWishlisted = true;
     }
 

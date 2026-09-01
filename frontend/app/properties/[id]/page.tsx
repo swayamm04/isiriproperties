@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { 
   ArrowLeft, Heart, MapPin, Bed, Bath, Compass, Calendar, User, Eye, CheckCircle, ChevronLeft, ChevronRight, X, Phone, MessageSquare, Maximize, Car, MessageCircle,
-  Waves, Dumbbell, Shield, Wifi, Coffee, TreePine, Tv, Wind, Lock, Zap, Droplet, Flame, Sun, Star, Building
+  Waves, Dumbbell, Shield, Wifi, Coffee, TreePine, Tv, Wind, Lock, Zap, Droplet, Flame, Sun, Star, Building, Share2
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -306,6 +306,41 @@ export default function PropertyDetailPage() {
               >
                 <ArrowLeft size={18} color="#000" />
               </button>
+
+              <div className={styles.topRightActions}>
+                <button 
+                  className={styles.iconBtn} 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleWishlistToggle();
+                  }}
+                  aria-label={isWishlisted ? "Remove from favorites" : "Add to favorites"}
+                >
+                  <Heart 
+                    size={18} 
+                    fill={isWishlisted ? "var(--color-primary)" : "none"} 
+                    color={isWishlisted ? "var(--color-primary)" : "#000"} 
+                  />
+                </button>
+                <button 
+                  className={styles.iconBtn}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (navigator.share) {
+                      navigator.share({
+                        title: property.title,
+                        url: window.location.href,
+                      }).catch(() => {});
+                    } else {
+                      navigator.clipboard.writeText(window.location.href);
+                      alert("Link copied to clipboard!");
+                    }
+                  }}
+                  aria-label="Share property"
+                >
+                  <Share2 size={18} color="#000" />
+                </button>
+              </div>
               
               {property.status === "sold" && (
                 <div className={styles.soldBadge}>Sold Out</div>
