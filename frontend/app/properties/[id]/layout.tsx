@@ -13,7 +13,10 @@ export async function generateMetadata({
     const { id } = await params;
     
     const headersList = await headers();
-    const host = headersList.get('host') || 'localhost:3000';
+    let host = headersList.get('x-forwarded-host') || headersList.get('host') || 'localhost:3000';
+    if (host.includes('localhost') && process.env.NODE_ENV === 'production') {
+      host = 'plotandacre.com';
+    }
     const protocol = headersList.get('x-forwarded-proto') || (host.includes('localhost') ? 'http' : 'https');
     const dynamicSiteUrl = `${protocol}://${host}`;
 
