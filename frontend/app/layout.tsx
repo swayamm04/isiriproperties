@@ -9,43 +9,53 @@ const inter = Inter({
   variable: "--font-sans",
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 
-  process.env.RENDER_EXTERNAL_URL || 
-  (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "") || 
-  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+import { headers } from "next/headers";
 
-export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
-  title: "Plot&Acre | Premium Real Estate & Luxury Living",
-  description: "Discover luxury architectural properties, premium villas, and estates with Plot&Acre. Editorial designs, sharp structures, and sophisticated living spaces.",
-  keywords: "real estate, luxury villas, architectural homes, premium properties, Plot&Acre",
-  icons: {
-    icon: '/favicon-v2.jpeg',
-    shortcut: '/favicon-v2.jpeg',
-    apple: '/favicon-v2.jpeg',
-  },
-  openGraph: {
-    title: "Plot&Acre | Premium Real Estate",
-    description: "Discover luxury architectural properties, premium villas, and estates.",
-    url: siteUrl,
-    siteName: "Plot&Acre",
-    images: [
-      {
-        url: '/favicon-v2.jpeg',
-        width: 1200,
-        height: 630,
-        alt: 'Plot&Acre',
-      },
-    ],
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Plot&Acre | Premium Real Estate",
-    description: "Discover luxury architectural properties, premium villas, and estates.",
-    images: ['/favicon-v2.jpeg'],
-  }
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const headersList = await headers();
+  const host = headersList.get('host') || 'localhost:3000';
+  const protocol = headersList.get('x-forwarded-proto') || (host.includes('localhost') ? 'http' : 'https');
+  const dynamicSiteUrl = `${protocol}://${host}`;
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 
+    process.env.RENDER_EXTERNAL_URL || 
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "") || 
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "") || 
+    dynamicSiteUrl;
+
+  return {
+    metadataBase: new URL(siteUrl),
+    title: "Plot&Acre | Premium Real Estate & Luxury Living",
+    description: "Discover luxury architectural properties, premium villas, and estates with Plot&Acre. Editorial designs, sharp structures, and sophisticated living spaces.",
+    keywords: "real estate, luxury villas, architectural homes, premium properties, Plot&Acre",
+    icons: {
+      icon: '/favicon-v2.jpeg',
+      shortcut: '/favicon-v2.jpeg',
+      apple: '/favicon-v2.jpeg',
+    },
+    openGraph: {
+      title: "Plot&Acre | Premium Real Estate",
+      description: "Discover luxury architectural properties, premium villas, and estates.",
+      url: siteUrl,
+      siteName: "Plot&Acre",
+      images: [
+        {
+          url: '/favicon-v2.jpeg',
+          width: 1200,
+          height: 630,
+          alt: 'Plot&Acre',
+        },
+      ],
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: "Plot&Acre | Premium Real Estate",
+      description: "Discover luxury architectural properties, premium villas, and estates.",
+      images: ['/favicon-v2.jpeg'],
+    }
+  };
+}
 
 import BottomNav from "@/components/BottomNav";
 
