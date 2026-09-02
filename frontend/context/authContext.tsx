@@ -9,7 +9,7 @@ export interface UserProfile {
   email: string;
   phone?: string;
   city?: string;
-  role: "super_admin" | "admin" | "user";
+  role: "super_admin" | "admin" | "employee" | "user";
   profileImage?: string;
   wishlist: string[];
 }
@@ -132,10 +132,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem("isiri_token");
-    setUser(null);
-    setError(null);
+  const logout = async () => {
+    try {
+      if (user && user.role !== "user") {
+        await apiRequest("/auth/logout", { method: "POST" }).catch(() => {});
+      }
+    } finally {
+      localStorage.removeItem("isiri_token");
+      setUser(null);
+      setError(null);
+    }
   };
 
   const toggleWishlist = async (propertyId: string): Promise<boolean> => {

@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Category = require("../models/Category");
 const { auth, authorize } = require("../middleware/auth");
+const { logActivity } = require("../utils/logger");
 
 // GET all categories
 router.get("/", async (req, res) => {
@@ -17,8 +18,8 @@ router.get("/", async (req, res) => {
   }
 });
 
-// POST a new category (Super Admin only)
-router.post("/", auth, authorize("super_admin"), async (req, res) => {
+// POST a new category (Super Admin, Employee)
+router.post("/", auth, authorize(["super_admin", "employee"]), async (req, res) => {
   try {
     const { name, fields, listingType } = req.body;
     
@@ -35,6 +36,8 @@ router.post("/", auth, authorize("super_admin"), async (req, res) => {
 
     const category = new Category({ name, fields, listingType: typeToUse });
     await category.save();
+    
+    await logActivity(req, "added a new category", `Category Name: ${category.name}`);
 
     res.status(201).json(category);
   } catch (error) {
@@ -42,8 +45,8 @@ router.post("/", auth, authorize("super_admin"), async (req, res) => {
   }
 });
 
-// PUT update a category (Super Admin only)
-router.put("/:id", auth, authorize("super_admin"), async (req, res) => {
+// PUT update a category (Super Admin, Employee)
+router.put("/:id", auth, authorize(["super_admin", "employee"]), async (req, res) => {
   try {
     const { name, fields, listingType } = req.body;
     const category = await Category.findById(req.params.id);
@@ -70,21 +73,28 @@ router.put("/:id", auth, authorize("super_admin"), async (req, res) => {
     if (fields) category.fields = fields;
 
     await category.save();
+    
+    await logActivity(req, "updated a category", `Category Name: ${category.name}`);
+    
     res.json(category);
   } catch (error) {
     res.status(500).json({ message: "Server error updating category", error: error.message });
   }
 });
 
-// DELETE a category (Super Admin only)
-router.delete("/:id", auth, authorize("super_admin"), async (req, res) => {
+// DELETE a category (Super Admin, Employee)
+router.delete("/:id", auth, authorize(["super_admin", "employee"]), async (req, res) => {
   try {
     const category = await Category.findById(req.params.id);
     if (!category) {
       return res.status(404).json({ message: "Category not found" });
     }
 
+    const catName = category.name;
     await category.deleteOne();
+    
+    await logActivity(req, "deleted a category", `Category Name: ${catName}`);
+    
     res.json({ message: "Category removed" });
   } catch (error) {
     res.status(500).json({ message: "Server error deleting category", error: error.message });

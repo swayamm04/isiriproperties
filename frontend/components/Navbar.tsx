@@ -205,16 +205,16 @@ export default function Navbar() {
                 href="/admin/dashboard"
                 className={`${styles.navLink} ${isActive("/admin/dashboard") ? styles.navLinkActive : ""}`}
               >
-                Admin Panel
+                Dashboard
               </Link>
             )}
 
-            {user && user.role === "super_admin" && (
+            {user && (user.role === "super_admin" || user.role === "employee") && (
               <Link
                 href="/super-admin/dashboard"
                 className={`${styles.navLink} ${isActive("/super-admin/dashboard") ? styles.navLinkActive : ""}`}
               >
-                Super Admin
+                {user.role === "super_admin" ? "Super Admin" : "Dashboard"}
               </Link>
             )}
 
@@ -222,7 +222,12 @@ export default function Navbar() {
             {user ? (
               <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
                 <Link href="/settings" style={{ display: "flex", alignItems: "center", gap: "0.5rem", textDecoration: "none" }}>
-                  <span className={styles.userInfo}>Hi, {user.name.split(" ")[0]}</span>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", lineHeight: "1.2" }}>
+                    <span className={styles.userInfo}>Hi, {user.name.split(" ")[0]}</span>
+                    <span style={{ fontSize: "0.75rem", color: "var(--color-primary-dark)", fontWeight: "600", textTransform: "uppercase" }}>
+                      {user.role === "super_admin" ? "Super Admin" : user.role === "admin" ? "Vendor" : user.role === "employee" ? "Employee" : "User"}
+                    </span>
+                  </div>
                   {user.profileImage ? (
                     <img src={user.profileImage} alt={user.name} style={{ width: "36px", height: "36px", borderRadius: "50%", objectFit: "cover", border: "2px solid var(--color-primary)" }} />
                   ) : (
@@ -270,7 +275,12 @@ export default function Navbar() {
               <div
                 style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
               >
-                <span style={{ fontSize: "0.9rem", fontWeight: "600", color: "var(--color-dark)" }}>Hi, {user.name.split(" ")[0]}</span>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", lineHeight: "1.2" }}>
+                  <span style={{ fontSize: "0.9rem", fontWeight: "600", color: "var(--color-dark)" }}>Hi, {user.name.split(" ")[0]}</span>
+                  <span style={{ fontSize: "0.7rem", color: "var(--color-primary-dark)", fontWeight: "600", textTransform: "uppercase" }}>
+                    {user.role === "super_admin" ? "Super Admin" : user.role === "admin" ? "Vendor" : user.role === "employee" ? "Employee" : "User"}
+                  </span>
+                </div>
                 {user.profileImage ? (
                   <img src={user.profileImage} alt={user.name} style={{ width: "32px", height: "32px", borderRadius: "50%", objectFit: "cover", border: "2px solid var(--color-primary)" }} />
                 ) : (
@@ -333,17 +343,17 @@ export default function Navbar() {
               className={styles.drawerLink}
               onClick={closeMenu}
             >
-              Admin Panel
+              Dashboard
             </Link>
           )}
 
-          {user && user.role === "super_admin" && (
+          {user && (user.role === "super_admin" || user.role === "employee") && (
             <Link
               href="/super-admin/dashboard"
               className={styles.drawerLink}
               onClick={closeMenu}
             >
-              Super Admin
+              {user.role === "super_admin" ? "Super Admin" : "Dashboard"}
             </Link>
           )}
 
@@ -357,7 +367,10 @@ export default function Navbar() {
                     {user.name.charAt(0).toUpperCase()}
                   </div>
                 )}
-                Logged in as: {user.name}
+                Logged in as: {user.name} 
+                <span style={{ fontSize: "0.75rem", color: "var(--color-primary-dark)", fontWeight: "600", textTransform: "uppercase", display: "block", marginTop: "2px" }}>
+                  ({user.role === "super_admin" ? "Super Admin" : user.role === "admin" ? "Vendor" : user.role === "employee" ? "Employee" : "User"})
+                </span>
               </div>
               <button
                 onClick={() => {

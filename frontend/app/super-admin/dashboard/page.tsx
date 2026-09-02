@@ -26,9 +26,14 @@ import {
   ChevronDown,
   ChevronUp,
   ChevronLeft,
-  MoreVertical
+  MoreVertical,
+  UserCog,
+  ClipboardList,
+  Download
 } from "lucide-react";
 import Link from "next/link";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import Loader from '@/components/Loader';
 import CustomSelect from '@/components/CustomSelect';
 import AutocompleteInput from '@/components/AutocompleteInput';
@@ -119,11 +124,21 @@ interface InterestInquiry {
   createdAt: string;
 }
 
+interface ActivityLog {
+  _id: string;
+  user: string;
+  userName: string;
+  userRole: string;
+  action: string;
+  details: string;
+  createdAt: string;
+}
+
 export default function SuperAdminDashboardPage() {
   const { user, loading, logout, updatePhone } = useAuth();
   const router = useRouter();
 
-  const [activeTab, setActiveTab] = useState<"dashboard" | "inquiries" | "admins" | "users" | "properties" | "settings">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "inquiries" | "admins" | "employees" | "users" | "properties" | "settings" | "activity_logs">("dashboard");
   const [selectedInquiry, setSelectedInquiry] = useState<InterestInquiry | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isAddPropModalOpen, setIsAddPropModalOpen] = useState(false);
@@ -137,10 +152,21 @@ export default function SuperAdminDashboardPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [inquiries, setInquiries] = useState<InterestInquiry[]>([]);
   const [admins, setAdmins] = useState<AdminProfile[]>([]);
+  const [employees, setEmployees] = useState<AdminProfile[]>([]);
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [citySuggestions, setCitySuggestions] = useState<string[]>([]);
+  
+  // Activity Logs state
+  const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
+  const [logStartDate, setLogStartDate] = useState("");
+  const [logEndDate, setLogEndDate] = useState("");
+  const [logRoleFilter, setLogRoleFilter] = useState("All");
+  const [logUserFilter, setLogUserFilter] = useState("");
+  const [roleUsers, setRoleUsers] = useState<{_id: string, name: string}[]>([]);
+  const [fetchingRoleUsers, setFetchingRoleUsers] = useState(false);
+  const [logsLoading, setLogsLoading] = useState(false);
   
   // Loading & Error states
   const [statsLoading, setStatsLoading] = useState(false);
@@ -157,7 +183,7 @@ export default function SuperAdminDashboardPage() {
   const [adminProfileImage, setAdminProfileImage] = useState<File | null>(null);
   const [addAdminLoading, setAddAdminLoading] = useState(false);
 
-  // Add Property form state (Super Admin listing properties directly)
+  // Add Property form state
   const [propTitle, setPropTitle] = useState("");
   const [propCity, setPropCity] = useState("");
   const [propLocation, setPropLocation] = useState("");
@@ -250,6 +276,51 @@ export default function SuperAdminDashboardPage() {
     }
   };
 
+  const fetchActivityLogs = async () => {
+    setLogsLoading(true);
+    try {
+      let url = `/superadmin/activity-logs?role=${logRoleFilter}`;
+      if (logStartDate) url += `&startDate=${logStartDate}`;
+      if (logEndDate) url += `&endDate=${logEndDate}`;
+      if (logUserFilter) url += `&userId=${logUserFilter}`;
+      const data = await apiRequest(url);
+      setActivityLogs(data);
+    } catch (error) {
+      console.error("Error fetching logs:", error);
+    } finally {
+      setLogsLoading(false);
+    }
+  };
+
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    doc.text("Activity Logs Report", 14, 15);
+    doc.setFontSize(10);
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 22);
+    
+    if (logStartDate || logEndDate) {
+      doc.text(`Date Range: ${logStartDate || "Any"} to ${logEndDate || "Any"}`, 14, 27);
+    }
+    
+    const tableData = activityLogs.map(log => [
+      new Date(log.createdAt).toLocaleString(),
+      log.userRole,
+      log.userName,
+      log.action,
+      log.details || "-"
+    ]);
+    
+    autoTable(doc, {
+      head: [["Date & Time", "Role", "User", "Action", "Details"]],
+      body: tableData,
+      startY: (logStartDate || logEndDate) ? 32 : 27,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [17, 34, 64] }
+    });
+    
+    doc.save("activity_logs_report.pdf");
+  };
+
   const loadTabData = async () => {
     setErrorMsg("");
     setSuccessMsg("");
@@ -264,11 +335,13 @@ export default function SuperAdminDashboardPage() {
       } else if (activeTab === "admins") {
         const data = await apiRequest("/superadmin/admins");
         setAdmins(data);
+      } else if (activeTab === "employees") {
+        const data = await apiRequest("/superadmin/employees");
+        setEmployees(data);
       } else if (activeTab === "users") {
         const data = await apiRequest("/superadmin/users");
         setUsers(data);
       } else if (activeTab === "properties") {
-        // Fetch properties (with optional admin filter)
         const endpoint = selectedAdminId 
           ? `/superadmin/properties?adminId=${selectedAdminId}` 
           : "/superadmin/properties";
@@ -282,6 +355,8 @@ export default function SuperAdminDashboardPage() {
         setCategories(catData);
         setAdmins(adminsData);
         setCitySuggestions(cityData);
+      } else if (activeTab === "activity_logs") {
+        await fetchActivityLogs();
       }
     } catch (err: any) {
       console.error(`Error loading data for ${activeTab}:`, err);
@@ -309,7 +384,7 @@ export default function SuperAdminDashboardPage() {
 
   useEffect(() => {
     if (loading) return;
-    if (!user || user.role !== "super_admin") {
+    if (!user || (user.role !== "super_admin" && user.role !== "employee")) {
       router.push("/");
       return;
     }
@@ -318,9 +393,30 @@ export default function SuperAdminDashboardPage() {
   }, [user, loading]);
 
   useEffect(() => {
-    if (loading || !user || user.role !== "super_admin") return;
+    if (loading || !user || (user.role !== "super_admin" && user.role !== "employee")) return;
     loadTabData();
-  }, [activeTab, selectedAdminId, user, loading]);
+  }, [activeTab, selectedAdminId, user, loading, propertyListingFilter, logStartDate, logEndDate, logRoleFilter, logUserFilter]);
+
+  useEffect(() => {
+    if (logRoleFilter === "All") {
+      setRoleUsers([]);
+      setLogUserFilter("");
+      return;
+    }
+    const fetchUsersForRole = async () => {
+      setFetchingRoleUsers(true);
+      try {
+        const users = await apiRequest(`/superadmin/users-by-role?role=${logRoleFilter}`);
+        setRoleUsers(users);
+        setLogUserFilter("");
+      } catch (err) {
+        console.error("Failed to fetch users by role:", err);
+      } finally {
+        setFetchingRoleUsers(false);
+      }
+    };
+    fetchUsersForRole();
+  }, [logRoleFilter]);
 
   // Actions: Inquiries
   const handleMarkReviewed = async (inquiryId: string) => {
@@ -337,8 +433,8 @@ export default function SuperAdminDashboardPage() {
     }
   };
 
-  // Actions: Add/Edit Admin Submit
-  const handleAddAdminSubmit = async (e: React.FormEvent) => {
+  // Actions: Add/Edit Admin/Employee Submit
+  const handleAddAdminSubmit = async (e: React.FormEvent, isEmployee = false) => {
     e.preventDefault();
     setAddAdminLoading(true);
     setErrorMsg("");
@@ -351,28 +447,21 @@ export default function SuperAdminDashboardPage() {
       formData.append("phone", adminPhone);
       if (adminPassword) formData.append("password", adminPassword);
       if (adminProfileImage) formData.append("profileImage", adminProfileImage);
+      if (isEmployee) formData.append("role", "employee");
 
       if (editingAdminId) {
-        // PUT /superadmin/admins/:id
         await apiRequest(`/superadmin/admins/${editingAdminId}`, {
           method: "PUT",
           body: formData,
-          headers: { "Authorization": `Bearer ${localStorage.getItem("isiri_token")}` }
         });
-        setSuccessMsg(`Admin details updated successfully.`);
+        setSuccessMsg(`Account details updated successfully.`);
         setEditingAdminId(null);
       } else {
-        if (!adminName || !adminPassword) {
-          setErrorMsg("Please enter all required fields to register.");
-          setAddAdminLoading(false);
-          return;
-        }
         await apiRequest("/superadmin/admins", {
           method: "POST",
           body: formData,
-          headers: { "Authorization": `Bearer ${localStorage.getItem("isiri_token")}` }
         });
-        setSuccessMsg(`Admin "${adminName}" created successfully.`);
+        setSuccessMsg(`Account created successfully.`);
       }
       setAdminName("");
       setAdminEmail("");
@@ -380,14 +469,10 @@ export default function SuperAdminDashboardPage() {
       setAdminPassword("");
       setAdminProfileImage(null);
       setIsAddAdminModalOpen(false);
-      setTimeout(() => {
-        setIsAddAdminModalOpen(false);
-        setSuccessMsg("");
-      }, 2000);
       loadStats();
       loadTabData();
     } catch (err: any) {
-      setErrorMsg(err.message || "Failed to save admin.");
+      setErrorMsg(err.message || "Failed to save.");
     } finally {
       setAddAdminLoading(false);
     }
@@ -509,7 +594,7 @@ export default function SuperAdminDashboardPage() {
     }
   };
 
-  // Actions: Add Property Submit (Super Admin)
+  // Actions: Add Property Submit
   const handleAddPropertySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setPropAddLoading(true);
@@ -823,8 +908,21 @@ export default function SuperAdminDashboardPage() {
             className={`${styles.menuItem} ${activeTab === "admins" ? styles.activeMenuItem : ""}`}
           >
             <Shield size={18} strokeWidth={1.5} />
-            <span>Manage Admins</span>
+            <span>Manage Vendors</span>
           </button>
+
+          {user?.role === "super_admin" && (
+            <button
+              onClick={() => {
+                setActiveTab("employees");
+                setIsSidebarOpen(false);
+              }}
+              className={`${styles.menuItem} ${activeTab === "employees" ? styles.activeMenuItem : ""}`}
+            >
+              <UserCog size={18} strokeWidth={1.5} />
+              <span>Manage Employees</span>
+            </button>
+          )}
 
           <button
             onClick={() => {
@@ -849,6 +947,20 @@ export default function SuperAdminDashboardPage() {
             <Home size={18} strokeWidth={1.5} />
             <span>All Properties</span>
           </button>
+
+          {user?.role === "super_admin" && (
+            <button
+              onClick={() => {
+                setActiveTab("activity_logs");
+                cancelEditAdmin();
+                setIsSidebarOpen(false);
+              }}
+              className={`${styles.menuItem} ${activeTab === "activity_logs" ? styles.activeMenuItem : ""}`}
+            >
+              <ClipboardList size={18} strokeWidth={1.5} />
+              <span>Activity Logs</span>
+            </button>
+          )}
 
           <div style={{ marginTop: "auto", borderTop: "1px solid rgba(76, 131, 161, 0.1)", paddingTop: "1rem" }}>
             <Link href="/" className={`${styles.menuItem} ${styles.hideOnMobile}`}>
@@ -967,6 +1079,26 @@ export default function SuperAdminDashboardPage() {
                         </div>
                         <div className={styles.statIconBox}>
                           <Users size={20} strokeWidth={1.5} />
+                        </div>
+                      </div>
+
+                      <div className={styles.statCard}>
+                        <div className={styles.statInfo}>
+                          <div className={styles.statVal}>{stats.availableProperties}</div>
+                          <div className={styles.statLabel}>Active Properties</div>
+                        </div>
+                        <div className={styles.statIconBox}>
+                          <Building2 size={20} strokeWidth={1.5} />
+                        </div>
+                      </div>
+
+                      <div className={styles.statCard}>
+                        <div className={styles.statInfo}>
+                          <div className={styles.statVal}>{stats.soldProperties}</div>
+                          <div className={styles.statLabel}>Sold Properties</div>
+                        </div>
+                        <div className={styles.statIconBox}>
+                          <Check size={20} strokeWidth={1.5} />
                         </div>
                       </div>
 
@@ -1403,6 +1535,129 @@ export default function SuperAdminDashboardPage() {
                     </div>
                   ) : (
                     <div className={styles.emptyMsg}>No property listings found.</div>
+                  )}
+                </div>
+              )}
+
+              {activeTab === "activity_logs" && user?.role === "super_admin" && (
+                <div>
+                  <div className={styles.filterBar} style={{ marginBottom: "1.5rem" }}>
+                    <h3 style={{ fontFamily: "var(--font-serif)", fontSize: "1.4rem", fontWeight: 400 }}>
+                      Activity Logs
+                    </h3>
+                    
+                    <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
+                      <div className={styles.filterGroup}>
+                        <label className={styles.filterLabel}>Role:</label>
+                        <CustomSelect
+                          options={[
+                            { value: "All", label: "All Roles" },
+                            { value: "Super Admin", label: "Super Admin" },
+                            { value: "Vendor", label: "Vendor" },
+                            { value: "Employee", label: "Employee" }
+                          ]}
+                          value={logRoleFilter}
+                          onChange={(val) => setLogRoleFilter(val)}
+                          style={{ minWidth: "140px", padding: 0, border: 'none' }}
+                        />
+                      </div>
+                      
+                      {logRoleFilter !== "All" && (
+                        <div className={styles.filterGroup}>
+                          <label className={styles.filterLabel}>User:</label>
+                          <CustomSelect
+                            options={[
+                              { value: "", label: fetchingRoleUsers ? "Loading..." : "All Users" },
+                              ...roleUsers.map((u) => ({ value: u._id, label: u.name }))
+                            ]}
+                            value={logUserFilter}
+                            onChange={(val) => setLogUserFilter(val)}
+                            style={{ minWidth: "160px", padding: 0, border: 'none' }}
+                          />
+                        </div>
+                      )}
+
+                      <div className={styles.filterGroup}>
+                        <label className={styles.filterLabel}>Start Date:</label>
+                        <input 
+                          type="date" 
+                          value={logStartDate}
+                          onChange={(e) => setLogStartDate(e.target.value)}
+                          style={{ padding: "0.4rem", border: "1px solid #ccc", borderRadius: "4px" }}
+                        />
+                      </div>
+                      <div className={styles.filterGroup}>
+                        <label className={styles.filterLabel}>End Date:</label>
+                        <input 
+                          type="date" 
+                          value={logEndDate}
+                          onChange={(e) => setLogEndDate(e.target.value)}
+                          style={{ padding: "0.4rem", border: "1px solid #ccc", borderRadius: "4px" }}
+                        />
+                      </div>
+                      <button
+                        onClick={exportToPDF}
+                        className={styles.submitBtn}
+                        style={{ 
+                          padding: "0.4rem 0.8rem", 
+                          fontSize: "0.8rem", 
+                          height: "fit-content", 
+                          alignSelf: "flex-end",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "0.4rem",
+                          width: "max-content",
+                          minWidth: "max-content",
+                          flexShrink: 0
+                        }}
+                        disabled={activityLogs.length === 0}
+                      >
+                        <Download size={16} />
+                        Export to PDF
+                      </button>
+                    </div>
+                  </div>
+
+                  {logsLoading ? (
+                    <div style={{ textAlign: "center", padding: "3rem" }}>Loading activity logs...</div>
+                  ) : activityLogs.length > 0 ? (
+                    <div className={styles.tableContainer}>
+                      <table className={styles.table}>
+                        <thead>
+                          <tr>
+                            <th>Date & Time</th>
+                            <th>Role</th>
+                            <th>User Name</th>
+                            <th>Action</th>
+                            <th>Details</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {activityLogs.map((log) => (
+                            <tr key={log._id}>
+                              <td style={{ whiteSpace: "nowrap" }}>{new Date(log.createdAt).toLocaleString()}</td>
+                              <td>
+                                <span style={{ 
+                                  padding: "0.25rem 0.5rem", 
+                                  borderRadius: "4px", 
+                                  fontSize: "0.75rem", 
+                                  fontWeight: 600,
+                                  backgroundColor: log.userRole === "Super Admin" ? "#ffebee" : log.userRole === "Vendor" ? "#e3f2fd" : "#f1f8e9",
+                                  color: log.userRole === "Super Admin" ? "#c62828" : log.userRole === "Vendor" ? "#1565c0" : "#2e7d32"
+                                }}>
+                                  {log.userRole}
+                                </span>
+                              </td>
+                              <td style={{ fontWeight: 500 }}>{log.userName}</td>
+                              <td>{log.action}</td>
+                              <td style={{ fontSize: "0.85rem", color: "#666" }}>{log.details || "-"}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className={styles.emptyMsg}>No activity logs found for the selected filters.</div>
                   )}
                 </div>
               )}

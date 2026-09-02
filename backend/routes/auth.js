@@ -8,6 +8,7 @@ const axios = require("axios");
 const { auth } = require("../middleware/auth");
 const upload = require("../utils/upload");
 const { normalizePhone, isValidPhone } = require("../utils/phoneValidation");
+const ActivityLog = require("../models/ActivityLog");
 
 
 // Configure Cloudinary if credentials exist in .env
@@ -232,6 +233,23 @@ router.post("/login", async (req, res) => {
     }
 
     const token = generateToken(user);
+    
+    // Log Activity for Staff
+    if (user.role !== "user") {
+      let roleStr = "User";
+      if (user.role === "super_admin") roleStr = "Super Admin";
+      else if (user.role === "admin") roleStr = "Vendor";
+      else if (user.role === "employee") roleStr = "Employee";
+
+      await ActivityLog.create({
+        user: user._id,
+        userName: user.name,
+        userRole: roleStr,
+        action: "logged in",
+        details: "User authenticated successfully"
+      });
+    }
+    
     res.json({
       token,
       user: {
@@ -247,6 +265,32 @@ router.post("/login", async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Server login error" });
+  }
+});
+
+// @route   POST api/auth/logout
+// @desc    Log out user (logging purpose)
+// @access  Private
+router.post("/logout", auth, async (req, res) => {
+  try {
+    if (req.user && req.user.role !== "user") {
+      let roleStr = "User";
+      if (req.user.role === "super_admin") roleStr = "Super Admin";
+      else if (req.user.role === "admin") roleStr = "Vendor";
+      else if (req.user.role === "employee") roleStr = "Employee";
+
+      await ActivityLog.create({
+        user: req.user.id || req.user._id,
+        userName: req.user.name || "Unknown",
+        userRole: roleStr,
+        action: "logged out",
+        details: "User terminated session"
+      });
+    }
+    res.json({ message: "Logged out" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Server logout error" });
   }
 });
 

@@ -6,6 +6,7 @@ const cloudinary = require("cloudinary").v2;
 const Property = require("../models/Property");
 const User = require("../models/User");
 const { auth, authorize } = require("../middleware/auth");
+const { logActivity } = require("../utils/logger");
 
 const router = express.Router();
 
@@ -148,6 +149,9 @@ router.put("/admin/sold/:id", auth, authorize("admin"), async (req, res) => {
     
     property.status = property.status === "available" ? "sold" : "available";
     await property.save();
+    
+    await logActivity(req, "toggled property sold status", `Property: ${property.title} | Status: ${property.status} | ID: ${property.propertyId}`);
+    
     res.json({ message: `Property status updated to ${property.status}`, property });
   } catch (error) {
     console.error(error);
@@ -184,8 +188,8 @@ router.get("/:id", async (req, res) => {
 
 // @route   POST api/properties
 // @desc    Create a new property (Upload files + form data)
-// @access  Private (Admin & Super Admin)
-router.post("/", auth, authorize(["admin", "super_admin"]), upload.array("imageFiles", 6), async (req, res) => {
+// @access  Private (Admin, Super Admin, Employee)
+router.post("/", auth, authorize(["admin", "super_admin", "employee"]), upload.array("imageFiles", 6), async (req, res) => {
   try {
     const { title, description, city, location, price, beds, baths, area, type, imageUrls, customFields, keyPoints, amenities, listingType, isPremium, rentFrequency } = req.body;
 
@@ -280,6 +284,9 @@ router.post("/", auth, authorize(["admin", "super_admin"]), upload.array("imageF
     });
 
     await newProperty.save();
+    
+    await logActivity(req, "added a new property", `Property: ${newProperty.title} | ID: ${newProperty.propertyId || newProperty._id}`);
+    
     res.status(201).json(newProperty);
   } catch (error) {
     console.error(error);
@@ -290,7 +297,7 @@ router.post("/", auth, authorize(["admin", "super_admin"]), upload.array("imageF
 // @route   POST api/properties/wishlist/:id
 // @desc    Add or remove a property from the user's wishlist
 // @access  Private (All authenticated users)
-router.post("/wishlist/:id", auth, authorize(["user", "admin", "super_admin"]), async (req, res) => {
+router.post("/wishlist/:id", auth, authorize(["user", "admin", "super_admin", "employee"]), async (req, res) => {
   try {
     const propertyIdParam = req.params.id;
     let property;
@@ -328,8 +335,8 @@ router.post("/wishlist/:id", auth, authorize(["user", "admin", "super_admin"]), 
 
 // @route   PUT api/properties/:id
 // @desc    Update a property
-// @access  Private (Admin & Super Admin)
-router.put("/:id", auth, authorize(["admin", "super_admin"]), upload.array("imageFiles", 6), async (req, res) => {
+// @access  Private (Admin, Super Admin, Employee)
+router.put("/:id", auth, authorize(["admin", "super_admin", "employee"]), upload.array("imageFiles", 6), async (req, res) => {
   try {
     const { title, description, city, location, price, beds, baths, area, type, imageUrls, customFields, keyPoints, amenities, removedImages, listingType, isPremium, rentFrequency } = req.body;
 
@@ -418,6 +425,9 @@ router.put("/:id", auth, authorize(["admin", "super_admin"]), upload.array("imag
     property.amenities = parsedAmenities;
 
     await property.save();
+    
+    await logActivity(req, "updated a property", `Property: ${property.title} | ID: ${property.propertyId || property._id}`);
+    
     res.json(property);
   } catch (error) {
     console.error(error);
@@ -427,8 +437,8 @@ router.put("/:id", auth, authorize(["admin", "super_admin"]), upload.array("imag
 
 // @route   DELETE api/properties/:id
 // @desc    Delete a property
-// @access  Private (Admin & Super Admin)
-router.delete("/:id", auth, authorize(["admin", "super_admin"]), async (req, res) => {
+// @access  Private (Admin, Super Admin, Employee)
+router.delete("/:id", auth, authorize(["admin", "super_admin", "employee"]), async (req, res) => {
   try {
     const property = await Property.findById(req.params.id);
     if (!property) return res.status(404).json({ error: "Property not found" });
@@ -438,7 +448,12 @@ router.delete("/:id", auth, authorize(["admin", "super_admin"]), async (req, res
       return res.status(403).json({ error: "Not authorized to delete this property" });
     }
 
+    const propTitle = property.title;
+    const propId = property.propertyId || property._id;
     await Property.findByIdAndDelete(req.params.id);
+    
+    await logActivity(req, "deleted a property", `Property: ${propTitle} | ID: ${propId}`);
+    
     res.json({ message: "Property deleted successfully" });
   } catch (error) {
     console.error(error);

@@ -8,7 +8,9 @@ const User = require("../models/User");
 const Property = require("../models/Property");
 const InterestRequest = require("../models/InterestRequest");
 const Counter = require("../models/Counter");
+const ActivityLog = require("../models/ActivityLog");
 const { auth, authorize } = require("../middleware/auth");
+const { logActivity } = require("../utils/logger");
 
 const router = express.Router();
 
@@ -52,8 +54,9 @@ const upload = multer({
   },
 });
 
-// All routes here require super_admin authorization
-router.use(auth, authorize("super_admin"));
+// Most routes here require super_admin or employee authorization
+// Specific sensitive routes (like admins/employees) will override this
+router.use(auth, authorize(["super_admin", "employee"]));
 
 // @route   GET api/superadmin/stats
 // @desc    Get dashboard stats (users, admins, properties, pending requests)
@@ -84,7 +87,7 @@ router.get("/stats", async (req, res) => {
 // @route   POST api/superadmin/admins
 // @desc    Add a new admin
 // @access  Private (Super Admin)
-router.post("/admins", upload.single("profileImage"), async (req, res) => {
+router.post("/admins", authorize("super_admin"), upload.single("profileImage"), async (req, res) => {
   const { name, email, password } = req.body;
   let { phone } = req.body;
 
@@ -142,6 +145,8 @@ router.post("/admins", upload.single("profileImage"), async (req, res) => {
         profileImage: newAdmin.profileImage,
       },
     });
+    
+    await logActivity(req, "added a new vendor", `Vendor Name: ${newAdmin.name} | Phone: ${newAdmin.phone}`);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error creating admin" });
@@ -150,8 +155,8 @@ router.post("/admins", upload.single("profileImage"), async (req, res) => {
 
 // @route   GET api/superadmin/admins
 // @desc    Get all admins list
-// @access  Private (Super Admin)
-router.get("/admins", async (req, res) => {
+// @access  Private (Super Admin, Employee)
+router.get("/admins", authorize(["super_admin", "employee"]), async (req, res) => {
   try {
     const admins = await User.find({ role: "admin" }).select("-password").sort({ createdAt: -1 });
     res.json(admins);
@@ -164,7 +169,7 @@ router.get("/admins", async (req, res) => {
 // @route   PUT api/superadmin/admins/:id
 // @desc    Edit admin details
 // @access  Private (Super Admin)
-router.put("/admins/:id", upload.single("profileImage"), async (req, res) => {
+router.put("/admins/:id", authorize("super_admin"), upload.single("profileImage"), async (req, res) => {
   const { name, email, password } = req.body;
   let { phone } = req.body;
 
@@ -211,6 +216,9 @@ router.put("/admins/:id", upload.single("profileImage"), async (req, res) => {
     }
 
     await admin.save();
+    
+    await logActivity(req, "updated a vendor account", `Vendor Name: ${admin.name} | Vendor ID: ${admin._id}`);
+    
     res.json({ message: "Admin updated successfully", admin });
   } catch (error) {
     console.error(error);
@@ -221,18 +229,189 @@ router.put("/admins/:id", upload.single("profileImage"), async (req, res) => {
 // @route   DELETE api/superadmin/admins/:id
 // @desc    Delete an admin (they can no longer log in)
 // @access  Private (Super Admin)
-router.delete("/admins/:id", async (req, res) => {
+router.delete("/admins/:id", authorize("super_admin"), async (req, res) => {
   try {
     const admin = await User.findOne({ _id: req.params.id, role: "admin" });
     if (!admin) {
       return res.status(404).json({ error: "Admin not found" });
     }
 
+    const adminName = admin.name;
     await User.findByIdAndDelete(req.params.id);
+    
+    await logActivity(req, "deleted a vendor account", `Vendor Name: ${adminName} | Vendor ID: ${req.params.id}`);
+    
     res.json({ message: "Admin deleted successfully" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error deleting admin" });
+  }
+});
+
+// --- EMPLOYEE MANAGEMENT ROUTES (SUPER ADMIN ONLY) ---
+
+// @route   POST api/superadmin/employees
+// @desc    Add a new employee
+// @access  Private (Super Admin)
+router.post("/employees", authorize("super_admin"), upload.single("profileImage"), async (req, res) => {
+  const { name, email, password } = req.body;
+  let { phone } = req.body;
+
+  try {
+    if (!name || !password || !phone) {
+      return res.status(400).json({ error: "Please enter all required fields" });
+    }
+
+    phone = normalizePhone(phone);
+    if (!isValidPhone(phone)) {
+      return res.status(400).json({ error: "Invalid Indian mobile number" });
+    }
+
+    if (email) {
+      const existingUserEmail = await User.findOne({ email });
+      if (existingUserEmail) {
+        return res.status(400).json({ error: "Email or username is already registered" });
+      }
+    }
+
+    const existingUserPhone = await User.findOne({ phone });
+    if (existingUserPhone) {
+      return res.status(400).json({ error: "Phone number is already registered to another user" });
+    }
+
+    let profileImageUrl = "";
+    if (req.file) {
+      if (isCloudinaryConfigured) {
+        const result = await cloudinary.uploader.upload(req.file.path, { folder: "isiri_profiles" });
+        profileImageUrl = result.secure_url;
+        fs.unlinkSync(req.file.path);
+      } else {
+        profileImageUrl = req.file.filename;
+      }
+    }
+
+    const newEmployee = new User({
+      name,
+      email,
+      phone,
+      password,
+      role: "employee",
+      profileImage: profileImageUrl,
+    });
+
+    await newEmployee.save();
+    res.status(201).json({
+      message: "Employee created successfully",
+      employee: {
+        id: newEmployee._id,
+        name: newEmployee.name,
+        email: newEmployee.email,
+        phone: newEmployee.phone,
+        role: newEmployee.role,
+        role: newEmployee.role,
+        profileImage: newEmployee.profileImage,
+      },
+    });
+    
+    await logActivity(req, "added a new employee", `Employee Name: ${newEmployee.name} | Phone: ${newEmployee.phone}`);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error creating employee" });
+  }
+});
+
+// @route   GET api/superadmin/employees
+// @desc    Get all employees list
+// @access  Private (Super Admin, Employee)
+router.get("/employees", authorize(["super_admin", "employee"]), async (req, res) => {
+  try {
+    const employees = await User.find({ role: "employee" }).select("-password").sort({ createdAt: -1 });
+    res.json(employees);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error fetching employees list" });
+  }
+});
+
+// @route   PUT api/superadmin/employees/:id
+// @desc    Edit employee details
+// @access  Private (Super Admin)
+router.put("/employees/:id", authorize("super_admin"), upload.single("profileImage"), async (req, res) => {
+  const { name, email, password } = req.body;
+  let { phone } = req.body;
+
+  try {
+    const employee = await User.findOne({ _id: req.params.id, role: "employee" });
+    if (!employee) {
+      return res.status(404).json({ error: "Employee not found" });
+    }
+
+    if (name) employee.name = name;
+    
+    if (phone) {
+      phone = normalizePhone(phone);
+      if (!isValidPhone(phone)) {
+        return res.status(400).json({ error: "Invalid Indian mobile number" });
+      }
+      
+      const existingPhone = await User.findOne({ phone, _id: { $ne: req.params.id } });
+      if (existingPhone) {
+        return res.status(400).json({ error: "Phone number is already used by another user" });
+      }
+      employee.phone = phone;
+    }
+
+    if (email) {
+      if (email !== employee.email) {
+        const existing = await User.findOne({ email });
+        if (existing) {
+          return res.status(400).json({ error: "Email is already registered" });
+        }
+        employee.email = email;
+      }
+    }
+    if (password) employee.password = password;
+
+    if (req.file) {
+      if (isCloudinaryConfigured) {
+        const result = await cloudinary.uploader.upload(req.file.path, { folder: "isiri_profiles" });
+        employee.profileImage = result.secure_url;
+        fs.unlinkSync(req.file.path);
+      } else {
+        employee.profileImage = req.file.filename;
+      }
+    }
+
+    await employee.save();
+    
+    await logActivity(req, "updated an employee account", `Employee Name: ${employee.name} | Employee ID: ${employee._id}`);
+    
+    res.json({ message: "Employee updated successfully", employee });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error updating employee" });
+  }
+});
+
+// @route   DELETE api/superadmin/employees/:id
+// @desc    Delete an employee
+// @access  Private (Super Admin)
+router.delete("/employees/:id", authorize("super_admin"), async (req, res) => {
+  try {
+    const employee = await User.findOne({ _id: req.params.id, role: "employee" });
+    if (!employee) {
+      return res.status(404).json({ error: "Employee not found" });
+    }
+
+    const empName = employee.name;
+    await User.findByIdAndDelete(req.params.id);
+    
+    await logActivity(req, "deleted an employee account", `Employee Name: ${empName} | Employee ID: ${req.params.id}`);
+    
+    res.json({ message: "Employee deleted successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error deleting employee" });
   }
 });
 
@@ -280,11 +459,76 @@ router.delete("/users/:id", async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
+    const userName = user.name;
     await User.findByIdAndDelete(req.params.id);
+    
+    await logActivity(req, "deleted a user account", `User Name: ${userName} | User ID: ${req.params.id}`);
+    
     res.json({ message: "User deleted successfully" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error deleting user" });
+  }
+});
+
+// @route   GET api/superadmin/activity-logs
+// @desc    Get activity logs with optional filters
+// @access  Private (Super Admin)
+router.get("/activity-logs", authorize("super_admin"), async (req, res) => {
+  try {
+    const { startDate, endDate, role, userId } = req.query;
+    let query = {};
+
+    // Date range filter
+    if (startDate || endDate) {
+      query.createdAt = {};
+      if (startDate) {
+        query.createdAt.$gte = new Date(startDate);
+      }
+      if (endDate) {
+        // Set end date to the end of the specified day
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        query.createdAt.$lte = end;
+      }
+    }
+
+    // Role filter
+    if (role && role !== "All") {
+      query.userRole = role;
+    }
+
+    // User ID filter
+    if (userId) {
+      query.user = userId;
+    }
+
+    const logs = await ActivityLog.find(query).sort({ createdAt: -1 });
+    res.json(logs);
+  } catch (error) {
+    console.error("Error fetching activity logs:", error);
+    res.status(500).json({ error: "Error fetching activity logs" });
+  }
+});
+
+// @route   GET api/superadmin/users-by-role
+// @desc    Get users by their display role name
+// @access  Private (Super Admin)
+router.get("/users-by-role", authorize("super_admin"), async (req, res) => {
+  try {
+    const { role } = req.query;
+    let dbRole = "";
+    if (role === "Super Admin") dbRole = "super_admin";
+    else if (role === "Vendor") dbRole = "admin";
+    else if (role === "Employee") dbRole = "employee";
+    
+    if (!dbRole) return res.json([]);
+
+    const users = await User.find({ role: dbRole }).select("_id name").sort({ name: 1 });
+    res.json(users);
+  } catch (error) {
+    console.error("Error fetching users by role:", error);
+    res.status(500).json({ error: "Error fetching users" });
   }
 });
 

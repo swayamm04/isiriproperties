@@ -53,8 +53,8 @@ router.post("/", auth, authorize("user"), async (req, res) => {
 
 // @route   GET api/interest
 // @desc    Get all interest requests (sorted with 'new' on top, 'reviewed' on bottom)
-// @access  Private (Super Admin only)
-router.get("/", auth, authorize("super_admin"), async (req, res) => {
+// @access  Private (Super Admin, Employee)
+router.get("/", auth, authorize(["super_admin", "employee"]), async (req, res) => {
   try {
     // Sorting by status: 'new' first, then 'reviewed'.
     // In alphabetical order, 'new' comes before 'reviewed', but sorting custom status works beautifully
@@ -73,8 +73,8 @@ router.get("/", auth, authorize("super_admin"), async (req, res) => {
 
 // @route   PUT api/interest/:id/review
 // @desc    Mark an interest request as reviewed
-// @access  Private (Super Admin only)
-router.put("/:id/review", auth, authorize("super_admin"), async (req, res) => {
+// @access  Private (Super Admin, Employee)
+router.put("/:id/review", auth, authorize(["super_admin", "employee"]), async (req, res) => {
   const { status } = req.body; // should be 'reviewed'
 
   try {
