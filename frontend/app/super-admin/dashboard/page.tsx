@@ -1562,7 +1562,7 @@ export default function SuperAdminDashboardPage() {
                         />
                       </div>
                       
-                      {logRoleFilter !== "All" && (
+                      {logRoleFilter !== "All" && logRoleFilter !== "Super Admin" && (
                         <div className={styles.filterGroup}>
                           <label className={styles.filterLabel}>User:</label>
                           <CustomSelect
