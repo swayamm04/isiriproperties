@@ -434,7 +434,7 @@ export default function SuperAdminDashboardPage() {
   };
 
   // Actions: Add/Edit Admin/Employee Submit
-  const handleAddAdminSubmit = async (e: React.FormEvent, isEmployee = false) => {
+  const handleAddAdminSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setAddAdminLoading(true);
     setErrorMsg("");
@@ -447,7 +447,7 @@ export default function SuperAdminDashboardPage() {
       formData.append("phone", adminPhone);
       if (adminPassword) formData.append("password", adminPassword);
       if (adminProfileImage) formData.append("profileImage", adminProfileImage);
-      if (isEmployee) formData.append("role", "employee");
+      if (activeTab === "employees") formData.append("role", "employee");
 
       if (editingAdminId) {
         await apiRequest(`/superadmin/admins/${editingAdminId}`, {
@@ -850,8 +850,10 @@ export default function SuperAdminDashboardPage() {
       case "dashboard": return "Dashboard / General";
       case "inquiries": return "Dashboard / Enquiries";
       case "admins": return "Supervision / Vendor Admins";
+      case "employees": return "Supervision / Employees";
       case "users": return "Supervision / Registered Users";
       case "properties": return "Supervision / Global Properties";
+      case "activity_logs": return "Supervision / Activity Logs";
       case "settings": return "System / Account Settings";
       default: return "Dashboard";
     }
@@ -1030,7 +1032,7 @@ export default function SuperAdminDashboardPage() {
           {/* Welcome greeting */}
           <div className={styles.welcomeSection}>
             <h1 className={styles.title}>
-              {activeTab === "dashboard" ? "System Dashboard" : activeTab === "inquiries" ? "Client Enquiries" : activeTab === "admins" ? "Manage Vendor Admins" : activeTab === "users" ? "Manage Customer Users" : activeTab === "settings" ? "Account Settings" : "Global Property Listings"}
+              {activeTab === "dashboard" ? "System Dashboard" : activeTab === "inquiries" ? "Client Enquiries" : activeTab === "admins" ? "Manage Vendor Admins" : activeTab === "employees" ? "Manage Employees" : activeTab === "users" ? "Manage Customer Users" : activeTab === "activity_logs" ? "Activity Logs" : activeTab === "settings" ? "Account Settings" : "Global Property Listings"}
             </h1>
             <p className={styles.subtitle}>
               Welcome back, {user.name.split(" ")[0]}. Here is the current status of your real estate platform.
@@ -1260,6 +1262,81 @@ export default function SuperAdminDashboardPage() {
                       </div>
                     ) : (
                       <div className={styles.emptyMsg}>No admins registered yet. Click "Add Admin" to register one.</div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {activeTab === "employees" && (
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", flexWrap: "wrap", gap: "1rem" }}>
+                    <h3 style={{ fontFamily: "var(--font-serif)", fontSize: "1.4rem", fontWeight: 400, margin: 0 }}>
+                      Active Employee Accounts
+                    </h3>
+                    <button
+                      onClick={() => {
+                        cancelEditAdmin();
+                        setIsAddAdminModalOpen(true);
+                      }}
+                      className={styles.submitBtn}
+                      style={{ 
+                        padding: "0.6rem 1.5rem", 
+                        fontSize: "0.8rem", 
+                        display: "flex", 
+                        alignItems: "center", 
+                        gap: "0.5rem" 
+                      }}
+                    >
+                      <PlusCircle size={16} />
+                      <span>Add Employee</span>
+                    </button>
+                  </div>
+
+                  <div>
+                    {employees.length > 0 ? (
+                      <div className={styles.tableContainer}>
+                        <table className={styles.table}>
+                          <thead>
+                            <tr>
+                              <th>Name</th>
+                              <th>Email ID</th>
+                              <th>Phone No.</th>
+                              <th>Created On</th>
+                              <th>Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {employees.map((emp) => (
+                              <tr key={emp._id}>
+                                <td style={{ fontWeight: 500 }}>{emp.name}</td>
+                                <td>{emp.email}</td>
+                                <td>{emp.phone || "N/A"}</td>
+                                <td>{new Date(emp.createdAt).toLocaleDateString()}</td>
+                                <td>
+                                  <div style={{ display: "flex", gap: "1.25rem", alignItems: "center" }}>
+                                    <button
+                                      onClick={() => startEditAdmin(emp)}
+                                      title="Edit Employee"
+                                      style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-primary-dark)", padding: 0 }}
+                                    >
+                                      <Edit size={16} strokeWidth={1.8} />
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeleteAdmin(emp._id, emp.name)}
+                                      title="Delete Employee"
+                                      style={{ background: "none", border: "none", cursor: "pointer", color: "#e05e5e", padding: 0 }}
+                                    >
+                                      <Trash2 size={16} strokeWidth={1.8} />
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <div className={styles.emptyMsg}>No employees registered yet. Click "Add Employee" to register one.</div>
                     )}
                   </div>
                 </div>
@@ -1667,27 +1744,27 @@ export default function SuperAdminDashboardPage() {
         </main>
       </div>
 
-      {/* Add Admin Modal */}
+      {/* Add Admin/Employee Modal */}
       {isAddAdminModalOpen && (
         <div className={styles.modalOverlay} onClick={() => setIsAddAdminModalOpen(false)}>
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()} style={{ maxWidth: "500px" }}>
             <button 
               className={styles.modalCloseBtn} 
               onClick={() => setIsAddAdminModalOpen(false)}
-              aria-label="Close Admin Modal"
+              aria-label="Close Modal"
             >
               <X size={20} />
             </button>
 
             <h2 className={styles.modalTitle} style={{ fontFamily: "var(--font-serif)", fontSize: "1.6rem", fontWeight: 400, marginBottom: "2rem" }}>
-              {editingAdminId ? "Edit Admin Details" : "Register Vendor Admin"}
+              {editingAdminId ? (activeTab === "employees" ? "Edit Employee Details" : "Edit Admin Details") : (activeTab === "employees" ? "Register Employee" : "Register Vendor Admin")}
             </h2>
             <form onSubmit={handleAddAdminSubmit}>
               {errorMsg && <div className={styles.errorBox}>{errorMsg}</div>}
               {successMsg && <div className={styles.successBox}>{successMsg}</div>}
 
               <div className={styles.formGroup}>
-                <label className={styles.label}>Admin Name</label>
+                <label className={styles.label}>{activeTab === "employees" ? "Employee Name" : "Admin Name"}</label>
                 <input
                   type="text"
                   placeholder="e.g. Rachel Green"
