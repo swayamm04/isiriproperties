@@ -839,10 +839,10 @@ export default function SuperAdminDashboardPage() {
     );
   }
 
-  if (!user || user.role !== "super_admin") {
+  if (!user || (user.role !== "super_admin" && user.role !== "employee")) {
     return (
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", backgroundColor: "var(--color-bg-light)" }}>
-        <p style={{ color: "#e05e5e" }}>Access Denied. Super Admin credentials required.</p>
+        <p style={{ color: "#e05e5e" }}>Access Denied. Super Admin or Employee credentials required.</p>
       </div>
     );
   }
