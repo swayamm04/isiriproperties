@@ -449,15 +449,17 @@ export default function SuperAdminDashboardPage() {
       if (adminProfileImage) formData.append("profileImage", adminProfileImage);
       if (activeTab === "employees") formData.append("role", "employee");
 
+      const endpoint = activeTab === "employees" ? "/superadmin/employees" : "/superadmin/admins";
+
       if (editingAdminId) {
-        await apiRequest(`/superadmin/admins/${editingAdminId}`, {
+        await apiRequest(`${endpoint}/${editingAdminId}`, {
           method: "PUT",
           body: formData,
         });
         setSuccessMsg(`Account details updated successfully.`);
         setEditingAdminId(null);
       } else {
-        await apiRequest("/superadmin/admins", {
+        await apiRequest(endpoint, {
           method: "POST",
           body: formData,
         });
@@ -1819,7 +1821,7 @@ export default function SuperAdminDashboardPage() {
 
               <div className={styles.modalActionContainer} style={{ marginTop: "2rem" }}>
                 <button type="submit" className={styles.submitBtn} disabled={addAdminLoading}>
-                  {addAdminLoading ? "Saving..." : editingAdminId ? "Update Admin Account" : "Add Admin Account"}
+                  {addAdminLoading ? "Saving..." : editingAdminId ? (activeTab === "employees" ? "Update Employee Account" : "Update Admin Account") : (activeTab === "employees" ? "Add Employee Account" : "Add Admin Account")}
                 </button>
                 
                 <button 

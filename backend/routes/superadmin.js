@@ -88,8 +88,10 @@ router.get("/stats", async (req, res) => {
 // @desc    Add a new admin
 // @access  Private (Super Admin)
 router.post("/admins", authorize("super_admin"), upload.single("profileImage"), async (req, res) => {
-  const { name, email, password } = req.body;
+  let { name, email, password } = req.body;
   let { phone } = req.body;
+
+  if (!email) email = undefined;
 
   try {
     if (!name || !password || !phone) {
@@ -149,7 +151,7 @@ router.post("/admins", authorize("super_admin"), upload.single("profileImage"), 
     await logActivity(req, "added a new vendor", `Vendor Name: ${newAdmin.name} | Phone: ${newAdmin.phone}`);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Error creating admin" });
+    res.status(500).json({ error: error.message || "Error creating admin" });
   }
 });
 
@@ -194,13 +196,16 @@ router.put("/admins/:id", authorize("super_admin"), upload.single("profileImage"
       admin.phone = phone;
     }
 
-    if (email) {
+    if (email !== undefined) {
       if (email !== admin.email) {
-        const existing = await User.findOne({ email });
-        if (existing) {
-          return res.status(400).json({ error: "Email is already registered" });
+        if (email !== "") {
+          const existing = await User.findOne({ email });
+          if (existing) {
+            return res.status(400).json({ error: "Email is already registered" });
+          }
         }
-        admin.email = email;
+        // Save empty string as undefined to prevent unique index conflicts on empty string
+        admin.email = email === "" ? undefined : email;
       }
     }
     if (password) admin.password = password;
@@ -222,7 +227,7 @@ router.put("/admins/:id", authorize("super_admin"), upload.single("profileImage"
     res.json({ message: "Admin updated successfully", admin });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Error updating admin" });
+    res.status(500).json({ error: error.message || "Error updating admin" });
   }
 });
 
@@ -254,8 +259,10 @@ router.delete("/admins/:id", authorize("super_admin"), async (req, res) => {
 // @desc    Add a new employee
 // @access  Private (Super Admin)
 router.post("/employees", authorize("super_admin"), upload.single("profileImage"), async (req, res) => {
-  const { name, email, password } = req.body;
+  let { name, email, password } = req.body;
   let { phone } = req.body;
+
+  if (!email) email = undefined;
 
   try {
     if (!name || !password || !phone) {
@@ -316,7 +323,7 @@ router.post("/employees", authorize("super_admin"), upload.single("profileImage"
     await logActivity(req, "added a new employee", `Employee Name: ${newEmployee.name} | Phone: ${newEmployee.phone}`);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Error creating employee" });
+    res.status(500).json({ error: error.message || "Error creating employee" });
   }
 });
 
@@ -361,13 +368,16 @@ router.put("/employees/:id", authorize("super_admin"), upload.single("profileIma
       employee.phone = phone;
     }
 
-    if (email) {
+    if (email !== undefined) {
       if (email !== employee.email) {
-        const existing = await User.findOne({ email });
-        if (existing) {
-          return res.status(400).json({ error: "Email is already registered" });
+        if (email !== "") {
+          const existing = await User.findOne({ email });
+          if (existing) {
+            return res.status(400).json({ error: "Email is already registered" });
+          }
         }
-        employee.email = email;
+        // Save empty string as undefined to prevent unique index conflicts on empty string
+        employee.email = email === "" ? undefined : email;
       }
     }
     if (password) employee.password = password;
@@ -389,7 +399,7 @@ router.put("/employees/:id", authorize("super_admin"), upload.single("profileIma
     res.json({ message: "Employee updated successfully", employee });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Error updating employee" });
+    res.status(500).json({ error: error.message || "Error updating employee" });
   }
 });
 
