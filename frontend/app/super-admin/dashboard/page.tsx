@@ -698,7 +698,7 @@ export default function SuperAdminDashboardPage() {
   const startEditAdmin = (adm: AdminProfile) => {
     setEditingAdminId(adm._id);
     setAdminName(adm.name);
-    setAdminEmail(adm.email);
+    setAdminEmail(adm.email || "");
     setAdminPhone(adm.phone || "");
     setAdminPassword("");
     setIsAddAdminModalOpen(true);
@@ -714,24 +714,26 @@ export default function SuperAdminDashboardPage() {
     setIsAddAdminModalOpen(false);
   };
 
-  // Actions: Delete Admin
-  const handleDeleteAdmin = async (adminId: string, adminName: string) => {
-    if (!confirm(`Are you sure you want to delete the admin "${adminName}"? They will lose access immediately.`)) {
+  // Actions: Delete Admin/Employee
+  const handleDeleteAdmin = async (adminId: string, adminName: string, isEmployee: boolean = false) => {
+    const roleText = isEmployee ? "employee" : "admin";
+    if (!confirm(`Are you sure you want to delete the ${roleText} "${adminName}"? They will lose access immediately.`)) {
       return;
     }
 
     try {
-      await apiRequest(`/superadmin/admins/${adminId}`, {
+      const endpoint = isEmployee ? `/superadmin/employees/${adminId}` : `/superadmin/admins/${adminId}`;
+      await apiRequest(endpoint, {
         method: "DELETE",
       });
-      setSuccessMsg(`Admin "${adminName}" deleted.`);
+      setSuccessMsg(`${isEmployee ? 'Employee' : 'Admin'} "${adminName}" deleted.`);
       if (editingAdminId === adminId) {
         cancelEditAdmin();
       }
       loadStats();
       loadTabData();
     } catch (err: any) {
-      setErrorMsg(err.message || "Failed to delete admin.");
+      setErrorMsg(err.message || `Failed to delete ${roleText}.`);
     }
   };
 
@@ -1324,7 +1326,7 @@ export default function SuperAdminDashboardPage() {
                                       <Edit size={16} strokeWidth={1.8} />
                                     </button>
                                     <button
-                                      onClick={() => handleDeleteAdmin(emp._id, emp.name)}
+                                      onClick={() => handleDeleteAdmin(emp._id, emp.name, true)}
                                       title="Delete Employee"
                                       style={{ background: "none", border: "none", cursor: "pointer", color: "#e05e5e", padding: 0 }}
                                     >
@@ -1375,6 +1377,13 @@ export default function SuperAdminDashboardPage() {
                               <td>
                                 <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
 
+                                  <button
+                                    onClick={() => handleToggleBlockUser(u._id, u.name, u.isBlocked)}
+                                    title={u.isBlocked ? "Unblock User" : "Block User"}
+                                    style={{ background: "none", border: "none", cursor: "pointer", color: u.isBlocked ? "#4eb570" : "#e05e5e", padding: 0 }}
+                                  >
+                                    {u.isBlocked ? <Check size={16} strokeWidth={1.8} /> : <EyeOff size={16} strokeWidth={1.8} />}
+                                  </button>
                                   <button
                                     onClick={() => handleDeleteUser(u._id, u.name)}
                                     title="Delete User"
@@ -1502,9 +1511,9 @@ export default function SuperAdminDashboardPage() {
                                 <td>{prop.location}</td>
                                 <td style={{ color: "var(--color-primary-dark)", fontWeight: 600 }}>
                                   {formatIndianPrice(prop.price)}
-                                  {prop.listingType === "Rent" && prop.rentFrequency && (
+                                  {prop.listingType?.toLowerCase() === "rent" && (
                                     <span style={{ fontSize: "0.7em", marginLeft: "4px", color: "var(--color-dark-muted)", fontWeight: 500 }}>
-                                      / {prop.rentFrequency}
+                                      / {prop.rentFrequency || "Month"}
                                     </span>
                                   )}
                                 </td>

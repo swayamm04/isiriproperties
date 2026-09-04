@@ -625,9 +625,9 @@ export default function AdminDashboardPage() {
                             <td>{prop.location}</td>
                             <td style={{ color: "var(--color-primary-dark)", fontWeight: 600 }}>
                               {formatIndianPrice(prop.price)}
-                              {prop.listingType === "Rent" && prop.rentFrequency && (
+                              {prop.listingType?.toLowerCase() === "rent" && (
                                 <span style={{ fontSize: "0.7em", marginLeft: "4px", color: "var(--color-dark-muted)", fontWeight: 500 }}>
-                                  / {prop.rentFrequency}
+                                  / {prop.rentFrequency || "Month"}
                                 </span>
                               )}
                             </td>

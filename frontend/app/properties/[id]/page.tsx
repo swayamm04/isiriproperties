@@ -399,9 +399,9 @@ export default function PropertyDetailPage() {
               <div className={styles.titleRow}>
                 <span className={styles.price}>
                   {formattedPrice}
-                  {property.listingType === "Rent" && property.rentFrequency && (
+                  {property.listingType?.toLowerCase() === "rent" && (
                     <span style={{ fontSize: "0.5em", fontWeight: 400, marginLeft: "6px", color: "var(--color-dark-muted)" }}>
-                      / {property.rentFrequency}
+                      / {property.rentFrequency || "Month"}
                     </span>
                   )}
                 </span>
