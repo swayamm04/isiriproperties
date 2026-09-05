@@ -29,7 +29,6 @@ router.post("/", auth, authorize("user"), async (req, res) => {
         name: req.user.name,
         phone: req.user.phone,
         city: req.user.city,
-        email: req.user.email,
       },
       property: {
         id: property._id,

@@ -183,7 +183,6 @@ router.post("/signup", async (req, res) => {
       user: {
         id: user._id,
         name: user.name,
-        email: user.email,
         phone: user.phone,
         city: user.city,
         role: user.role,

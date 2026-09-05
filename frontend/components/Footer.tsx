@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { FaInstagram, FaFacebook, FaYoutube } from "react-icons/fa";
 import styles from "./Footer.module.css";
 
 export default function Footer() {
@@ -18,6 +19,17 @@ export default function Footer() {
           <p className={styles.brandText}>
             Specialists in fine architectural properties, curate estates, and luxury penthouses. Committed to excellence, discretion, and architectural integrity.
           </p>
+          <div className={styles.socialLinks}>
+            <a href="https://www.instagram.com/plotandacre" target="_blank" rel="noopener noreferrer" className={styles.socialIcon} aria-label="Instagram">
+              <FaInstagram size={20} />
+            </a>
+            <a href="https://www.facebook.com/profile.php?id=61594038692214" target="_blank" rel="noopener noreferrer" className={styles.socialIcon} aria-label="Facebook">
+              <FaFacebook size={20} />
+            </a>
+            <a href="https://www.youtube.com/@plotandacre" target="_blank" rel="noopener noreferrer" className={styles.socialIcon} aria-label="YouTube">
+              <FaYoutube size={22} />
+            </a>
+          </div>
         </div>
 
         {/* Quick Links Column */}
@@ -45,13 +57,14 @@ export default function Footer() {
           <ul className={styles.linksList} style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.85rem', lineHeight: '1.6' }}>
             <li style={{ marginBottom: '1rem' }}>
               <strong style={{ color: 'var(--color-primary)' }}>Address:</strong><br />
+              ISIRI GROUP AND ASSOCIATES,<br />
               02, Basaveshwara complex, 60 Feet Rd,<br />
               near kariyanna building, Adarsh Layout,<br />
               Vinoba Nagara, Shivamogga, KA 577204
             </li>
             <li style={{ marginBottom: '1rem' }}>
               <strong style={{ color: 'var(--color-primary)' }}>Phone:</strong><br />
-              +91 99644 96644 / 09964496644
+              +91 99644 96644 / 9964496694
             </li>
             <li>
               <strong style={{ color: 'var(--color-primary)' }}>Email:</strong><br />

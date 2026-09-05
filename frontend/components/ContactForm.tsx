@@ -7,7 +7,6 @@ import styles from "./ContactForm.module.css";
 export default function ContactForm() {
   const [formData, setFormData] = useState({
     name: "",
-    email: "",
     phone: "",
     message: "",
   });
@@ -23,7 +22,7 @@ export default function ContactForm() {
     // Simulate API request
     setTimeout(() => {
       setIsSubmitted(true);
-      setFormData({ name: "", email: "", phone: "", message: "" });
+      setFormData({ name: "", phone: "", message: "" });
     }, 800);
   };
 
@@ -68,7 +67,6 @@ export default function ContactForm() {
                 <p className={styles.infoText}>advisory@plotandacre.com<br />concierge@plotandacre.com</p>
               </div>
             </div>
-
             <div className={styles.infoItem}>
               <Clock className={styles.infoIcon} size={20} strokeWidth={1.5} />
               <div>

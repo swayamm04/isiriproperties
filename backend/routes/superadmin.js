@@ -88,10 +88,8 @@ router.get("/stats", async (req, res) => {
 // @desc    Add a new admin
 // @access  Private (Super Admin)
 router.post("/admins", authorize("super_admin"), upload.single("profileImage"), async (req, res) => {
-  let { name, email, password } = req.body;
+  let { name, password } = req.body;
   let { phone } = req.body;
-
-  if (!email) email = undefined;
 
   try {
     if (!name || !password || !phone) {
@@ -101,13 +99,6 @@ router.post("/admins", authorize("super_admin"), upload.single("profileImage"), 
     phone = normalizePhone(phone);
     if (!isValidPhone(phone)) {
       return res.status(400).json({ error: "Invalid Indian mobile number" });
-    }
-
-    if (email) {
-      const existingUserEmail = await User.findOne({ email });
-      if (existingUserEmail) {
-        return res.status(400).json({ error: "Email or username is already registered" });
-      }
     }
 
     const existingUserPhone = await User.findOne({ phone });
@@ -128,7 +119,6 @@ router.post("/admins", authorize("super_admin"), upload.single("profileImage"), 
 
     const newAdmin = new User({
       name,
-      email,
       phone,
       password,
       role: "admin",
@@ -141,7 +131,6 @@ router.post("/admins", authorize("super_admin"), upload.single("profileImage"), 
       admin: {
         id: newAdmin._id,
         name: newAdmin.name,
-        email: newAdmin.email,
         phone: newAdmin.phone,
         role: newAdmin.role,
         profileImage: newAdmin.profileImage,
@@ -172,7 +161,7 @@ router.get("/admins", authorize(["super_admin", "employee"]), async (req, res) =
 // @desc    Edit admin details
 // @access  Private (Super Admin)
 router.put("/admins/:id", authorize("super_admin"), upload.single("profileImage"), async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, password } = req.body;
   let { phone } = req.body;
 
   try {
@@ -196,18 +185,6 @@ router.put("/admins/:id", authorize("super_admin"), upload.single("profileImage"
       admin.phone = phone;
     }
 
-    if (email !== undefined) {
-      if (email !== admin.email) {
-        if (email !== "") {
-          const existing = await User.findOne({ email });
-          if (existing) {
-            return res.status(400).json({ error: "Email is already registered" });
-          }
-        }
-        // Save empty string as undefined to prevent unique index conflicts on empty string
-        admin.email = email === "" ? undefined : email;
-      }
-    }
     if (password) admin.password = password;
 
     if (req.file) {
@@ -259,10 +236,8 @@ router.delete("/admins/:id", authorize("super_admin"), async (req, res) => {
 // @desc    Add a new employee
 // @access  Private (Super Admin)
 router.post("/employees", authorize("super_admin"), upload.single("profileImage"), async (req, res) => {
-  let { name, email, password } = req.body;
+  let { name, password } = req.body;
   let { phone } = req.body;
-
-  if (!email) email = undefined;
 
   try {
     if (!name || !password || !phone) {
@@ -272,13 +247,6 @@ router.post("/employees", authorize("super_admin"), upload.single("profileImage"
     phone = normalizePhone(phone);
     if (!isValidPhone(phone)) {
       return res.status(400).json({ error: "Invalid Indian mobile number" });
-    }
-
-    if (email) {
-      const existingUserEmail = await User.findOne({ email });
-      if (existingUserEmail) {
-        return res.status(400).json({ error: "Email or username is already registered" });
-      }
     }
 
     const existingUserPhone = await User.findOne({ phone });
@@ -299,7 +267,6 @@ router.post("/employees", authorize("super_admin"), upload.single("profileImage"
 
     const newEmployee = new User({
       name,
-      email,
       phone,
       password,
       role: "employee",
@@ -312,7 +279,6 @@ router.post("/employees", authorize("super_admin"), upload.single("profileImage"
       employee: {
         id: newEmployee._id,
         name: newEmployee.name,
-        email: newEmployee.email,
         phone: newEmployee.phone,
         role: newEmployee.role,
         role: newEmployee.role,
@@ -344,7 +310,7 @@ router.get("/employees", authorize(["super_admin", "employee"]), async (req, res
 // @desc    Edit employee details
 // @access  Private (Super Admin)
 router.put("/employees/:id", authorize("super_admin"), upload.single("profileImage"), async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, password } = req.body;
   let { phone } = req.body;
 
   try {
@@ -368,18 +334,6 @@ router.put("/employees/:id", authorize("super_admin"), upload.single("profileIma
       employee.phone = phone;
     }
 
-    if (email !== undefined) {
-      if (email !== employee.email) {
-        if (email !== "") {
-          const existing = await User.findOne({ email });
-          if (existing) {
-            return res.status(400).json({ error: "Email is already registered" });
-          }
-        }
-        // Save empty string as undefined to prevent unique index conflicts on empty string
-        employee.email = email === "" ? undefined : email;
-      }
-    }
     if (password) employee.password = password;
 
     if (req.file) {

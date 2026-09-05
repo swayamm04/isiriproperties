@@ -144,6 +144,7 @@ export default function SuperAdminDashboardPage() {
   const [isAddPropModalOpen, setIsAddPropModalOpen] = useState(false);
   const [isAddAdminModalOpen, setIsAddAdminModalOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   
   const [logoClicks, setLogoClicks] = useState(0);
   const [clickTimer, setClickTimer] = useState<NodeJS.Timeout | null>(null);
@@ -177,9 +178,10 @@ export default function SuperAdminDashboardPage() {
   // Add/Edit Admin form state
   const [editingAdminId, setEditingAdminId] = useState<string | null>(null);
   const [adminName, setAdminName] = useState("");
-  const [adminEmail, setAdminEmail] = useState("");
+
   const [adminPhone, setAdminPhone] = useState("");
   const [adminPassword, setAdminPassword] = useState("");
+  const [showAdminPassword, setShowAdminPassword] = useState(false);
   const [adminProfileImage, setAdminProfileImage] = useState<File | null>(null);
   const [addAdminLoading, setAddAdminLoading] = useState(false);
 
@@ -332,7 +334,7 @@ export default function SuperAdminDashboardPage() {
       } else if (activeTab === "inquiries") {
         const data = await apiRequest("/interest");
         setInquiries(data);
-      } else if (activeTab === "admins") {
+      } else if (activeTab === "admins" && user?.role === "super_admin") {
         const data = await apiRequest("/superadmin/admins");
         setAdmins(data);
       } else if (activeTab === "employees") {
@@ -443,7 +445,7 @@ export default function SuperAdminDashboardPage() {
     try {
       const formData = new FormData();
       formData.append("name", adminName);
-      formData.append("email", adminEmail);
+
       formData.append("phone", adminPhone);
       if (adminPassword) formData.append("password", adminPassword);
       if (adminProfileImage) formData.append("profileImage", adminProfileImage);
@@ -466,7 +468,7 @@ export default function SuperAdminDashboardPage() {
         setSuccessMsg(`Account created successfully.`);
       }
       setAdminName("");
-      setAdminEmail("");
+
       setAdminPhone("");
       setAdminPassword("");
       setAdminProfileImage(null);
@@ -698,7 +700,7 @@ export default function SuperAdminDashboardPage() {
   const startEditAdmin = (adm: AdminProfile) => {
     setEditingAdminId(adm._id);
     setAdminName(adm.name);
-    setAdminEmail(adm.email || "");
+
     setAdminPhone(adm.phone || "");
     setAdminPassword("");
     setIsAddAdminModalOpen(true);
@@ -707,7 +709,7 @@ export default function SuperAdminDashboardPage() {
   const cancelEditAdmin = () => {
     setEditingAdminId(null);
     setAdminName("");
-    setAdminEmail("");
+
     setAdminPhone("");
     setAdminPassword("");
     setAdminProfileImage(null);
@@ -841,6 +843,14 @@ export default function SuperAdminDashboardPage() {
     );
   }
 
+  if (isLoggingOut) {
+    return (
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", backgroundColor: "var(--color-bg-light)" }}>
+        <p style={{ color: "var(--color-primary-dark)", fontSize: "1.2rem", fontWeight: 500 }}>Logging out...</p>
+      </div>
+    );
+  }
+
   if (!user || (user.role !== "super_admin" && user.role !== "employee")) {
     return (
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", backgroundColor: "var(--color-bg-light)" }}>
@@ -906,16 +916,18 @@ export default function SuperAdminDashboardPage() {
             <span>Enquiries</span>
           </button>
 
-          <button
-            onClick={() => {
-              setActiveTab("admins");
-              setIsSidebarOpen(false);
-            }}
-            className={`${styles.menuItem} ${activeTab === "admins" ? styles.activeMenuItem : ""}`}
-          >
-            <Shield size={18} strokeWidth={1.5} />
-            <span>Manage Vendors</span>
-          </button>
+          {user?.role === "super_admin" && (
+            <button
+              onClick={() => {
+                setActiveTab("admins");
+                setIsSidebarOpen(false);
+              }}
+              className={`${styles.menuItem} ${activeTab === "admins" ? styles.activeMenuItem : ""}`}
+            >
+              <Shield size={18} strokeWidth={1.5} />
+              <span>Manage Vendors</span>
+            </button>
+          )}
 
           {user?.role === "super_admin" && (
             <button
@@ -976,6 +988,7 @@ export default function SuperAdminDashboardPage() {
 
             <button 
               onClick={() => {
+                setIsLoggingOut(true);
                 logout();
                 window.location.href = "/";
               }} 
@@ -1019,7 +1032,7 @@ export default function SuperAdminDashboardPage() {
           <div className={styles.profileArea}>
             <div className={styles.profileText}>
               <div className={styles.profileName}>{user.name}</div>
-              <div className={styles.profileRole}>Super Admin</div>
+              <div className={styles.profileRole}>{user.role === "super_admin" ? "Super Admin" : "Employee"}</div>
             </div>
             <div className={styles.avatar}>
               {user.profileImage ? (
@@ -1195,7 +1208,7 @@ export default function SuperAdminDashboardPage() {
                 </div>
               )}
 
-              {activeTab === "admins" && (
+              {activeTab === "admins" && user?.role === "super_admin" && (
                 <div>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", flexWrap: "wrap", gap: "1rem" }}>
                     <h3 style={{ fontFamily: "var(--font-serif)", fontSize: "1.4rem", fontWeight: 400, margin: 0 }}>
@@ -1228,7 +1241,7 @@ export default function SuperAdminDashboardPage() {
                           <thead>
                             <tr>
                               <th>Name</th>
-                              <th>Email ID</th>
+
                               <th>Phone No.</th>
                               <th>Created On</th>
                               <th>Actions</th>
@@ -1238,7 +1251,7 @@ export default function SuperAdminDashboardPage() {
                             {admins.map((adm) => (
                               <tr key={adm._id}>
                                 <td style={{ fontWeight: 500 }}>{adm.name}</td>
-                                <td>{adm.email}</td>
+
                                 <td>{adm.phone || "N/A"}</td>
                                 <td>{new Date(adm.createdAt).toLocaleDateString()}</td>
                                 <td>
@@ -1303,7 +1316,7 @@ export default function SuperAdminDashboardPage() {
                           <thead>
                             <tr>
                               <th>Name</th>
-                              <th>Email ID</th>
+
                               <th>Phone No.</th>
                               <th>Created On</th>
                               <th>Actions</th>
@@ -1313,7 +1326,7 @@ export default function SuperAdminDashboardPage() {
                             {employees.map((emp) => (
                               <tr key={emp._id}>
                                 <td style={{ fontWeight: 500 }}>{emp.name}</td>
-                                <td>{emp.email}</td>
+
                                 <td>{emp.phone || "N/A"}</td>
                                 <td>{new Date(emp.createdAt).toLocaleDateString()}</td>
                                 <td>
@@ -1358,7 +1371,7 @@ export default function SuperAdminDashboardPage() {
                           <tr>
                             <th>Name</th>
                             <th>Phone</th>
-                            <th>Email / Username</th>
+
                             <th>Status</th>
                             <th>Actions</th>
                           </tr>
@@ -1368,7 +1381,7 @@ export default function SuperAdminDashboardPage() {
                             <tr key={u._id}>
                               <td style={{ fontWeight: 500 }}>{u.name}</td>
                               <td>{u.phone}</td>
-                              <td>{u.email}</td>
+
                               <td>
                                 <span style={{ fontWeight: 600, color: u.isBlocked ? "#e05e5e" : "#4eb570" }}>
                                   {u.isBlocked ? "Blocked" : "Active"}
@@ -1787,17 +1800,6 @@ export default function SuperAdminDashboardPage() {
               </div>
 
               <div className={styles.formGroup}>
-                <label className={styles.label}>Email ID (Optional)</label>
-                <input
-                  type="email"
-                  placeholder="e.g. rachel@plotandacre.com"
-                  value={adminEmail}
-                  onChange={(e) => setAdminEmail(e.target.value)}
-                  className={styles.input}
-                />
-              </div>
-
-              <div className={styles.formGroup}>
                 <label className={styles.label}>Phone Number</label>
                 <input
                   type="tel"
@@ -1816,14 +1818,38 @@ export default function SuperAdminDashboardPage() {
                 <label className={styles.label}>
                   {editingAdminId ? "New Password (optional)" : "Default Password"}
                 </label>
-                <input
-                  type="password"
-                  placeholder={editingAdminId ? "Leave blank to keep current" : "••••••••"}
-                  value={adminPassword}
-                  onChange={(e) => setAdminPassword(e.target.value)}
-                  className={styles.input}
-                  required={!editingAdminId}
-                />
+                <div style={{ position: "relative" }}>
+                  <input
+                    type={showAdminPassword ? "text" : "password"}
+                    placeholder={editingAdminId ? "Leave blank to keep current" : "••••••••"}
+                    value={adminPassword}
+                    onChange={(e) => setAdminPassword(e.target.value)}
+                    className={styles.input}
+                    required={!editingAdminId}
+                    style={{ paddingRight: "40px" }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowAdminPassword(!showAdminPassword)}
+                    style={{
+                      position: "absolute",
+                      right: "12px",
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      color: "var(--color-dark-muted)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      padding: 0
+                    }}
+                    tabIndex={-1}
+                  >
+                    {showAdminPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
               </div>
 
 
@@ -2498,7 +2524,7 @@ export default function SuperAdminDashboardPage() {
                 <div className={styles.metaItem}>Name: <strong>{selectedInquiry.user.name}</strong></div>
                 <div className={styles.metaItem}>Phone: <strong>{selectedInquiry.user.phone}</strong></div>
                 <div className={styles.metaItem}>City: <strong>{selectedInquiry.user.city}</strong></div>
-                <div className={styles.metaItem}>Email ID: <strong>{selectedInquiry.user.email}</strong></div>
+
               </div>
 
               <div className={styles.metaBlock}>

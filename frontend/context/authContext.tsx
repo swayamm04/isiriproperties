@@ -6,7 +6,6 @@ import { apiRequest } from "../utils/api";
 export interface UserProfile {
   id: string;
   name: string;
-  email: string;
   phone?: string;
   city?: string;
   role: "super_admin" | "admin" | "employee" | "user";
@@ -52,7 +51,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser({
           id: data._id || data.id,
           name: data.name,
-          email: data.email,
           phone: data.phone,
           city: data.city,
           role: data.role,
@@ -87,7 +85,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const profile = {
         id: data.user.id || data.user._id,
         name: data.user.name,
-        email: data.user.email,
         phone: data.user.phone,
         city: data.user.city,
         role: data.user.role,
@@ -116,7 +113,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const profile = {
         id: data.user.id || data.user._id,
         name: data.user.name,
-        email: data.user.email,
         phone: data.user.phone,
         city: data.user.city,
         role: data.user.role,
@@ -171,7 +167,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser({
         id: data._id || data.id,
         name: data.name,
-        email: data.email,
         phone: data.phone,
         city: data.city,
         role: data.role,

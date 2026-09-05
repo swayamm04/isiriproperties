@@ -69,6 +69,7 @@ export default function AdminDashboardPage() {
   const [activeTab, setActiveTab] = useState<"my_properties" | "settings">("my_properties");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isAddPropModalOpen, setIsAddPropModalOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   // My properties state
   const [properties, setProperties] = useState<Property[]>([]);
@@ -396,6 +397,14 @@ export default function AdminDashboardPage() {
     );
   }
 
+  if (isLoggingOut) {
+    return (
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", backgroundColor: "var(--color-bg-light)" }}>
+        <p style={{ color: "var(--color-primary-dark)", fontSize: "1.2rem", fontWeight: 500 }}>Logging out...</p>
+      </div>
+    );
+  }
+
   if (!user || user.role !== "admin") {
     return (
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", backgroundColor: "var(--color-bg-light)" }}>
@@ -442,6 +451,7 @@ export default function AdminDashboardPage() {
 
             <button 
               onClick={() => {
+                setIsLoggingOut(true);
                 logout();
                 window.location.href = "/";
               }} 

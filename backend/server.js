@@ -33,19 +33,18 @@ mongoose
     // Seed Super Admin if not already present
     try {
       const User = require("./models/User");
-      const superAdminEmail = "admin@isiri.com";
-      const superAdminExists = await User.findOne({ email: superAdminEmail });
+      const superAdminExists = await User.findOne({ role: "super_admin" });
       
       if (!superAdminExists) {
         const superAdmin = new User({
           name: "Super Admin",
-          email: superAdminEmail,
+          phone: "0000000000",
           password: "propretiesisiri",
           role: "super_admin",
         });
         
         await superAdmin.save();
-        console.log("Super Admin seeded successfully: admin@isiri.com / propretiesisiri");
+        console.log("Super Admin seeded successfully: Phone: 0000000000 / propretiesisiri");
       } else {
         console.log("Super Admin already exists in the database");
       }
